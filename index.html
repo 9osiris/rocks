@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>ORC - Watch Free Movies & TV</title>
+  <title>Osiris's Cinema - Watch Free Movies & TV</title>
   <meta name="description" content="Stream movies and TV shows on OsirisCinema.">
   <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
   <meta name="theme-color" content="#0e0e10">
@@ -17,9 +17,21 @@
 </head>
 <body>
 
+  <svg class="splash-filters" aria-hidden="true">
+    <filter id="orc-glass" x="-50%" y="-50%" width="200%" height="200%" primitiveUnits="objectBoundingBox">
+      <feImage id="orc-glass-map" x="-50%" y="-50%" width="200%" height="200%" result="map"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.02" result="blur"/>
+      <feDisplacementMap in="blur" in2="map" scale="0.75" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
   <div id="splash-screen">
-    <div class="splash-mark">OSIR<span>I</span>S</div>
-    <div class="splash-line"></div>
+    <div class="splash-stage">
+      <div class="splash-glass">
+        <span class="splash-glass-sub">Osiris's</span>
+        <span class="splash-glass-main">Cinema</span>
+      </div>
+    </div>
   </div>
 
   <aside class="sidebar" id="sidebar"></aside>
@@ -28,7 +40,10 @@
     <main id="main-content" style="opacity:0;transition:opacity .5s ease">
 
       <section class="hero">
-        <div class="hero-backdrop" id="hero-backdrop"><img id="hero-backdrop-img" alt="" /></div>
+        <div class="hero-backdrop" id="hero-backdrop">
+          <img class="hero-slide is-active" id="hero-backdrop-a" alt="" />
+          <img class="hero-slide" id="hero-backdrop-b" alt="" />
+        </div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <div class="hero-type" id="hero-type">Film</div>
@@ -50,6 +65,7 @@
             </button>
           </div>
         </div>
+        <div class="hero-dots" id="hero-dots"></div>
       </section>
 
       <div class="genre-strip" id="genre-strip"></div>
@@ -57,10 +73,12 @@
       <section id="categories" class="categories"></section>
 
       <footer class="page-foot">
-        Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">moviedb or sum i forgot ngl</a>.
-        OsirisCinema does not host video - streams come from third-party sources.. yeah.
-
-        shout out to the WFC too love yall boys <3
+        Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>.
+        Osiris's Cinema does not host video, streams come from third-party sources. 
+        
+        Special thanks to LYRD INNO. Team for ideas for the web design. 
+        
+        @ trulyosiris on Discord <3
       </footer>
     </main>
   </div>
