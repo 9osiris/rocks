@@ -23,13 +23,23 @@
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.02" result="blur"/>
       <feDisplacementMap in="blur" in2="map" scale="0.75" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
+    <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+      <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence"/>
+      <feGaussianBlur in="turbulence" stdDeviation="2" result="softMap"/>
+      <feDisplacementMap in="SourceGraphic" in2="softMap" scale="55" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
   </svg>
 
   <div id="splash-screen">
     <div class="splash-stage">
-      <div class="splash-glass">
-        <span class="splash-glass-sub">Osiris's</span>
-        <span class="splash-glass-main">Cinema</span>
+      <div class="liquidGlass-wrapper splash-glass">
+        <div class="liquidGlass-effect"></div>
+        <div class="liquidGlass-tint liquidGlass-tint--dark"></div>
+        <div class="liquidGlass-shine"></div>
+        <div class="liquidGlass-text splash-glass-inner">
+          <span class="splash-glass-sub">Osiris's</span>
+          <span class="splash-glass-main">Cinema</span>
+        </div>
       </div>
     </div>
   </div>
@@ -55,11 +65,11 @@
               <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Play
             </button>
-            <button class="btn-ghost" id="hero-trailer-btn" style="display:none">
+            <button class="btn-ghost glass-chip" id="hero-trailer-btn" style="display:none">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Trailer
             </button>
-            <button class="btn-ghost" id="hero-info-btn">
+            <button class="btn-ghost glass-chip" id="hero-info-btn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
               Details
             </button>
@@ -73,12 +83,10 @@
       <section id="categories" class="categories"></section>
 
       <footer class="page-foot">
-        Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>.
-        OsirisCinema does not host video, streams come from third-party sources.
-
-        Special thanks to the LYRD INNO. team for idea's for the web design.
-
-        @ trulyosiris on Discord <3
+        <p>Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>.</p>
+        <p>Osiris's Cinema does not store or host media. Streams are provided by third-party services; legal concerns should be raised with those hosts directly. Osiris's Cinema is not responsible for content served by external providers.</p>
+        <p>© LYRD INNO. · <a href="/dmca">DMCA</a> · <a href="/settings">Settings</a></p>
+        <p>@ trulyosiris on Discord &lt;3</p>
       </footer>
     </main>
   </div>
