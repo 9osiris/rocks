@@ -32,8 +32,10 @@ const ICONS = {
   tv: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M8 22h8M12 19v3"/></svg>`,
   trend: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>`,
   list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>`,
-  shuffle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>`,
+  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`,
   back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>`,
+  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L19 7"/></svg>`,
 };
 
 const $ = (s, c = document) => c.querySelector(s);
@@ -72,6 +74,38 @@ function homeUrl() {
 
 function getProvider() { return localStorage.getItem("orc_provider") || PROVIDERS[0].id; }
 function setProvider(id) { localStorage.setItem("orc_provider", id); }
+
+const SETTINGS = {
+  accentKey: "orc_accent",
+  reduceMotionKey: "orc_reduce_motion",
+  hideWatchedKey: "orc_hide_watched",
+  autoplayTrailersKey: "orc_autoplay_trailers",
+  get(k, def = "") { return localStorage.getItem(k) ?? def; },
+  set(k, v) { localStorage.setItem(k, v); },
+  toggle(k) {
+    const on = localStorage.getItem(k) === "1";
+    localStorage.setItem(k, on ? "0" : "1");
+    return !on;
+  },
+};
+
+const ACCENT_COLORS = [
+  { id: "7c5cff", label: "Violet" },
+  { id: "3b82f6", label: "Blue" },
+  { id: "ef4444", label: "Red" },
+  { id: "22c55e", label: "Green" },
+  { id: "f97316", label: "Orange" },
+  { id: "ec4899", label: "Pink" },
+  { id: "06b6d4", label: "Cyan" },
+];
+
+function applyGlobalSettings() {
+  const hex = SETTINGS.get(SETTINGS.accentKey, ACCENT);
+  document.documentElement.style.setProperty("--accent", `#${hex}`);
+  document.documentElement.style.setProperty("--accent-dim", `#${hex}`);
+  document.documentElement.style.setProperty("--accent-soft", `rgba(${parseInt(hex.slice(0, 2), 16)}, ${parseInt(hex.slice(2, 4), 16)}, ${parseInt(hex.slice(4, 6), 16)}, 0.14)`);
+  document.documentElement.classList.toggle("reduce-motion", SETTINGS.get(SETTINGS.reduceMotionKey) === "1");
+}
 function providerUrl(type, id, s, e) {
   const p = PROVIDERS.find(x => x.id === getProvider()) || PROVIDERS[0];
   return type === "tv" ? p.tv(id, s, e) : p.movie(id);
@@ -122,89 +156,89 @@ const PAGE = (() => {
   if (p === "/movie") return "movie";
   if (p === "/tv") return "tv";
   if (p === "/search") return "search";
+  if (p === "/settings") return "settings";
+  if (p === "/dmca") return "dmca";
   return "home";
 })();
+
+const normPath = p => (p.replace(/\/$/, "") || "/");
 
 const isTouch = () => matchMedia("(hover: none), (pointer: coarse)").matches;
 const isMobile = () => matchMedia("(max-width: 768px)").matches;
 
 function initMobileUI(page) {
   document.documentElement.classList.toggle("is-touch", isTouch());
-  if (!isMobile()) return;
-
-  const shell = $(".app-shell");
-  if (!shell || $("#mobile-topbar")) return;
-
-  const isDetail = page === "movie" || page === "tv";
-  const bar = document.createElement("header");
-  bar.id = "mobile-topbar";
-  bar.className = "mobile-topbar";
-
-  if (isDetail) {
-    bar.innerHTML = `
-      <a href="${homeUrl()}" class="mobile-back-btn" aria-label="Back">${ICONS.back}</a>
-      <span class="mobile-topbar-brand" style="flex:1;justify-content:center;margin-right:40px">
-        <img src="images/favicon.svg" alt=""> OSIRIS
-      </span>`;
-  } else if (page === "search") {
-    bar.innerHTML = `
-      <a href="${homeUrl()}" class="mobile-topbar-brand">
-        <img src="images/favicon.svg" alt=""> OSIRIS
-      </a>
-      <div class="mobile-topbar-actions"></div>`;
-  } else {
-    bar.innerHTML = `
-      <a href="${homeUrl()}" class="mobile-topbar-brand">
-        <img src="images/favicon.svg" alt=""> OSIRIS
-      </a>
-      <div class="mobile-topbar-actions">
-        <a href="/search" class="mobile-icon-btn" aria-label="Search">${ICONS.search}</a>
-      </div>`;
-  }
-
-  shell.prepend(bar);
+  if (!isMobile() || page !== "movie" && page !== "tv") return;
+  if ($("#mobile-float-back")) return;
+  const btn = document.createElement("a");
+  btn.id = "mobile-float-back";
+  btn.className = "mobile-float-back";
+  btn.href = homeUrl();
+  btn.setAttribute("aria-label", "Back");
+  btn.innerHTML = ICONS.back;
+  document.body.appendChild(btn);
 }
 
 function initSidebar(active) {
   const el = $("#sidebar");
   if (!el) return;
 
-  const link = (href, icon, label, act, extra = "") =>
-    `<a href="${href}" class="sidebar-link${act ? " active" : ""}" ${extra}>${icon}<span class="mob-label">${label}</span><span class="tip">${label}</span></a>`;
+  const link = (href, icon, label, act) =>
+    `<a href="${href}" class="sidebar-link${act ? " active" : ""}">${icon}<span class="mob-label">${label}</span><span class="tip">${label}</span></a>`;
 
+  el.className = "sidebar";
   el.innerHTML = `
-    <a href="${homeUrl()}" class="sidebar-logo"><img src="images/favicon.svg" alt="Osiris"></a>
-    <nav class="sidebar-nav">
-      ${link("/search", ICONS.search, "Search", active === "search")}
-      ${link(homeUrl(), ICONS.home, "Home", active === "home")}
-      ${link("/search?type=movie", ICONS.film, "Movies", active === "movies")}
-      ${link("/search?type=tv", ICONS.tv, "TV", active === "tv")}
-      <div class="sidebar-divider"></div>
-      ${link(`${homeUrl()}#trending`, ICONS.trend, "Trending", false)}
-      ${link(`${homeUrl()}#my-list`, ICONS.list, "My List", false)}
-      ${link("#", ICONS.shuffle, "Random", false, 'id="shuffle-btn"')}
-    </nav>`;
+    <div class="sidebar-inner">
+      <a href="${homeUrl()}" class="sidebar-logo"><img src="images/favicon.svg" alt=""></a>
+      <nav class="sidebar-nav">
+        ${link("/search", ICONS.search, "Search", active === "search")}
+        ${link(homeUrl(), ICONS.home, "Home", active === "home")}
+        ${link("/search?type=movie", ICONS.film, "Movies", active === "movies")}
+        ${link("/search?type=tv", ICONS.tv, "TV Shows", active === "tv")}
+        <div class="sidebar-divider"></div>
+        ${link(`${homeUrl()}#trending`, ICONS.trend, "Trending", false)}
+        ${link(`${homeUrl()}#my-list`, ICONS.list, "My List", false)}
+        ${link("/settings", ICONS.settings, "Settings", active === "settings")}
+      </nav>
+    </div>`;
 
-  $("#shuffle-btn")?.addEventListener("click", async e => {
-    e.preventDefault();
-    toast("Finding something…");
-    try {
-      const pick = Math.random() > 0.5 ? "movie" : "tv";
-      const page = Math.floor(Math.random() * 15) + 1;
-      const data = await tmdb(`/discover/${pick}?sort_by=popularity.desc&page=${page}`);
-      const items = (data.results || []).filter(r => r.poster_path);
-      if (!items.length) return;
-      const item = items[Math.floor(Math.random() * items.length)];
-      location.href = pick === "tv" ? `/tv?id=${item.id}` : `/movie?id=${item.id}`;
-    } catch { toast("Couldn't pick — try again"); }
-  });
-
+  initSidebarDock();
   initMobileUI(PAGE);
+}
+
+function initSidebarDock() {
+  if (isMobile()) return;
+  document.body.classList.add("sidebar-dock");
+  if ($("#sidebar-edge")) return;
+
+  const edge = document.createElement("div");
+  edge.id = "sidebar-edge";
+  edge.setAttribute("aria-hidden", "true");
+  document.body.appendChild(edge);
+
+  const sidebar = $("#sidebar");
+  let closeTimer;
+
+  const open = () => {
+    clearTimeout(closeTimer);
+    document.body.classList.add("sidebar-open");
+  };
+  const scheduleClose = () => {
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => document.body.classList.remove("sidebar-open"), 520);
+  };
+
+  edge.addEventListener("mouseenter", open);
+  sidebar?.addEventListener("mouseenter", open);
+  sidebar?.addEventListener("mouseleave", scheduleClose);
+  document.addEventListener("mousemove", e => {
+    if (e.clientX <= 36) open();
+  });
 }
 
 function toast(msg) {
   let t = $(".toast");
-  if (!t) { t = document.createElement("div"); t.className = "toast"; document.body.appendChild(t); }
+  if (!t) { t = document.createElement("div"); t.className = "toast glass-surface"; document.body.appendChild(t); }
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(t._timer);
@@ -226,15 +260,21 @@ function buildCard(item, type = "movie", opts = {}) {
   const href = kind === "tv" ? `/tv?id=${id}` : `/movie?id=${id}`;
   const saved = MyList.has(id, kind);
   const prog = opts.progressValue ?? Progress.getItem(id, kind)?.progress;
+  const watched = prog && prog >= 95;
+  const y = year(item.release_date || item.first_air_date);
 
   const card = document.createElement("div");
-  card.className = "media-card";
+  card.className = `media-card${watched && SETTINGS.get(SETTINGS.hideWatchedKey) === "1" ? " is-watched" : ""}`;
   card.innerHTML = `
     ${opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
-    ${img ? `<img src="${esc(img)}" alt="" loading="lazy" />` : `<div class="no-img">—</div>`}
+    ${img ? `<img src="${esc(img)}" alt="" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img">—</div>`}
     ${prog ? `<div class="progress-bar"><span style="width:${Math.min(prog, 100)}%"></span></div>` : ""}
     <div class="card-quick">
-      <button class="card-icon-btn save-btn${saved ? " saved" : ""}" aria-label="Save">${saved ? "✓" : "+"}</button>
+      <button type="button" class="card-icon-btn save-btn${saved ? " saved" : ""}" aria-label="Save">${saved ? ICONS.check : ICONS.plus}</button>
+    </div>
+    <div class="card-foot">
+      <div class="card-foot-title">${esc(title)}</div>
+      <div class="card-foot-meta">${y ? `${y} · ` : ""}${kind === "tv" ? "Series" : "Movie"}</div>
     </div>`;
 
   card.addEventListener("click", e => {
@@ -247,14 +287,25 @@ function buildCard(item, type = "movie", opts = {}) {
     const added = MyList.toggle({ id, type: kind, title, poster: item.poster_path });
     const btn = e.currentTarget;
     btn.classList.toggle("saved", added);
-    btn.textContent = added ? "✓" : "+";
+    btn.innerHTML = added ? ICONS.check : ICONS.plus;
     toast(added ? "Added to My List" : "Removed from list");
   });
 
   let timer;
   if (!isTouch()) {
-    card.addEventListener("mouseenter", () => { timer = setTimeout(() => showPopup(card, item, kind), 450); });
-    card.addEventListener("mouseleave", () => clearTimeout(timer));
+    card.addEventListener("mouseenter", () => {
+      card.classList.add("is-hovered");
+      timer = setTimeout(() => showPopup(card, item, kind), 1100);
+    });
+    card.addEventListener("mouseleave", () => {
+      card.classList.remove("is-hovered");
+      clearTimeout(timer);
+      if (activePopup) {
+        setTimeout(() => {
+          if (activePopup && !activePopup.matches(":hover")) closePopup();
+        }, 150);
+      }
+    });
   }
 
   return card;
@@ -269,14 +320,37 @@ let popupScrollHandler = null;
 
 function closePopup() {
   if (!activePopup) return;
+  activePopup.classList.remove("is-visible");
   activePopup.classList.add("closing");
   const el = activePopup;
-  setTimeout(() => el.remove(), 150);
+  setTimeout(() => el.remove(), 240);
   activePopup = null;
   if (popupScrollHandler) {
     document.removeEventListener("scroll", popupScrollHandler, true);
     popupScrollHandler = null;
   }
+}
+
+const OVERVIEW_PREVIEW = 95;
+
+function setPopupOverview(el, text) {
+  if (!el) return;
+  const full = (text || "No summary available.").trim();
+  el.dataset.full = full;
+  if (full.length <= OVERVIEW_PREVIEW) {
+    el.textContent = full;
+    el.classList.remove("truncated", "expanded");
+    return;
+  }
+  el.classList.add("truncated");
+  el.classList.remove("expanded");
+  el.innerHTML = `${esc(full.slice(0, OVERVIEW_PREVIEW).trim())}… <button type="button" class="pp-more">See more</button>`;
+  el.querySelector(".pp-more")?.addEventListener("click", e => {
+    e.stopPropagation();
+    el.textContent = full;
+    el.classList.remove("truncated");
+    el.classList.add("expanded");
+  });
 }
 
 function showPopup(card, item, type) {
@@ -297,25 +371,39 @@ function showPopup(card, item, type) {
     <div class="card-popup-body">
       <div class="card-popup-title">${esc(title)}</div>
       <div class="card-popup-meta">${year(item.release_date || item.first_air_date)}${rating ? ` · ★ ${rating}` : ""} · ${kind === "tv" ? "Series" : "Film"}</div>
+      <p class="card-popup-overview">${esc(item.overview ? "" : "Loading summary…")}</p>
       <div class="card-popup-actions">
-        <button class="pp-play">Play</button>
-        <button class="pp-save${saved ? " saved" : ""}">${saved ? "Saved" : "Save"}</button>
+        <button type="button" class="pp-play">Play</button>
+        <button type="button" class="pp-save${saved ? " saved" : ""}">${saved ? "Saved" : "Save"}</button>
       </div>
     </div>`;
 
+  const overviewEl = pop.querySelector(".card-popup-overview");
+  if (item.overview) setPopupOverview(overviewEl, item.overview);
+  else overviewEl.textContent = "Loading summary…";
+
   const rect = card.getBoundingClientRect();
-  const pw = 240;
+  const pw = 248;
   let left = rect.left + rect.width / 2 - pw / 2;
-  let top = rect.top - 8;
+  let top = rect.top - 10;
   if (left < 8) left = 8;
   if (left + pw > innerWidth - 8) left = innerWidth - pw - 8;
-  if (top < 12) top = rect.bottom + 6;
-  if (top + 160 > innerHeight) top = innerHeight - 170;
+  if (top < 12) top = rect.bottom + 8;
+  if (top + 200 > innerHeight) top = innerHeight - 210;
 
   pop.style.left = left + "px";
   pop.style.top = top + "px";
   document.body.appendChild(pop);
+  requestAnimationFrame(() => pop.classList.add("is-visible"));
   activePopup = pop;
+
+  if (!item.overview) {
+    tmdb(`/${kind}/${id}`).then(d => {
+      if (activePopup === pop) setPopupOverview(overviewEl, d.overview);
+    }).catch(() => {
+      if (activePopup === pop) setPopupOverview(overviewEl, "No summary available.");
+    });
+  }
 
   pop.querySelector(".pp-play").addEventListener("click", () => { closePopup(); location.href = href; });
   pop.querySelector(".pp-save").addEventListener("click", () => {
@@ -324,7 +412,8 @@ function showPopup(card, item, type) {
     btn.classList.toggle("saved", added);
     btn.textContent = added ? "Saved" : "Save";
   });
-  pop.addEventListener("mouseleave", () => setTimeout(closePopup, 200));
+  pop.addEventListener("mouseenter", () => clearTimeout(pop._closeTimer));
+  pop.addEventListener("mouseleave", () => { pop._closeTimer = setTimeout(closePopup, 280); });
   popupScrollHandler = () => closePopup();
   document.addEventListener("scroll", popupScrollHandler, { passive: true, capture: true });
 }
@@ -357,37 +446,122 @@ function buildRow(title, items, type = "movie", opts = {}) {
   const scroll = 480;
   wrap.querySelector(".row-arrow.left").addEventListener("click", () => track.scrollBy({ left: -scroll, behavior: "smooth" }));
   wrap.querySelector(".row-arrow.right").addEventListener("click", () => track.scrollBy({ left: scroll, behavior: "smooth" }));
+
+  if (opts.periodKey) attachPeriodDropdown(wrap, opts);
   return wrap;
+}
+
+function attachPeriodDropdown(wrap, opts) {
+  const header = wrap.querySelector(".row-header");
+  if (!header) return;
+  const titleEl = header.querySelector(".row-title");
+  if (!titleEl) return;
+
+  titleEl.innerHTML = `Trending Movies <span class="row-period-wrap">
+    <button type="button" class="row-period-btn" aria-haspopup="listbox">This Week ▾</button>
+    <div class="row-period-menu" role="listbox">
+      <button type="button" data-period="day" data-path="/trending/all/day">Today</button>
+      <button type="button" data-period="week" data-path="/trending/all/week" class="active">This Week</button>
+    </div>
+  </span>`;
+
+  const btn = titleEl.querySelector(".row-period-btn");
+  const menu = titleEl.querySelector(".row-period-menu");
+  const track = wrap.querySelector(".row-track");
+
+  btn?.addEventListener("click", e => {
+    e.stopPropagation();
+    menu.classList.toggle("open");
+  });
+
+  menu?.querySelectorAll("button").forEach(opt => {
+    opt.addEventListener("click", async e => {
+      e.stopPropagation();
+      menu.classList.remove("open");
+      menu.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      opt.classList.add("active");
+      btn.textContent = `${opt.textContent} ▾`;
+      track.innerHTML = "";
+      skeletons(10).forEach(s => track.appendChild(s));
+      try {
+        const data = await tmdb(opt.dataset.path);
+        track.innerHTML = "";
+        (data.results || []).slice(0, 20).forEach((it, i) => track.appendChild(buildCard(it, "movie", { rank: i + 1 })));
+      } catch {
+        track.innerHTML = "";
+      }
+    });
+  });
+
+  document.addEventListener("click", () => menu?.classList.remove("open"));
 }
 
 function scrollToEl(el) {
   if (!el) return;
-  const offset = isMobile() ? (parseInt(getComputedStyle(document.documentElement).getPropertyValue("--mobile-top-h")) || 52) + 12 : 24;
+  const offset = isMobile() ? 12 : 28;
   const y = el.getBoundingClientRect().top + window.scrollY - offset;
-  window.scrollTo({ top: y, behavior: "smooth" });
+  window.scrollTo(0, y);
+}
+
+function scrollToSelector(sel) {
+  scrollToEl($(sel));
 }
 
 function initAnchorScroll() {
   document.addEventListener("click", e => {
     const a = e.target.closest("a[href*='#']");
     if (!a) return;
-    const hash = a.getAttribute("href")?.split("#")[1];
+    const raw = a.getAttribute("href") || "";
+    const hash = raw.split("#")[1];
     if (!hash) return;
     const dest = new URL(a.href, location.origin);
-    const destPath = dest.pathname.replace(/\/$/, "") || "/";
-    const curPath = location.pathname.replace(/\/$/, "") || "/";
-    if (destPath !== curPath) return;
+    if (normPath(dest.pathname) !== normPath(location.pathname)) return;
     const target = document.getElementById(hash);
     if (!target) return;
     e.preventDefault();
     scrollToEl(target);
     history.pushState(null, "", `#${hash}`);
   });
+
+  window.addEventListener("hashchange", () => {
+    const hash = location.hash.replace("#", "");
+    if (!hash) return;
+    const target = document.getElementById(hash);
+    if (target) scrollToEl(target);
+  });
+}
+
+function injectGlassFilters() {
+  if ($("#glass-distortion")) return;
+  const distortion = `
+    <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+      <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence"/>
+      <feGaussianBlur in="turbulence" stdDeviation="2" result="softMap"/>
+      <feDisplacementMap in="SourceGraphic" in2="softMap" scale="55" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>`;
+  const existing = $(".splash-filters").first();
+  if (existing) {
+    existing.insertAdjacentHTML("beforeend", distortion);
+    return;
+  }
+  const wrap = document.createElement("div");
+  wrap.className = "glass-filters-root";
+  wrap.innerHTML = `
+    <svg aria-hidden="true">
+      <filter id="orc-glass" x="-50%" y="-50%" width="200%" height="200%" primitiveUnits="objectBoundingBox">
+        <feImage id="orc-glass-map" x="-50%" y="-50%" width="200%" height="200%" result="map"/>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="0.02" result="blur"/>
+        <feDisplacementMap in="blur" in2="map" scale="0.75" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      ${distortion}
+    </svg>`;
+  document.body.prepend(wrap);
 }
 
 function initGlassFilter() {
+  injectGlassFilters();
   const fe = $("#orc-glass-map");
-  if (!fe) return;
+  if (!fe || fe.getAttribute("href")) return;
   fetch("https://essykings.github.io/JavaScript/map.png")
     .then(r => r.blob())
     .then(b => fe.setAttribute("href", URL.createObjectURL(b)))
@@ -697,7 +871,7 @@ async function initHomePage() {
     if (res.status !== "fulfilled") return;
     const items = res.value.results || [];
     const c = cats[i];
-    const row = buildRow(c.title, items, c.type, { id: c.id, ranks: c.ranks, seeAll: c.seeAll });
+    const row = buildRow(c.title, items, c.type, { id: c.id, ranks: c.ranks, seeAll: c.seeAll, periodKey: c.id === "trending" });
     if (row) el.appendChild(row);
   });
 
@@ -716,7 +890,10 @@ async function initHomePage() {
   if (main && !$("#splash-screen")) main.style.opacity = "1";
 
   const hash = location.hash.replace("#", "");
-  if (hash) setTimeout(() => scrollToEl(document.getElementById(hash)), 700);
+  if (hash) {
+    const delay = ($("#splash-screen") && !sessionStorage.getItem("orc_splash")) ? 3000 : 500;
+    setTimeout(() => scrollToEl(document.getElementById(hash)), delay);
+  }
 }
 
 function renderProviders(container, type, id, s, e, onChange) {
@@ -764,7 +941,7 @@ async function initMoviePage() {
         <button class="btn-ghost" id="detail-save">${saved ? "✓ Saved" : "+ My List"}</button>
       </div>`;
 
-    $("#detail-play").addEventListener("click", () => $("#player-frame")?.scrollIntoView({ behavior: "smooth" }));
+    $("#detail-play").addEventListener("click", () => scrollToSelector("#player-frame"));
     $("#detail-save").addEventListener("click", () => {
       const a = MyList.toggle({ id: m.id, type: "movie", title: m.title, poster: m.poster_path });
       $("#detail-save").textContent = a ? "✓ Saved" : "+ My List";
@@ -790,7 +967,7 @@ async function initMoviePage() {
       cast.forEach(a => {
         const d = document.createElement("div");
         d.className = "cast-item";
-        d.innerHTML = `${a.profile_path ? `<img src="${IMG_W500}${a.profile_path}" alt="" loading="lazy"/>` : `<img alt=""/>`}<div class="name">${esc(a.name)}</div><div class="role">${esc(a.character || "")}</div>`;
+        d.innerHTML = `${a.profile_path ? `<img src="${IMG_W500}${a.profile_path}" alt="" loading="lazy" draggable="false"/>` : `<div class="cast-placeholder"></div>`}<div class="name" title="${esc(a.name)}">${esc(a.name)}</div><div class="role" title="${esc(a.character || "")}">${esc(a.character || "")}</div>`;
         $("#cast-row").appendChild(d);
       });
     }
@@ -835,7 +1012,7 @@ async function initTvPage() {
         <button class="btn-ghost" id="detail-save">${saved ? "✓ Saved" : "+ My List"}</button>
       </div>`;
 
-    $("#detail-play").addEventListener("click", () => $("#player-frame")?.scrollIntoView({ behavior: "smooth" }));
+    $("#detail-play").addEventListener("click", () => scrollToSelector("#player-frame"));
     $("#detail-save").addEventListener("click", () => {
       const a = MyList.toggle({ id: show.id, type: "tv", title: show.name, poster: show.poster_path });
       $("#detail-save").textContent = a ? "✓ Saved" : "+ My List";
@@ -864,17 +1041,26 @@ async function initTvPage() {
         const eps = sd.episodes || [];
         if (eps.length && !eps.some(ep => ep.episode_number === episode)) episode = eps[0].episode_number;
         eps.forEach(ep => {
-          const el = document.createElement("div");
-          el.className = `ep-item${ep.episode_number === episode && sn === season ? " on" : ""}`;
+          const el = document.createElement("button");
+          el.type = "button";
+          el.className = `ep-row${ep.episode_number === episode && sn === season ? " on" : ""}`;
+          const air = ep.air_date ? new Date(ep.air_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+          const dur = ep.runtime ? `${ep.runtime}m` : "";
           el.innerHTML = `
-            ${ep.still_path ? `<img src="${IMG_W500}${ep.still_path}" alt="" loading="lazy"/>` : `<img alt=""/>`}
-            <div><div class="ep-num">E${ep.episode_number}</div><div class="ep-name">${esc(ep.name || "")}</div><div class="ep-desc">${esc(ep.overview || "")}</div></div>`;
+            <span class="ep-row-num">${ep.episode_number}</span>
+            <div class="ep-row-thumb">${ep.still_path ? `<img src="${IMG_W500}${ep.still_path}" alt="" loading="lazy" draggable="false"/>` : ""}</div>
+            <div class="ep-row-body">
+              <div class="ep-row-title">${esc(ep.name || `Episode ${ep.episode_number}`)}</div>
+              ${air ? `<div class="ep-row-date">${air}</div>` : ""}
+              <div class="ep-row-desc">${esc(ep.overview || "")}</div>
+            </div>
+            ${dur ? `<span class="ep-row-dur">${dur}</span>` : ""}`;
           el.addEventListener("click", () => {
             season = sn; episode = ep.episode_number;
-            $$(".ep-item").forEach(x => x.classList.remove("on"));
+            $$(".ep-row").forEach(x => x.classList.remove("on"));
             el.classList.add("on");
             update();
-            frame?.scrollIntoView({ behavior: "smooth" });
+            scrollToSelector("#player-frame");
           });
           $("#ep-grid").appendChild(el);
         });
@@ -887,6 +1073,12 @@ async function initTvPage() {
 
     if (seasons.length && $("#season-select")) {
       $("#ep-block").style.display = "";
+      const epHead = $("#ep-block").querySelector(".ep-head") || document.createElement("div");
+      if (!epHead.classList.contains("ep-head")) {
+        epHead.className = "ep-head";
+        epHead.innerHTML = `<h2>Episodes</h2>`;
+        $("#ep-block").prepend(epHead);
+      }
       seasons.forEach(s => {
         const o = document.createElement("option");
         o.value = s.season_number;
@@ -910,7 +1102,7 @@ async function initTvPage() {
       cast.forEach(a => {
         const d = document.createElement("div");
         d.className = "cast-item";
-        d.innerHTML = `${a.profile_path ? `<img src="${IMG_W500}${a.profile_path}" alt="" loading="lazy"/>` : `<img alt=""/>`}<div class="name">${esc(a.name)}</div><div class="role">${esc(a.character || "")}</div>`;
+        d.innerHTML = `${a.profile_path ? `<img src="${IMG_W500}${a.profile_path}" alt="" loading="lazy" draggable="false"/>` : `<div class="cast-placeholder"></div>`}<div class="name" title="${esc(a.name)}">${esc(a.name)}</div><div class="role" title="${esc(a.character || "")}">${esc(a.character || "")}</div>`;
         $("#cast-row").appendChild(d);
       });
     }
@@ -998,6 +1190,87 @@ function initSearchPage() {
   clear?.addEventListener("click", () => { input.value = ""; clear.style.display = "none"; doSearch(""); input.focus(); });
 }
 
+function initSettingsPage() {
+  initSidebar("settings");
+  document.title = "Settings — Osiris's Cinema";
+
+  const providerBox = $("#settings-providers");
+  if (providerBox) {
+    providerBox.innerHTML = "";
+    PROVIDERS.forEach(p => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `settings-provider${getProvider() === p.id ? " active" : ""}`;
+      btn.textContent = p.name;
+      btn.addEventListener("click", () => {
+        setProvider(p.id);
+        $$(".settings-provider").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        toast(`Stream provider set to ${p.name}`);
+      });
+      providerBox.appendChild(btn);
+    });
+  }
+
+  const accentBox = $("#settings-accents");
+  if (accentBox) {
+    accentBox.innerHTML = "";
+    const cur = SETTINGS.get(SETTINGS.accentKey, ACCENT);
+    ACCENT_COLORS.forEach(c => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `accent-swatch${cur === c.id ? " active" : ""}`;
+      btn.style.setProperty("--swatch", `#${c.id}`);
+      btn.title = c.label;
+      btn.innerHTML = cur === c.id ? ICONS.check : "";
+      btn.addEventListener("click", () => {
+        SETTINGS.set(SETTINGS.accentKey, c.id);
+        applyGlobalSettings();
+        $$(".accent-swatch").forEach(b => { b.classList.remove("active"); b.innerHTML = ""; });
+        btn.classList.add("active");
+        btn.innerHTML = ICONS.check;
+        toast(`Accent set to ${c.label}`);
+      });
+      accentBox.appendChild(btn);
+    });
+  }
+
+  const bindToggle = (id, key, label) => {
+    const el = $(id);
+    if (!el) return;
+    const sync = () => el.classList.toggle("on", SETTINGS.get(key) === "1");
+    sync();
+    el.addEventListener("click", () => {
+      const on = SETTINGS.toggle(key);
+      sync();
+      if (key === SETTINGS.reduceMotionKey) applyGlobalSettings();
+      toast(`${label} ${on ? "enabled" : "disabled"}`);
+    });
+  };
+
+  bindToggle("#toggle-reduce-motion", SETTINGS.reduceMotionKey, "Reduce motion");
+  bindToggle("#toggle-hide-watched", SETTINGS.hideWatchedKey, "Hide watched");
+  bindToggle("#toggle-autoplay-trailers", SETTINGS.autoplayTrailersKey, "Auto-play trailers");
+
+  $("#clear-progress")?.addEventListener("click", () => {
+    localStorage.removeItem(Progress.key);
+    toast("Continue watching cleared");
+  });
+  $("#clear-list")?.addEventListener("click", () => {
+    localStorage.removeItem(MyList.key);
+    toast("My List cleared");
+  });
+  $("#reset-splash")?.addEventListener("click", () => {
+    sessionStorage.removeItem("orc_splash");
+    toast("Intro will show on next home visit");
+  });
+}
+
+function initDmcaPage() {
+  initSidebar("home");
+  document.title = "DMCA — Osiris's Cinema";
+}
+
 function playLoader(bg, title) {
   return new Promise(resolve => {
     const el = document.createElement("div");
@@ -1068,6 +1341,9 @@ document.addEventListener("keydown", e => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyGlobalSettings();
+  injectGlassFilters();
+  initGlassFilter();
   NProgress.done();
   initAnchorScroll();
   switch (PAGE) {
@@ -1075,5 +1351,7 @@ document.addEventListener("DOMContentLoaded", () => {
     case "movie": initMoviePage(); break;
     case "tv": initTvPage(); break;
     case "search": initSearchPage(); break;
+    case "settings": initSettingsPage(); break;
+    case "dmca": initDmcaPage(); break;
   }
 });
