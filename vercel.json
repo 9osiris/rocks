@@ -1,7 +1,14 @@
 {
+  "cleanUrls": true,
   "rewrites": [
     { "source": "/css/orc-styles.css", "destination": "/orc-styles.css" },
     { "source": "/js/orc-script.js", "destination": "/orc-script.js" },
     { "source": "/images/favicon.svg", "destination": "/favicon.svg" }
+  ],
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+    { "source": "/movie.html", "destination": "/movie", "permanent": true },
+    { "source": "/tv.html", "destination": "/tv", "permanent": true },
+    { "source": "/search.html", "destination": "/search", "permanent": true }
   ]
 }
