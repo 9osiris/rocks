@@ -289,18 +289,29 @@ window.addEventListener("message", e => {
   } catch (_) {}
 });
 
-const PAGE = (() => {
+let PAGE = "home";
+
+function detectPage() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+  if ($("#player-frame") && id) return $("#ep-block") ? "tv" : "movie";
+  if ($("#main-search-input") || document.body.classList.contains("search-page")) return "search";
+  if ($(".settings-body") || document.body.classList.contains("settings-page")) return "settings";
+  if ($(".legal-body") || document.body.classList.contains("legal-page")) return "dmca";
+  if ($("#categories") || $("#hero-title") || $("#splash-screen")) return "home";
+
   const seg = (location.pathname.split("/").pop() || "").replace(/\.html$/i, "").toLowerCase();
   const bySeg = { movie: "movie", tv: "tv", search: "search", settings: "settings", dmca: "dmca", index: "home", osiriscinema: "home" };
   if (bySeg[seg]) return bySeg[seg];
+
   const p = location.pathname.replace(/\/$/, "") || "/";
-  if (p === "/movie") return "movie";
-  if (p === "/tv") return "tv";
-  if (p === "/search") return "search";
-  if (p === "/settings") return "settings";
-  if (p === "/dmca") return "dmca";
+  if (p === "/movie" || p.endsWith("/movie")) return "movie";
+  if (p === "/tv" || p.endsWith("/tv")) return "tv";
+  if (p === "/search" || p.endsWith("/search")) return "search";
+  if (p === "/settings" || p.endsWith("/settings")) return "settings";
+  if (p === "/dmca" || p.endsWith("/dmca")) return "dmca";
   return "home";
-})();
+}
 
 const normPath = p => (p.replace(/\/$/, "") || "/");
 
@@ -972,6 +983,7 @@ async function initHomePage() {
   initGenreStrip();
 
   const el = $("#categories");
+  if (!el) return;
   const cats = [
     { title: "New This Week", path: "/movie/now_playing", type: "movie" },
     { title: "Trending Now", path: "/trending/all/week", type: "movie", id: "trending", ranks: true },
@@ -1065,20 +1077,30 @@ function renderProviders(container, type, id, s, e, onChange) {
 }
 
 async function initMoviePage() {
-  initSidebar();
-  checkPlayLoader();
   const id = new URLSearchParams(location.search).get("id");
   const header = $("#detail-header");
   const frame = $("#player-frame");
   if (!id) { location.href = homeUrl(); return; }
+  if (!header || !frame) return;
+
+  initSidebar();
+  checkPlayLoader();
 
   const showErr = msg => {
     if (header) header.innerHTML = `<p style="color:var(--text-muted)">${esc(msg)}</p>`;
-    if (frame) frame.innerHTML = `<p style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.85rem">Could not load player.</p>`;
+    if (frame) frame.innerHTML = `<p style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.85rem;padding:20px;text-align:center">Could not load player.</p>`;
   };
 
+  let m;
   try {
-    const m = await tmdb(`/movie/${id}?append_to_response=credits,similar,recommendations,videos,watch/providers,keywords`);
+    m = await tmdb(`/movie/${id}?append_to_response=credits,similar,videos,recommendations`);
+  } catch (e) {
+    console.error(e);
+    showErr("Couldn't load this title. Check your connection and try again.");
+    return;
+  }
+
+  try {
     document.title = `${m.title} — ${BRAND}`;
     const backdrop = m.backdrop_path ? `${IMG_ORIG}${m.backdrop_path}` : "";
     const backdropEl = $("#detail-backdrop");
@@ -1086,7 +1108,7 @@ async function initMoviePage() {
 
     const saved = MyList.has(m.id, "movie");
     const trailer = pickTrailer(m.videos);
-    if (header) header.innerHTML = `
+    header.innerHTML = `
       <h1 class="detail-title">${esc(m.title)}</h1>
       ${m.tagline ? `<p class="detail-tagline">${esc(m.tagline)}</p>` : ""}
       ${m.belongs_to_collection ? `<a class="collection-banner" href="/search?type=movie&q=${encodeURIComponent(m.belongs_to_collection.name)}">Part of ${esc(m.belongs_to_collection.name)}</a>` : ""}
@@ -1105,17 +1127,15 @@ async function initMoviePage() {
       </div>`;
 
     $("#detail-play")?.addEventListener("click", () => scrollToSelector("#player-frame"));
-    $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
+    if (trailer) $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
     $("#detail-save")?.addEventListener("click", () => {
       const a = MyList.toggle({ id: m.id, type: "movie", title: m.title, poster: m.poster_path });
-      $("#detail-save").textContent = a ? "✓ Saved" : "+ My List";
+      const btn = $("#detail-save");
+      if (btn) btn.textContent = a ? "✓ Saved" : "+ My List";
       toast(a ? "Added to My List" : "Removed");
     });
 
-    renderWatchProviders(hostAfter(header, "watch-providers-host"), m["watch/providers"]);
-    renderKeywords(hostAfter($("#watch-providers-host") || header, "keywords-host"), m.keywords, "movie");
-
-    const load = url => { if (frame) frame.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; fullscreen"></iframe>`; };
+    const load = url => { frame.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; fullscreen"></iframe>`; };
     renderProviders($("#provider-bar"), "movie", id, 1, 1, load);
     load(providerUrl("movie", id, 1, 1));
 
@@ -1143,8 +1163,14 @@ async function initMoviePage() {
     renderCardRow("#similar-section", "#similar-row", sim, "movie");
   } catch (e) {
     console.error(e);
-    showErr("Couldn't load this title. Check your connection and try again.");
+    showErr("Couldn't display this title.");
+    return;
   }
+
+  tmdb(`/movie/${id}?append_to_response=keywords,watch/providers`).then(extras => {
+    renderWatchProviders(hostAfter(header, "watch-providers-host"), extras["watch/providers"]);
+    renderKeywords(hostAfter($("#watch-providers-host") || header, "keywords-host"), extras.keywords, "movie");
+  }).catch(() => {});
 }
 
 async function initTvPage() {
@@ -1164,7 +1190,7 @@ async function initTvPage() {
   };
 
   try {
-    const show = await tmdb(`/tv/${id}?append_to_response=credits,similar,recommendations,videos,watch/providers,keywords`);
+    const show = await tmdb(`/tv/${id}?append_to_response=credits,similar,recommendations,videos`);
     document.title = `${show.name} — ${BRAND}`;
     const backdropEl = $("#detail-backdrop");
     if (backdropEl && show.backdrop_path) backdropEl.style.backgroundImage = `url(${IMG_ORIG}${show.backdrop_path})`;
@@ -1191,15 +1217,12 @@ async function initTvPage() {
       </div>`;
 
     $("#detail-play")?.addEventListener("click", () => scrollToSelector("#player-frame"));
-    $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
+    if (trailer) $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
     $("#detail-save")?.addEventListener("click", () => {
       const a = MyList.toggle({ id: show.id, type: "tv", title: show.name, poster: show.poster_path });
       $("#detail-save").textContent = a ? "✓ Saved" : "+ My List";
       toast(a ? "Added to My List" : "Removed");
     });
-
-    renderWatchProviders(hostAfter(header, "watch-providers-host"), show["watch/providers"]);
-    renderKeywords(hostAfter($("#watch-providers-host") || header, "keywords-host"), show.keywords, "tv");
 
     const seasons = (show.seasons || []).filter(s => s.season_number > 0);
     const seasonNums = seasons.map(s => s.season_number);
@@ -1299,6 +1322,11 @@ async function initTvPage() {
 
     const sim = show.similar?.results?.slice(0, 14) || [];
     renderCardRow("#similar-section", "#similar-row", sim, "tv");
+
+    tmdb(`/tv/${id}?append_to_response=keywords,watch/providers`).then(extras => {
+      renderWatchProviders(hostAfter(header, "watch-providers-host"), extras["watch/providers"]);
+      renderKeywords(hostAfter($("#watch-providers-host") || header, "keywords-host"), extras.keywords, "tv");
+    }).catch(() => {});
   } catch (e) {
     console.error(e);
     showErr("Couldn't load this show. Check your connection and try again.");
@@ -1539,17 +1567,24 @@ document.addEventListener("keydown", e => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  applyGlobalSettings();
-  injectGlassFilters();
-  initGlassFilter();
-  NProgress.done();
-  initAnchorScroll();
-  switch (PAGE) {
-    case "home": initHomePage(); break;
-    case "movie": initMoviePage().catch(e => console.error(e)); break;
-    case "tv": initTvPage().catch(e => console.error(e)); break;
-    case "search": initSearchPage(); break;
-    case "settings": initSettingsPage(); break;
-    case "dmca": initDmcaPage(); break;
+  PAGE = detectPage();
+  try {
+    applyGlobalSettings();
+    injectGlassFilters();
+    initGlassFilter();
+    NProgress.done();
+    initAnchorScroll();
+    switch (PAGE) {
+      case "home": initHomePage().catch(e => console.error(e)); break;
+      case "movie": initMoviePage().catch(e => console.error(e)); break;
+      case "tv": initTvPage().catch(e => console.error(e)); break;
+      case "search": initSearchPage(); break;
+      case "settings": initSettingsPage(); break;
+      case "dmca": initDmcaPage(); break;
+    }
+  } catch (e) {
+    console.error("Osiris init failed:", e);
+    const header = $("#detail-header");
+    if (header) header.innerHTML = `<p style="color:var(--text-muted)">Something went wrong loading this page. Try refreshing.</p>`;
   }
 });
