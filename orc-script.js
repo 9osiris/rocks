@@ -93,14 +93,20 @@ function renderWatchProviders(container, providers, country = "US") {
     `<img src="${IMG_W45}${p.logo_path}" alt="${esc(p.provider_name)}" title="${esc(p.provider_name)}" loading="lazy"/>`
   ).join("")}</div></div>`;
 }
+const PINNED_SIDEBAR_PAGES = new Set(["settings", "dmca", "search"]);
+
 function renderKeywords(container, keywords, type) {
   if (!container) return;
   const list = keywords?.keywords || keywords?.results || [];
-  if (!list.length) { container.style.display = "none"; return; }
+  if (!list.length) { container.innerHTML = ""; container.style.display = "none"; return; }
   container.style.display = "";
-  container.innerHTML = list.slice(0, 12).map(k =>
-    `<a href="/search?type=${type}&q=${encodeURIComponent(k.name)}" class="keyword-pill">${esc(k.name)}</a>`
-  ).join("");
+  container.innerHTML = `
+    <div class="detail-extra-block">
+      <h3 class="detail-extra-label">Keywords</h3>
+      <div class="keywords-row">${list.slice(0, 10).map(k =>
+        `<a href="/search?type=${type}&q=${encodeURIComponent(k.name)}" class="keyword-pill">${esc(k.name)}</a>`
+      ).join("")}</div>
+    </div>`;
 }
 function renderCastRow(cast) {
   const section = $("#cast-section");
@@ -320,7 +326,7 @@ const isMobile = () => matchMedia("(max-width: 768px)").matches;
 
 function initMobileUI(page) {
   document.documentElement.classList.toggle("is-touch", isTouch());
-  if (!isMobile() || page !== "movie" && page !== "tv") return;
+  if (!isMobile() || page === "home") return;
   if ($("#mobile-float-back")) return;
   const btn = document.createElement("a");
   btn.id = "mobile-float-back";
@@ -355,6 +361,9 @@ function initSidebar(active) {
     </div>`;
 
   initSidebarDock();
+  if (!isMobile() && PINNED_SIDEBAR_PAGES.has(PAGE)) {
+    document.body.classList.add("sidebar-open", "sidebar-pinned");
+  }
   initMobileUI(PAGE);
 }
 
@@ -376,6 +385,7 @@ function initSidebarDock() {
     document.body.classList.add("sidebar-open");
   };
   const scheduleClose = () => {
+    if (document.body.classList.contains("sidebar-pinned")) return;
     clearTimeout(closeTimer);
     closeTimer = setTimeout(() => {
       if (!edge.matches(":hover") && !sidebar?.matches(":hover")) {
@@ -1168,8 +1178,9 @@ async function initMoviePage() {
   }
 
   tmdb(`/movie/${id}?append_to_response=keywords,watch/providers`).then(extras => {
-    renderWatchProviders(hostAfter(header, "watch-providers-host"), extras["watch/providers"]);
-    renderKeywords(hostAfter($("#watch-providers-host") || header, "keywords-host"), extras.keywords, "movie");
+    const anchor = $("#detail-info") || header;
+    renderWatchProviders(hostAfter(anchor, "watch-providers-host"), extras["watch/providers"]);
+    renderKeywords(hostAfter($("#watch-providers-host") || anchor, "keywords-host"), extras.keywords, "movie");
   }).catch(() => {});
 }
 
@@ -1324,8 +1335,9 @@ async function initTvPage() {
     renderCardRow("#similar-section", "#similar-row", sim, "tv");
 
     tmdb(`/tv/${id}?append_to_response=keywords,watch/providers`).then(extras => {
-      renderWatchProviders(hostAfter(header, "watch-providers-host"), extras["watch/providers"]);
-      renderKeywords(hostAfter($("#watch-providers-host") || header, "keywords-host"), extras.keywords, "tv");
+      const anchor = $("#detail-info") || header;
+      renderWatchProviders(hostAfter(anchor, "watch-providers-host"), extras["watch/providers"]);
+      renderKeywords(hostAfter($("#watch-providers-host") || anchor, "keywords-host"), extras.keywords, "tv");
     }).catch(() => {});
   } catch (e) {
     console.error(e);
