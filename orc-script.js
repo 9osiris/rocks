@@ -698,7 +698,7 @@ function injectGlassFilters() {
       <feGaussianBlur in="turbulence" stdDeviation="2" result="softMap"/>
       <feDisplacementMap in="SourceGraphic" in2="softMap" scale="55" xChannelSelector="R" yChannelSelector="G"/>
     </filter>`;
-  const existing = $(".splash-filters").first();
+  const existing = $(".splash-filters");
   if (existing) {
     existing.insertAdjacentHTML("beforeend", distortion);
     return;
