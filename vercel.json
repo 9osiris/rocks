@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/css/orc-styles.css", "destination": "/orc-styles.css" },
+    { "source": "/js/orc-script.js", "destination": "/orc-script.js" },
+    { "source": "/images/favicon.svg", "destination": "/favicon.svg" }
+  ]
+}
