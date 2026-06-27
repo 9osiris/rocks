@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>OsirisCinema — Movie</title>
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <meta name="theme-color" content="#0e0e10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/orc-styles.css">
+</head>
+<body class="detail-page">
+
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="app-shell">
+    <div class="detail-hero">
+      <div class="detail-hero-bg" id="detail-backdrop"></div>
+      <div class="detail-hero-fade"></div>
+    </div>
+
+    <div class="detail-body">
+      <div id="detail-header">
+        <div class="skeleton-card" style="width:280px;height:32px;margin-bottom:12px;border-radius:6px"></div>
+      </div>
+
+      <section class="player-wrap">
+        <div id="provider-bar"></div>
+        <div class="player-frame" id="player-frame">
+          <div class="spinner" style="position:absolute;top:50%;left:50%;margin:-18px 0 0 -18px"></div>
+        </div>
+      </section>
+
+      <div id="detail-info"></div>
+    </div>
+
+    <section id="cast-section" style="display:none">
+      <h2 class="section-head">Cast</h2>
+      <div class="cast-scroll" id="cast-row"></div>
+    </section>
+
+    <section id="similar-section" style="display:none">
+      <h2 class="section-head">More Like This</h2>
+      <div class="similar-row" id="similar-row"></div>
+    </section>
+
+    <footer class="page-foot">Third-party streams · Data by TMDB</footer>
+  </div>
+
+  <script src="js/orc-script.js"></script>
+</body>
+</html>

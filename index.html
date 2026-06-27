@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>OsirisCinema — Watch Free Movies & TV</title>
+  <meta name="description" content="Stream movies and TV shows on OsirisCinema.">
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <meta name="theme-color" content="#0e0e10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/orc-styles.css">
+</head>
+<body>
+
+  <div id="splash-screen">
+    <div class="splash-mark">OSIR<span>I</span>S</div>
+    <div class="splash-line"></div>
+  </div>
+
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="app-shell">
+    <main id="main-content" style="opacity:0;transition:opacity .5s ease">
+
+      <section class="hero">
+        <div class="hero-backdrop" id="hero-backdrop"><img id="hero-backdrop-img" alt="" /></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <div class="hero-type" id="hero-type">Film</div>
+          <h1 class="hero-title" id="hero-title">Loading</h1>
+          <p class="hero-desc" id="hero-desc"></p>
+          <div class="hero-meta" id="hero-meta"></div>
+          <div class="hero-actions">
+            <button class="btn-play" id="hero-play-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Play
+            </button>
+            <button class="btn-ghost" id="hero-trailer-btn" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Trailer
+            </button>
+            <button class="btn-ghost" id="hero-info-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Details
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div class="genre-strip" id="genre-strip"></div>
+
+      <section id="categories" class="categories"></section>
+
+      <footer class="page-foot">
+        Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>.
+        OsirisCinema does not host video — streams come from third-party sources.
+      </footer>
+    </main>
+  </div>
+
+  <script src="js/orc-script.js"></script>
+</body>
+</html>

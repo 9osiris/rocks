@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>OsirisCinema — Search</title>
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <meta name="theme-color" content="#0e0e10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/orc-styles.css">
+</head>
+<body class="search-page">
+
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="app-shell">
+    <main class="search-body">
+      <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:20px;letter-spacing:-.02em">Browse</h1>
+
+      <div class="search-input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" id="main-search-input" placeholder="Titles, actors, keywords…" autocomplete="off">
+        <button id="search-clear" style="display:none;background:none;border:none;color:var(--text-dim);padding:4px;cursor:pointer" aria-label="Clear">✕</button>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-chip on" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="movie">Movies</button>
+        <button class="filter-chip" data-filter="tv">TV Shows</button>
+      </div>
+
+      <p class="search-status" id="search-status"></p>
+      <div class="search-grid" id="search-results"></div>
+    </main>
+
+    <footer class="page-foot">Data by TMDB</footer>
+  </div>
+
+  <script src="js/orc-script.js"></script>
+</body>
+</html>
