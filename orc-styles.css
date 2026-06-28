@@ -422,6 +422,10 @@ body.sidebar-open .sidebar-link:hover .tip {
   transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
 }
 
+#splash-screen.splash-exit .splash-glass-main {
+  animation: none;
+}
+
 #splash-screen.splash-exit {
   opacity: 0;
   pointer-events: none;
@@ -553,6 +557,77 @@ body.sidebar-open .sidebar-link:hover .tip {
   opacity: 0;
   transition: opacity 0.42s ease;
 }
+
+/* Hero skeleton shimmer */
+.hero-backdrop.has-skeleton {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: heroSkeletonShimmer 1.6s infinite;
+}
+@keyframes heroSkeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.hero-skeleton-content {
+  position: relative;
+  z-index: 2;
+  padding: 0 48px 72px;
+  max-width: 580px;
+}
+
+.hero-skeleton-type {
+  width: 60px;
+  height: 14px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.12);
+  margin-bottom: 14px;
+}
+
+.hero-skeleton-title {
+  width: min(320px, 60%);
+  height: clamp(2rem, 4.5vw, 3.4rem);
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,0.15);
+  margin-bottom: 16px;
+}
+
+.hero-skeleton-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+.hero-skeleton-desc span {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.1);
+}
+.hero-skeleton-desc span:nth-child(1) { width: 90%; }
+.hero-skeleton-desc span:nth-child(2) { width: 75%; }
+.hero-skeleton-desc span:nth-child(3) { width: 55%; }
+
+.hero-skeleton-meta {
+  width: 200px;
+  height: 14px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.08);
+  margin-bottom: 22px;
+}
+
+.hero-skeleton-actions {
+  display: flex;
+  gap: 10px;
+}
+.hero-skeleton-actions span {
+  height: 40px;
+  border-radius: var(--pill);
+  background: rgba(255,255,255,0.12);
+}
+.hero-skeleton-actions span:nth-child(1) { width: 100px; }
+.hero-skeleton-actions span:nth-child(2) { width: 90px; }
+.hero-skeleton-actions span:nth-child(3) { width: 100px; }
 
 .hero-content {
   position: relative; z-index: 2;
@@ -1505,8 +1580,95 @@ button.cast-item {
   overflow: hidden;
   background: var(--bg-elevated);
   flex-shrink: 0;
+  position: relative;
 }
 .ep-row-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Now Playing badge on active episode thumbnail */
+.ep-row.on .ep-row-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(124,92,255,0.25);
+}
+.ep-row.on .ep-row-thumb::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  z-index: 2;
+  box-shadow: 0 0 0 4px rgba(124,92,255,0.3), 0 4px 14px rgba(0,0,0,0.5);
+}
+.ep-row.on .ep-row-thumb .ep-now-playing-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.ep-row.on .ep-row-thumb .ep-now-playing-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: #fff;
+  display: block;
+}
+
+/* Now Playing label on active episode */
+.ep-row.on .ep-row-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ep-row.on .ep-row-title::after {
+  content: "Now Playing";
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: var(--pill);
+  background: rgba(124,92,255,0.15);
+  border: 1px solid rgba(124,92,255,0.3);
+  white-space: nowrap;
+}
+
+/* Equalizer animation for Now Playing indicator */
+.ep-eq {
+  display: none;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  margin-left: auto;
+  align-self: center;
+}
+.ep-row.on .ep-eq { display: flex; }
+.ep-eq span {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--accent);
+  animation: epEqBar 0.8s ease-in-out infinite alternate;
+}
+.ep-eq span:nth-child(1) { height: 6px; animation-delay: 0s; }
+.ep-eq span:nth-child(2) { height: 12px; animation-delay: 0.15s; }
+.ep-eq span:nth-child(3) { height: 8px; animation-delay: 0.3s; }
+.ep-eq span:nth-child(4) { height: 10px; animation-delay: 0.45s; }
+@keyframes epEqBar {
+  from { transform: scaleY(0.35); }
+  to { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce), html.reduce-motion {
+  .ep-eq span { animation: none; }
+}
+
 .ep-row-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 4px; }
 .ep-row-date { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 6px; }
 .ep-row-desc {
@@ -1855,6 +2017,11 @@ toast {
     max-width: 100%;
   }
 
+  .hero-skeleton-content {
+    padding: calc(8px + var(--safe-top)) 20px 36px;
+    max-width: 100%;
+  }
+
   .hero-title { font-size: clamp(1.65rem, 7vw, 2.4rem); }
   .hero-desc { -webkit-line-clamp: 2; font-size: 0.85rem; }
   .hero-meta { font-size: 0.75rem; margin-bottom: 16px; }
@@ -1918,7 +2085,7 @@ toast {
     text-align: center;
   }
 
-  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal-overlay { padding: 0; align-items: flex-bottom; }
   .modal-box {
     width: 100%;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -1953,6 +2120,7 @@ toast {
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .hero-content { padding: 0 32px 48px; }
+  .hero-skeleton-content { padding: 0 32px 48px; }
   .row-header, .row-track { padding-left: 32px; padding-right: 32px; }
   .genre-strip { padding-left: 32px; padding-right: 32px; }
   .detail-body { padding: 0 32px; }
