@@ -1131,7 +1131,24 @@ body.sidebar-open .sidebar-link:hover .tip {
   margin-bottom: 32px;
 }
 
-.player-wrap { margin-bottom: 36px; max-width: 960px; }
+.player-wrap { margin-bottom: 36px; max-width: 960px; position: relative; }
+
+.player-shield-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: var(--pill);
+  background: rgba(14,14,16,0.82);
+  border: 1px solid rgba(124,92,255,0.35);
+  color: var(--accent);
+  pointer-events: none;
+}
 
 .provider-tabs {
   display: flex;
