@@ -1,4 +1,4 @@
-"use strict";
+use strict";
 
 const TMDB_KEY  = "5622cafbfe8f8cfe358a29c53e19bba0";
 const TMDB_BASE = "https://api.themoviedb.org/3";
@@ -462,7 +462,7 @@ function initSidebar(active) {
         ${link("/search", ICONS.search, "Search", active === "search")}
         ${link(homeUrl(), ICONS.home, "Home", active === "home")}
         ${link("/search?type=movie", ICONS.film, "Movies", active === "movies")}
-        ${link("/search?type=tv", ICONS.tv, "TV Shows", active === "tv")}
+        ${link("/search?type=tv", ICONS.tv, "TV", active === "tv")}
         <div class="sidebar-divider"></div>
         ${link(`${homeUrl()}#trending`, ICONS.trend, "Trending", false)}
         ${link(`${homeUrl()}#my-list`, ICONS.list, "My List", false)}
