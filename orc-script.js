@@ -8,17 +8,17 @@ const ACCENT    = "7c5cff";
 
 const PROVIDERS = [
   { id: "vidking", name: "VidKing",
-    movie: id => `{{https://www.vidking.net/embed/movie/${id}}}?color=${ACCENT}&autoPlay=true`,
-    tv: (id, s, e) => `{{https://www.vidking.net/embed/tv/${id}}}/${s}/${e}?color=${ACCENT}&autoPlay=true&nextEpisode=true&episodeSelector=true` },
+    movie: id => `https://www.vidking.net/embed/movie/${id}?color=${ACCENT}&autoPlay=true`,
+    tv: (id, s, e) => `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${ACCENT}&autoPlay=true&nextEpisode=true&episodeSelector=true` },
   { id: "vidsrc", name: "VidSrc",
-    movie: id => `{{https://vidsrc-embed.ru/embed/movie/${id}}}?autoplay=1`,
-    tv: (id, s, e) => `{{https://vidsrc-embed.ru/embed/tv/${id}}}/${s}/${e}?autoplay=1` },
+    movie: id => `https://vidsrc-embed.ru/embed/movie/${id}?autoplay=1`,
+    tv: (id, s, e) => `https://vidsrc-embed.ru/embed/tv/${id}/${s}/${e}?autoplay=1` },
   { id: "vidsrc2", name: "VidSrc 2",
-    movie: id => `{{https://vidsrc-embed.su/embed/movie/${id}}}?autoplay=1`,
-    tv: (id, s, e) => `{{https://vidsrc-embed.su/embed/tv/${id}}}/${s}/${e}?autoplay=1` },
+    movie: id => `https://vidsrc-embed.su/embed/movie/${id}?autoplay=1`,
+    tv: (id, s, e) => `https://vidsrc-embed.su/embed/tv/${id}/${s}/${e}?autoplay=1` },
   { id: "111movies", name: "111Movies",
-    movie: id => `{{https://111movies.com/movie/${id}}}`,
-    tv: (id, s, e) => `{{https://111movies.com/tv/${id}}}/${s}/${e}` },
+    movie: id => `https://111movies.com/movie/${id}`,
+    tv: (id, s, e) => `https://111movies.com/tv/${id}/${s}/${e}` },
 ];
 
 const PLAYER_HOSTS = [
@@ -462,6 +462,7 @@ function initMobileUI(page) {
   document.body.appendChild(btn);
 }
 
+// ── FIX 1: mismatched backtick/quote on the two anchor hrefs ──────────────────
 function initSidebar(active) {
   const el = $("#sidebar");
   if (!el) return;
@@ -479,8 +480,8 @@ function initSidebar(active) {
         ${link("/search?type=movie", ICONS.film, "Movies", active === "movies")}
         ${link("/search?type=tv", ICONS.tv, "TV", active === "tv")}
         <div class="sidebar-divider"></div>
-        ${link(`${homeUrl()}#trending", ICONS.trend, "Trending", false)}
-        ${link(`${homeUrl()}#my-list", ICONS.list, "My List", false)}
+        ${link(`${homeUrl()}#trending`, ICONS.trend, "Trending", false)}
+        ${link(`${homeUrl()}#my-list`, ICONS.list, "My List", false)}
         ${link("/settings", ICONS.settings, "Settings", active === "settings")}
       </nav>
     </div>`;
@@ -892,6 +893,7 @@ function initSplash() {
 
 const PLAY_ICON_SVG = `<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
+// ── FIX 2: closed the innerHTML template literal properly ─────────────────────
 function showHeroSkeleton() {
   const backdrop = $("#hero-backdrop");
   if (backdrop) backdrop.classList.add("has-skeleton");
@@ -908,4 +910,12 @@ function showHeroSkeleton() {
     <div class="hero-skeleton-title"></div>
     <div class="hero-skeleton-desc"><span></span><span></span><span></span></div>
     <div class="hero-skeleton-meta"></div>
-    <div class="hero-skeleton-actions}
+    <div class="hero-skeleton-actions"></div>`;
+
+  hero.appendChild(skel);
+}
+
+function hideHeroSkeleton() {
+  $(".hero-skeleton-content")?.remove();
+  $("#hero-backdrop")?.classList.remove("has-skeleton");
+}
