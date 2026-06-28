@@ -47,6 +47,8 @@ const ICONS = {
   back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`,
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L19 7"/></svg>`,
+  fullscreen: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`,
+  fullscreenExit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 9H5V5M15 5h4v4M5 15v4h4M19 15v4h-4"/></svg>`,
 };
 
 const $ = (s, c = document) => c.querySelector(s);
@@ -280,8 +282,43 @@ function createPlayerIframe(src) {
   iframe.src = src;
   iframe.title = "Video player";
   iframe.setAttribute("allowfullscreen", "");
+  iframe.setAttribute("webkitallowfullscreen", "");
+  iframe.setAttribute("mozallowfullscreen", "");
   iframe.setAttribute("allow", "autoplay; fullscreen; encrypted-media; picture-in-picture");
   return iframe;
+}
+
+function isPlayerFullscreen() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+function togglePlayerFullscreen(frameEl) {
+  if (!frameEl) return;
+  if (isPlayerFullscreen()) {
+    (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+    return;
+  }
+  const req = frameEl.requestFullscreen || frameEl.webkitRequestFullscreen;
+  if (req) req.call(frameEl).catch(() => {});
+}
+
+function syncPlayerFsBtn(frameEl) {
+  const btn = frameEl?.querySelector(".player-fs-btn");
+  if (btn) btn.innerHTML = isPlayerFullscreen() ? ICONS.fullscreenExit : ICONS.fullscreen;
+}
+
+function ensurePlayerFsBtn(frameEl) {
+  if (!frameEl || frameEl.querySelector(".player-fs-btn")) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "player-fs-btn";
+  btn.setAttribute("aria-label", "Fullscreen");
+  btn.innerHTML = ICONS.fullscreen;
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    togglePlayerFullscreen(frameEl);
+  });
+  frameEl.appendChild(btn);
 }
 
 function loadPlayerFrame(frameEl, url) {
@@ -293,6 +330,7 @@ function loadPlayerFrame(frameEl, url) {
     return;
   }
   frameEl.appendChild(iframe);
+  ensurePlayerFsBtn(frameEl);
 }
 
 let playerGuardReady = false;
@@ -301,14 +339,12 @@ function initPlayerGuard() {
   if (playerGuardReady) return;
   playerGuardReady = true;
 
-  if (!window.__orcOpenPatched) {
-    window.__orcOpenPatched = true;
-    const rawOpen = window.open.bind(window);
-    window.open = (...args) => {
-      if ((PAGE === "movie" || PAGE === "tv") && $("#player-frame iframe")) return null;
-      return rawOpen(...args);
-    };
-  }
+  document.addEventListener("fullscreenchange", () => {
+    syncPlayerFsBtn($("#player-frame"));
+  });
+  document.addEventListener("webkitfullscreenchange", () => {
+    syncPlayerFsBtn($("#player-frame"));
+  });
 
   document.addEventListener("auxclick", e => {
     if (PAGE !== "movie" && PAGE !== "tv") return;
@@ -317,11 +353,11 @@ function initPlayerGuard() {
 
   const lockUrl = location.href;
   window.addEventListener("blur", () => {
-    if (!$("#player-frame iframe")) return;
+    if (isPlayerFullscreen() || !$("#player-frame iframe")) return;
     window.__orcBlurAt = Date.now();
   });
   window.addEventListener("focus", () => {
-    if (!window.__orcBlurAt) return;
+    if (!window.__orcBlurAt || isPlayerFullscreen()) return;
     if (Date.now() - window.__orcBlurAt < 800 && location.href !== lockUrl) {
       history.replaceState(null, "", lockUrl);
     }
