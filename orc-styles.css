@@ -15,6 +15,7 @@
   --sidebar-total: calc(var(--sidebar-w) + var(--sidebar-fade));
   --sidebar-push: 52px;
   --mobile-nav-h: 62px;
+  --mobile-nav-w: 340px;
   --radius:       6px;
   --radius-lg:    10px;
   --pill:         20px;
@@ -1639,9 +1640,13 @@ button.cast-item {
   .mobile-float-back { display: flex; }
 
   .sidebar {
-    top: auto; bottom: 12px; left: 12px; right: 12px;
-    width: auto;
-    height: calc(var(--mobile-nav-h) + var(--safe-bottom));
+    top: auto;
+    bottom: calc(12px + var(--safe-bottom));
+    left: 50%;
+    right: auto;
+    width: var(--mobile-nav-w);
+    max-width: calc(100vw - 24px);
+    height: var(--mobile-nav-h);
     flex-direction: row;
     align-items: stretch;
     background: rgba(14,14,16,0.9);
@@ -1651,7 +1656,7 @@ button.cast-item {
     border-radius: var(--pill);
     box-shadow: 0 8px 32px rgba(0,0,0,0.45);
     pointer-events: auto !important;
-    transform: none !important;
+    transform: translateX(-50%) !important;
     opacity: 1 !important;
     visibility: visible !important;
     -webkit-mask-image: none !important;
@@ -1667,7 +1672,6 @@ button.cast-item {
     align-items: stretch;
     width: 100%;
     padding: 0;
-    padding-bottom: var(--safe-bottom);
   }
 
   .sidebar-logo, .sidebar-divider, .sidebar-link .tip, .sidebar-link.active::before { display: none; }
@@ -1675,23 +1679,21 @@ button.cast-item {
   .sidebar-nav {
     flex-direction: row;
     flex: 1;
-    justify-content: space-around;
+    justify-content: space-evenly;
     align-items: stretch;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding: 0 4px;
+    overflow: hidden;
+    padding: 0 6px;
   }
-  .sidebar-nav::-webkit-scrollbar { display: none; }
 
   .sidebar-link {
-    flex: 1;
-    min-width: 52px;
-    max-width: 72px;
-    width: auto;
+    flex: 0 0 42px;
+    min-width: 42px;
+    max-width: 42px;
+    width: 42px;
     height: auto;
     flex-direction: column;
     gap: 3px;
-    padding: 8px 4px 6px;
+    padding: 8px 0 6px;
     border-radius: 0;
     justify-content: center;
     transform: none !important;
