@@ -1,4 +1,4 @@
-use strict";
+"use strict";
 
 const TMDB_KEY  = "5622cafbfe8f8cfe358a29c53e19bba0";
 const TMDB_BASE = "https://api.themoviedb.org/3";
@@ -10,17 +10,17 @@ const ACCENT    = "7c5cff";
 
 const PROVIDERS = [
   { id: "vidking", name: "VidKing",
-    movie: id => `https://www.vidking.net/embed/movie/${id}?color=${ACCENT}&autoPlay=true`,
-    tv: (id, s, e) => `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${ACCENT}&autoPlay=true&nextEpisode=true&episodeSelector=true` },
+    movie: id => `{{https://www.vidking.net/embed/movie/${id}}}?color=${ACCENT}&autoPlay=true`,
+    tv: (id, s, e) => `{{https://www.vidking.net/embed/tv/${id}}}/${s}/${e}?color=${ACCENT}&autoPlay=true&nextEpisode=true&episodeSelector=true` },
   { id: "vidsrc", name: "VidSrc",
-    movie: id => `https://vidsrc-embed.ru/embed/movie/${id}?autoplay=1`,
-    tv: (id, s, e) => `https://vidsrc-embed.ru/embed/tv/${id}/${s}/${e}?autoplay=1` },
+    movie: id => `{{https://vidsrc-embed.ru/embed/movie/${id}}}?autoplay=1`,
+    tv: (id, s, e) => `{{https://vidsrc-embed.ru/embed/tv/${id}}}/${s}/${e}?autoplay=1` },
   { id: "vidsrc2", name: "VidSrc 2",
-    movie: id => `https://vidsrc-embed.su/embed/movie/${id}?autoplay=1`,
-    tv: (id, s, e) => `https://vidsrc-embed.su/embed/tv/${id}/${s}/${e}?autoplay=1` },
+    movie: id => `{{https://vidsrc-embed.su/embed/movie/${id}}}?autoplay=1`,
+    tv: (id, s, e) => `{{https://vidsrc-embed.su/embed/tv/${id}}}/${s}/${e}?autoplay=1` },
   { id: "111movies", name: "111Movies",
-    movie: id => `https://111movies.com/movie/${id}`,
-    tv: (id, s, e) => `https://111movies.com/tv/${id}/${s}/${e}` },
+    movie: id => `{{https://111movies.com/movie/${id}}}`,
+    tv: (id, s, e) => `{{https://111movies.com/tv/${id}}}/${s}/${e}` },
 ];
 
 const PLAYER_HOSTS = [
@@ -1062,7 +1062,7 @@ function openTrailer(youtubeKey) {
     modal.querySelector(".modal-close").addEventListener("click", closeTrailer);
     modal.addEventListener("click", e => { if (e.target === modal) closeTrailer(); });
   }
-  modal.querySelector("iframe").src = `https://www.youtube.com/embed/${youtubeKey}?autoplay=1&rel=0`;
+  modal.querySelector("iframe").src = `{{https://www.youtube.com/embed/${youtubeKey}}}?autoplay=1&rel=0`;
   modal.classList.add("open");
 }
 
