@@ -1,5 +1,3 @@
-"use strict";
-
 const TMDB_KEY  = "5622cafbfe8f8cfe358a29c53e19bba0";
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMG_W500  = "https://image.tmdb.org/t/p/w500";
