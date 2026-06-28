@@ -393,7 +393,6 @@ body.sidebar-open .sidebar-link:hover .tip {
     rgba(14,14,16,0.95) 60%,
     rgba(99,68,224,0.10) 100%
   );
-  animation: curtainOpenLeft 0.9s var(--ease-out) 2.1s forwards;
 }
 .splash-curtain-right {
   right: 0;
@@ -403,35 +402,30 @@ body.sidebar-open .sidebar-link:hover .tip {
     rgba(14,14,16,0.95) 40%,
     #000 100%
   );
-  animation: curtainOpenRight 0.9s var(--ease-out) 2.1s forwards;
 }
 
-@keyframes curtainOpenLeft {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
+/* Curtains open on exit - controlled by .splash-exit, not keyframe animations */
+#splash-screen.splash-exit .splash-curtain-left {
+  animation: none;
+  transform: translateX(-100%);
+  transition: transform 0.7s var(--ease-out);
 }
-@keyframes curtainOpenRight {
-  from { transform: translateX(0); }
-  to   { transform: translateX(100%); }
+#splash-screen.splash-exit .splash-curtain-right {
+  animation: none;
+  transform: translateX(100%);
+  transition: transform 0.7s var(--ease-out);
 }
 
 #splash-screen.splash-exit .splash-stage {
   opacity: 0;
   transform: scale(1.06);
-  transition: opacity 0.65s var(--ease-out), transform 0.65s var(--ease-out);
+  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
 }
-#splash-screen.splash-exit .splash-curtain-left {
-  transform: translateX(-100%);
-  transition: transform 0.6s var(--ease-out);
-}
-#splash-screen.splash-exit .splash-curtain-right {
-  transform: translateX(100%);
-  transition: transform 0.6s var(--ease-out);
-}
+
 #splash-screen.splash-exit {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.5s var(--ease-out) 0.3s;
+  transition: opacity 0.4s var(--ease-out) 0.4s;
 }
 
 .splash-stage {
