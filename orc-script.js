@@ -49,6 +49,7 @@ const ICONS = {
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L19 7"/></svg>`,
   fullscreen: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`,
   fullscreenExit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 9H5V5M15 5h4v4M5 15v4h4M19 15v4h-4"/></svg>`,
+  play: `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
 };
 
 const $ = (s, c = document) => c.querySelector(s);
@@ -873,6 +874,47 @@ function initSplash() {
   setTimeout(finish, 2600);
 }
 
+/* ===== Hero skeleton ===== */
+
+const PLAY_ICON_SVG = `<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+
+function showHeroSkeleton() {
+  const backdrop = $("#hero-backdrop");
+  if (backdrop) backdrop.classList.add("has-skeleton");
+
+  const hero = $(".hero");
+  if (!hero) return;
+  const old = $(".hero-skeleton-content");
+  if (old) return;
+
+  const skel = document.createElement("div");
+  skel.className = "hero-skeleton-content";
+  skel.innerHTML = `
+    <div class="hero-skeleton-type"></div>
+    <div class="hero-skeleton-title"></div>
+    <div class="hero-skeleton-desc"><span></span><span></span><span></span></div>
+    <div class="hero-skeleton-meta"></div>
+    <div class="hero-skeleton-actions"><span></span><span></span><span></span></div>
+  `;
+
+  const realContent = $(".hero-content");
+  if (realContent) {
+    realContent.style.display = "none";
+    realContent.after(skel);
+  } else {
+    hero.appendChild(skel);
+  }
+}
+
+function hideHeroSkeleton() {
+  const backdrop = $("#hero-backdrop");
+  if (backdrop) backdrop.classList.remove("has-skeleton");
+  const skel = $(".hero-skeleton-content");
+  if (skel) skel.remove();
+  const realContent = $(".hero-content");
+  if (realContent) realContent.style.display = "";
+}
+
 const HERO_INTERVAL = 7000;
 let heroSlides = [];
 let heroIndex = 0;
@@ -975,6 +1017,7 @@ async function setHeroSlide(i, animate = false) {
 function initHeroCarousel(slides) {
   if (!slides.length) return;
   heroSlides = slides;
+  hideHeroSkeleton();
   buildHeroDots();
   loadHero(slides[0]);
   if (slides.length > 1) {
@@ -1101,6 +1144,7 @@ async function initHomePage() {
   initSplash();
   initSidebar("home");
   initGenreStrip();
+  showHeroSkeleton();
 
   const el = $("#categories");
   if (!el) return;
@@ -1148,6 +1192,7 @@ async function initHomePage() {
 
   const heroPool = pickHeroItems(results);
   if (heroPool.length) initHeroCarousel(heroPool);
+  else hideHeroSkeleton();
 
   results.forEach((res, i) => {
     if (res.status !== "fulfilled") return;
@@ -1375,12 +1420,13 @@ async function initTvPage() {
           const dur = ep.runtime ? `${ep.runtime}m` : "";
           el.innerHTML = `
             <span class="ep-row-num">${ep.episode_number}</span>
-            <div class="ep-row-thumb">${ep.still_path ? `<img src="${IMG_W500}${ep.still_path}" alt="" loading="lazy" draggable="false"/>` : ""}</div>
+            <div class="ep-row-thumb">${ep.still_path ? `<img src="${IMG_W500}${ep.still_path}" alt="" loading="lazy" draggable="false"/>` : ""}<span class="ep-now-playing-icon">${PLAY_ICON_SVG}</span></div>
             <div class="ep-row-body">
               <div class="ep-row-title">${esc(ep.name || `Episode ${ep.episode_number}`)}</div>
               ${air ? `<div class="ep-row-date">${air}</div>` : ""}
               <div class="ep-row-desc">${esc(ep.overview || "")}</div>
             </div>
+            <div class="ep-eq"><span></span><span></span><span></span><span></span></div>
             ${dur ? `<span class="ep-row-dur">${dur}</span>` : ""}`;
           el.addEventListener("click", () => {
             season = sn; episode = ep.episode_number;
