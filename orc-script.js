@@ -9,23 +9,26 @@ const BRAND     = "OsirisCinema";
 const ACCENT    = "7c5cff";
 
 const PROVIDERS = [
-  { id: "vidking", name: "VidKing", embed: true,
+  { id: "vidking", name: "VidKing",
     movie: id => `https://www.vidking.net/embed/movie/${id}?color=${ACCENT}&autoPlay=true`,
     tv: (id, s, e) => `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${ACCENT}&autoPlay=true&nextEpisode=true&episodeSelector=true` },
-  { id: "vidsrc", name: "VidSrc", embed: true,
-    movie: id => `https://vidsrc-embed.ru/embed/movie/${id}`,
-    tv: (id, s, e) => `https://vidsrc-embed.ru/embed/tv/${id}/${s}/${e}` },
-  { id: "111movies", name: "111Movies", embed: true,
-    movie: id => `https://111movies.com/embed/movie/${id}`,
-    tv: (id, s, e) => `https://111movies.com/embed/tv/${id}/${s}/${e}` },
+  { id: "vidsrc", name: "VidSrc",
+    movie: id => `https://vidsrc-embed.ru/embed/movie/${id}?autoplay=1`,
+    tv: (id, s, e) => `https://vidsrc-embed.ru/embed/tv/${id}/${s}/${e}?autoplay=1` },
+  { id: "vidsrc2", name: "VidSrc 2",
+    movie: id => `https://vidsrc-embed.su/embed/movie/${id}?autoplay=1`,
+    tv: (id, s, e) => `https://vidsrc-embed.su/embed/tv/${id}/${s}/${e}?autoplay=1` },
+  { id: "111movies", name: "111Movies",
+    movie: id => `https://111movies.com/movie/${id}`,
+    tv: (id, s, e) => `https://111movies.com/tv/${id}/${s}/${e}` },
 ];
 
 const PLAYER_HOSTS = [
-  "vidking.net", "vidsrc-embed.ru", "111movies.com",
-  "www.vidking.net", "www.111movies.com",
+  "vidking.net", "www.vidking.net",
+  "vidsrc-embed.ru", "vidsrc-embed.su", "vidsrcme.su", "vsrc.su",
+  "v2.vidsrc.me", "vidsrc.me",
+  "111movies.com", "www.111movies.com",
 ];
-
-const PLAYER_SANDBOX = "allow-scripts allow-same-origin allow-presentation allow-forms allow-top-navigation-by-user-activation";
 
 const GENRES = [
   { name: "Action", id: 28 }, { name: "Comedy", id: 35 }, { name: "Horror", id: 27 },
@@ -229,7 +232,6 @@ const SETTINGS = {
   reduceMotionKey: "orc_reduce_motion",
   hideWatchedKey: "orc_hide_watched",
   autoplayTrailersKey: "orc_autoplay_trailers",
-  playerShieldKey: "orc_player_shield",
   get(k, def = "") { return localStorage.getItem(k) ?? def; },
   set(k, v) { localStorage.setItem(k, v); },
   toggle(k) {
@@ -263,10 +265,6 @@ function providerUrl(type, id, s, e) {
   return type === "tv" ? p.tv(id, s, e) : p.movie(id);
 }
 
-function playerShieldOn() {
-  return SETTINGS.get(SETTINGS.playerShieldKey, "1") !== "0";
-}
-
 function isAllowedPlayerUrl(url) {
   try {
     const host = new URL(url).hostname.toLowerCase();
@@ -283,9 +281,6 @@ function createPlayerIframe(src) {
   iframe.title = "Video player";
   iframe.setAttribute("allowfullscreen", "");
   iframe.setAttribute("allow", "autoplay; fullscreen; encrypted-media; picture-in-picture");
-  iframe.setAttribute("referrerpolicy", "no-referrer");
-  iframe.setAttribute("loading", "eager");
-  if (playerShieldOn()) iframe.setAttribute("sandbox", PLAYER_SANDBOX);
   return iframe;
 }
 
@@ -294,64 +289,39 @@ function loadPlayerFrame(frameEl, url) {
   frameEl.innerHTML = "";
   const iframe = createPlayerIframe(url);
   if (!iframe) {
-    frameEl.innerHTML = `<p style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.85rem;padding:20px;text-align:center">Blocked untrusted player source.</p>`;
+    frameEl.innerHTML = `<p style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.85rem;padding:20px;text-align:center">Could not load this stream source.</p>`;
     return;
   }
   frameEl.appendChild(iframe);
-  updatePlayerShieldBadge(frameEl);
 }
 
-function updatePlayerShieldBadge(frameEl) {
-  const wrap = frameEl?.closest(".player-wrap");
-  if (!wrap) return;
-  let badge = wrap.querySelector(".player-shield-badge");
-  if (!playerShieldOn()) {
-    badge?.remove();
-    return;
-  }
-  if (!badge) {
-    badge = document.createElement("div");
-    badge.className = "player-shield-badge";
-    badge.textContent = "Ad shield on";
-    wrap.appendChild(badge);
-  }
-}
+let playerGuardReady = false;
 
-let playerShieldReady = false;
-
-function initPlayerShield() {
-  if (playerShieldReady) return;
-  playerShieldReady = true;
+function initPlayerGuard() {
+  if (playerGuardReady) return;
+  playerGuardReady = true;
 
   if (!window.__orcOpenPatched) {
     window.__orcOpenPatched = true;
     const rawOpen = window.open.bind(window);
     window.open = (...args) => {
-      if (playerShieldOn() && (PAGE === "movie" || PAGE === "tv") && $("#player-frame iframe")) {
-        return null;
-      }
+      if ((PAGE === "movie" || PAGE === "tv") && $("#player-frame iframe")) return null;
       return rawOpen(...args);
     };
   }
 
   document.addEventListener("auxclick", e => {
-    if (!playerShieldOn() || PAGE !== "movie" && PAGE !== "tv") return;
+    if (PAGE !== "movie" && PAGE !== "tv") return;
     if (e.button === 1 && $("#player-frame iframe")) e.preventDefault();
   }, true);
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden || !playerShieldOn()) return;
-    const iframe = $("#player-frame iframe");
-    if (iframe) setTimeout(() => iframe.focus(), 80);
-  });
-
   const lockUrl = location.href;
   window.addEventListener("blur", () => {
-    if (!playerShieldOn() || !$("#player-frame iframe")) return;
+    if (!$("#player-frame iframe")) return;
     window.__orcBlurAt = Date.now();
   });
   window.addEventListener("focus", () => {
-    if (!playerShieldOn() || !window.__orcBlurAt) return;
+    if (!window.__orcBlurAt) return;
     if (Date.now() - window.__orcBlurAt < 800 && location.href !== lockUrl) {
       history.replaceState(null, "", lockUrl);
     }
@@ -1199,7 +1169,7 @@ async function initMoviePage() {
 
   initSidebar();
   checkPlayLoader();
-  initPlayerShield();
+  initPlayerGuard();
 
   const showErr = msg => {
     if (header) header.innerHTML = `<p style="color:var(--text-muted)">${esc(msg)}</p>`;
@@ -1292,7 +1262,7 @@ async function initMoviePage() {
 async function initTvPage() {
   initSidebar("tv");
   checkPlayLoader();
-  initPlayerShield();
+  initPlayerGuard();
   const params = new URLSearchParams(location.search);
   const id = params.get("id");
   let season = parseInt(params.get("season") || "1", 10);
@@ -1594,7 +1564,6 @@ function initSettingsPage() {
   bindToggle("#toggle-reduce-motion", SETTINGS.reduceMotionKey, "Reduce motion");
   bindToggle("#toggle-hide-watched", SETTINGS.hideWatchedKey, "Hide watched");
   bindToggle("#toggle-autoplay-trailers", SETTINGS.autoplayTrailersKey, "Auto-play trailers");
-  bindToggle("#toggle-player-shield", SETTINGS.playerShieldKey, "Ad shield", "1");
 
   $("#clear-progress")?.addEventListener("click", () => {
     localStorage.removeItem(Progress.key);
