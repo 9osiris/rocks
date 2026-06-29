@@ -889,11 +889,8 @@ function initSplash() {
   setTimeout(finish, 2600);
 }
 
-/* ===== Hero skeleton ===== */
-
 const PLAY_ICON_SVG = `<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
-// ── FIX 2: closed the innerHTML template literal properly ─────────────────────
 function showHeroSkeleton() {
   const backdrop = $("#hero-backdrop");
   if (backdrop) backdrop.classList.add("has-skeleton");
@@ -919,3 +916,12 @@ function hideHeroSkeleton() {
   $(".hero-skeleton-content")?.remove();
   $("#hero-backdrop")?.classList.remove("has-skeleton");
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  PAGE = detectPage();
+  applyGlobalSettings();
+  initSplash();
+  initSidebar(PAGE);
+  initPlayerGuard();
+  initAnchorScroll();
+});
