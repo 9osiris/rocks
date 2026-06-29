@@ -11,6 +11,8 @@
     { "source": "/tv.html", "destination": "/tv", "permanent": true },
     { "source": "/search.html", "destination": "/search", "permanent": true },
     { "source": "/settings.html", "destination": "/settings", "permanent": true },
-    { "source": "/dmca.html", "destination": "/dmca", "permanent": true }
+    { "source": "/dmca.html", "destination": "/dmca", "permanent": true },
+    { "source": "/OsirisCinema.html", "destination": "/", "permanent": true },
+    { "source": "/OsirisCinema", "destination": "/", "permanent": true }
   ]
 }
