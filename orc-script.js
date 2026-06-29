@@ -47,6 +47,9 @@ const ICONS = {
   back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`,
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L19 7"/></svg>`,
+  fullscreen: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`,
+  fullscreenExit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 9H5V5M15 5h4v4M5 15v4h4M19 15v4h-4"/></svg>`,
+  play: `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
   share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>`,
 };
 
@@ -291,6 +294,35 @@ function isPlayerFullscreen() {
   return !!(document.fullscreenElement || document.webkitFullscreenElement);
 }
 
+function togglePlayerFullscreen(frameEl) {
+  if (!frameEl) return;
+  if (isPlayerFullscreen()) {
+    (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+    return;
+  }
+  const req = frameEl.requestFullscreen || frameEl.webkitRequestFullscreen;
+  if (req) req.call(frameEl).catch(() => {});
+}
+
+function syncPlayerFsBtn(frameEl) {
+  const btn = frameEl?.querySelector(".player-fs-btn");
+  if (btn) btn.innerHTML = isPlayerFullscreen() ? ICONS.fullscreenExit : ICONS.fullscreen;
+}
+
+function ensurePlayerFsBtn(frameEl) {
+  if (!frameEl || frameEl.querySelector(".player-fs-btn")) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "player-fs-btn";
+  btn.setAttribute("aria-label", "Fullscreen");
+  btn.innerHTML = ICONS.fullscreen;
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    togglePlayerFullscreen(frameEl);
+  });
+  frameEl.appendChild(btn);
+}
+
 function loadPlayerFrame(frameEl, url) {
   if (!frameEl) return;
   frameEl.innerHTML = "";
@@ -300,6 +332,7 @@ function loadPlayerFrame(frameEl, url) {
     return;
   }
   frameEl.appendChild(iframe);
+  ensurePlayerFsBtn(frameEl);
 }
 
 let playerGuardReady = false;
@@ -307,6 +340,13 @@ let playerGuardReady = false;
 function initPlayerGuard() {
   if (playerGuardReady) return;
   playerGuardReady = true;
+
+  document.addEventListener("fullscreenchange", () => {
+    syncPlayerFsBtn($("#player-frame"));
+  });
+  document.addEventListener("webkitfullscreenchange", () => {
+    syncPlayerFsBtn($("#player-frame"));
+  });
 
   document.addEventListener("auxclick", e => {
     if (PAGE !== "movie" && PAGE !== "tv") return;
@@ -930,6 +970,36 @@ function initSplash() {
   setTimeout(finish, 2600);
 }
 
+/* ===== Hero skeleton ===== */
+
+const PLAY_ICON_SVG = `<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+
+function showHeroSkeleton() {
+  const backdrop = $("#hero-backdrop");
+  if (backdrop) backdrop.classList.add("has-skeleton");
+
+  const hero = $(".hero");
+  if (!hero) return;
+  const old = $(".hero-skeleton-content");
+  if (old) return;
+
+  const skel = document.createElement("div");
+  skel.className = "hero-skeleton-content";
+  skel.innerHTML = `
+    <div class="hero-skeleton-type"></div>
+    <div class="hero-skeleton-title"></div>
+    <div class="hero-skeleton-desc"><span></span><span></span><span></span></div>
+    <div class="hero-skeleton-meta"></div>
+    <div class="hero-skeleton-actions"></div>`;
+
+  hero.appendChild(skel);
+}
+
+function hideHeroSkeleton() {
+  $(".hero-skeleton-content")?.remove();
+  $("#hero-backdrop")?.classList.remove("has-skeleton");
+}
+
 const HERO_INTERVAL = 7000;
 let heroSlides = [];
 let heroIndex = 0;
@@ -1162,6 +1232,7 @@ async function initHomePage() {
   initSplash();
   initSidebar("home");
   initGenreStrip();
+  showHeroSkeleton();
 
   const el = $("#categories");
   if (!el) return;
@@ -1229,6 +1300,7 @@ async function initHomePage() {
   el.prepend(gRow);
 
   observeRows();
+  hideHeroSkeleton();
   const main = $("#main-content");
   if (main && !$("#splash-screen")) main.style.opacity = "1";
 
@@ -1264,7 +1336,7 @@ async function initMoviePage() {
   if (!id) { location.href = homeUrl(); return; }
   if (!header || !frame) return;
 
-  initSidebar();
+  initSidebar("movie");
   checkPlayLoader();
   initPlayerGuard();
 
