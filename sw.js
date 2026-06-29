@@ -1,5 +1,5 @@
-const CACHE = "orc-static-v2";
-const ASSETS = ["/orc-styles.css", "/orc-script.js", "/images/favicon.svg", "/favicon.svg"];
+const CACHE = "orc-static-v3";
+const ASSETS = ["/orc-styles.css", "/orc-script.js", "/images/favicon.svg", "/favicon.svg", "/favicon.png", "/icon-192.png", "/icon-512.png", "/manifest.json"];
 
 self.addEventListener("install", e => {
   e.waitUntil(
