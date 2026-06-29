@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>OsirisCinema — Search</title>
+  <title>OsirisCinema - Search</title>
   <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
   <meta name="theme-color" content="#0e0e10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +23,7 @@
 
       <div class="search-input-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="text" id="main-search-input" placeholder="Titles, actors, keywords…" autocomplete="off">
+        <input type="text" id="main-search-input" placeholder="Titles, actors, keywords…" autocomplete="off" aria-label="Search titles, actors, and keywords">
         <button id="search-clear" style="display:none;background:none;border:none;color:var(--text-dim);padding:4px;cursor:pointer" aria-label="Clear">✕</button>
       </div>
 
@@ -33,12 +33,15 @@
         <button class="filter-chip" data-filter="tv">TV Shows</button>
       </div>
 
+      <div id="search-recent" class="search-recent" hidden></div>
+
       <p class="search-status" id="search-status"></p>
       <div class="search-grid" id="search-results"></div>
     </main>
 
     <footer class="page-foot">
       <p>Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>.</p>
+      <p>Osiris's Cinema does not store or host media. Streams are provided by third-party services; legal concerns should be raised with those hosts directly. Osiris's Cinema is not responsible for content served by external providers.</p>
       <p>© LYRD INNO. · <a href="/dmca">DMCA</a> · <a href="/settings">Settings</a></p>
     </footer>
   </div>
