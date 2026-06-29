@@ -152,6 +152,21 @@ img { display: block; max-width: 100%; }
 button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
 ul { list-style: none; }
 
+/* Visible keyboard focus for accessibility (PC keyboard / a11y users) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.media-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 ::-webkit-scrollbar { width: 0; height: 0; }
 .row-track { scrollbar-width: none; }
 .row-track::-webkit-scrollbar { display: none; }
@@ -160,6 +175,7 @@ ul { list-style: none; }
   margin-left: 0;
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   will-change: margin-left, width;
   transition:
     margin-left 0.55s var(--ease-out),
@@ -850,7 +866,10 @@ body.sidebar-open .sidebar-link:hover .tip {
   gap: 10px;
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding: 8px 48px 16px;
+  /* Extra vertical padding so cards scaled up on hover are not clipped
+     (overflow-x:auto forces overflow-y to auto, which would crop them). */
+  padding: 26px 48px 30px;
+  margin-top: -16px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
@@ -1953,7 +1972,8 @@ button.cast-item {
   }
 
   .hero-content {
-    padding: calc(8px + var(--safe-top)) 20px 36px;
+    /* Clear the floating bottom nav + hero dots so Play/Details aren't covered */
+    padding: calc(8px + var(--safe-top)) 20px calc(var(--mobile-nav-h) + var(--safe-bottom) + 52px);
     max-width: 100%;
   }
 
@@ -1977,6 +1997,7 @@ button.cast-item {
   .row-title { font-size: 0.98rem; }
   .row-track {
     padding: 4px 20px 14px;
+    margin-top: 0;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
   }
@@ -2068,7 +2089,7 @@ button.cast-item {
 
 @media (max-width: 768px) and (orientation: landscape) {
   .hero { height: 100svh; min-height: 0; max-height: none; }
-  .hero-content { padding-bottom: 20px; }
+  .hero-content { padding-bottom: calc(var(--mobile-nav-h) + var(--safe-bottom) + 16px); }
   .hero-desc { display: none; }
   .detail-hero { height: 50vh; min-height: 180px; }
 }
