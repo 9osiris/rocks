@@ -78,17 +78,26 @@ function releaseModalFocus() {
   modalReturnFocus = null;
 }
 
-async function tmdb(path) {
-  const sep = path.includes("?") ? "&" : "?";
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 15000);
-  try {
-    const res = await fetch(`${TMDB_BASE}${path}${sep}api_key=${TMDB_KEY}`, { signal: ctrl.signal });
-    if (!res.ok) throw new Error(`TMDB ${res.status}`);
-    return res.json();
-  } finally {
-    clearTimeout(timer);
-  }
+const _tmdbCache = new Map();
+function tmdb(path) {
+  // De-duplicate and cache GET requests for the session so repeated card
+  // hovers and back/forward navigation don't refetch the same data.
+  if (_tmdbCache.has(path)) return _tmdbCache.get(path);
+  const req = (async () => {
+    const sep = path.includes("?") ? "&" : "?";
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    try {
+      const res = await fetch(`${TMDB_BASE}${path}${sep}api_key=${TMDB_KEY}`, { signal: ctrl.signal });
+      if (!res.ok) throw new Error(`TMDB ${res.status}`);
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  })();
+  req.catch(() => _tmdbCache.delete(path)); // never cache a failed request
+  _tmdbCache.set(path, req);
+  return req;
 }
 
 function posterUrl(p) { return p ? `${IMG_W500}${p}` : null; }
@@ -126,7 +135,7 @@ function renderWatchProviders(container, providers, country = "US") {
   if (!items.length) { container.style.display = "none"; return; }
   container.style.display = "";
   container.innerHTML = `<div class="watch-providers"><span class="wp-label">Also on</span><div class="wp-logos">${items.map(p =>
-    `<img src="${IMG_W45}${p.logo_path}" alt="${esc(p.provider_name)}" title="${esc(p.provider_name)}" loading="lazy"/>`
+    `<img src="${esc(IMG_W45 + (p.logo_path || ""))}" alt="${esc(p.provider_name)}" title="${esc(p.provider_name)}" loading="lazy"/>`
   ).join("")}</div></div>`;
 }
 const PINNED_SIDEBAR_PAGES = new Set(["settings", "dmca", "search"]);
@@ -155,7 +164,7 @@ function renderCastRow(cast) {
     d.type = "button";
     d.className = "cast-item";
     d.setAttribute("aria-label", `${a.name}${a.character ? `, as ${a.character}` : ""}`);
-    d.innerHTML = `${a.profile_path ? `<img src="${IMG_W500}${a.profile_path}" alt="" loading="lazy" draggable="false"/>` : `<div class="cast-placeholder"></div>`}<div class="name" title="${esc(a.name)}">${esc(a.name)}</div><div class="role" title="${esc(a.character || "")}">${esc(a.character || "")}</div>`;
+    d.innerHTML = `${a.profile_path ? `<img src="${esc(IMG_W500 + a.profile_path)}" alt="" loading="lazy" draggable="false"/>` : `<div class="cast-placeholder"></div>`}<div class="name" title="${esc(a.name)}">${esc(a.name)}</div><div class="role" title="${esc(a.character || "")}">${esc(a.character || "")}</div>`;
     d.addEventListener("click", () => openPersonModal(a.id));
     row.appendChild(d);
   });
@@ -207,7 +216,7 @@ async function openPersonModal(id) {
     const credits = (p.combined_credits?.cast || []).sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 12);
     box.innerHTML = `
       <div class="person-head">
-        ${p.profile_path ? `<img src="${IMG_W500}${p.profile_path}" alt=""/>` : `<div class="person-ph"></div>`}
+        ${p.profile_path ? `<img src="${esc(IMG_W500 + p.profile_path)}" alt=""/>` : `<div class="person-ph"></div>`}
         <div>
           <h2>${esc(p.name)}</h2>
           <p>${esc(p.known_for_department || "")}${p.place_of_birth ? ` · ${esc(p.place_of_birth)}` : ""}</p>
@@ -322,6 +331,11 @@ function createPlayerIframe(src) {
   iframe.setAttribute("webkitallowfullscreen", "");
   iframe.setAttribute("mozallowfullscreen", "");
   iframe.setAttribute("allow", "autoplay; fullscreen; encrypted-media; picture-in-picture");
+  // Sandbox the third-party player: let it run and play video (scripts +
+  // same-origin), but block pop-up windows (no allow-popups) and redirect
+  // hijacking (no allow-top-navigation) — the main malvertising vectors.
+  iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation allow-forms");
+  iframe.setAttribute("referrerpolicy", "origin");
   return iframe;
 }
 
@@ -414,6 +428,11 @@ const Progress = {
 
 window.addEventListener("message", e => {
   try {
+    // Only trust progress events that actually come from an allow-listed
+    // player host — don't accept postMessage data from arbitrary origins.
+    let originHost = "";
+    try { originHost = new URL(e.origin).hostname.toLowerCase(); } catch { return; }
+    if (!PLAYER_HOSTS.some(h => originHost === h || originHost.endsWith(`.${h}`))) return;
     if (typeof e.data !== "string") return;
     const msg = JSON.parse(e.data);
     if (msg.type !== "PLAYER_EVENT" || !msg.data?.id) return;
@@ -685,6 +704,9 @@ function buildCard(item, type = "movie", opts = {}) {
 
   const card = document.createElement("div");
   card.className = `media-card${watched && SETTINGS.get(SETTINGS.hideWatchedKey) === "1" ? " is-watched" : ""}`;
+  card.tabIndex = 0;
+  card.setAttribute("role", "link");
+  card.setAttribute("aria-label", title);
   card.innerHTML = `
     ${opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
     ${!opts.rank && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
@@ -701,6 +723,14 @@ function buildCard(item, type = "movie", opts = {}) {
   card.addEventListener("click", e => {
     if (e.target.closest(".save-btn")) return;
     location.href = href;
+  });
+
+  card.addEventListener("keydown", e => {
+    if (e.target.closest(".save-btn")) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      location.href = href;
+    }
   });
 
   card.querySelector(".save-btn").addEventListener("click", e => {
@@ -1217,7 +1247,7 @@ function openTrailer(youtubeKey) {
     modal = document.createElement("div");
     modal.id = "trailer-modal";
     modal.className = "modal-overlay";
-    modal.innerHTML = `<button class="modal-close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="modal-box"><iframe allowfullscreen allow="autoplay"></iframe></div>`;
+    modal.innerHTML = `<button class="modal-close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="modal-box"><iframe allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
     document.body.appendChild(modal);
     modal.querySelector(".modal-close").addEventListener("click", closeTrailer);
     modal.addEventListener("click", e => { if (e.target === modal) closeTrailer(); });
@@ -1558,7 +1588,7 @@ async function initTvPage() {
           const dur = ep.runtime ? `${ep.runtime}m` : "";
           el.innerHTML = `
             <span class="ep-row-num">${ep.episode_number}</span>
-            <div class="ep-row-thumb">${ep.still_path ? `<img src="${IMG_W500}${ep.still_path}" alt="" loading="lazy" draggable="false"/>` : ""}</div>
+            <div class="ep-row-thumb">${ep.still_path ? `<img src="${esc(IMG_W500 + ep.still_path)}" alt="" loading="lazy" draggable="false"/>` : ""}</div>
             <div class="ep-row-body">
               <div class="ep-row-title">${esc(ep.name || `Episode ${ep.episode_number}`)}</div>
               ${air ? `<div class="ep-row-date">${air}</div>` : ""}
