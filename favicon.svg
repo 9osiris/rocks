@@ -1,6 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="16" fill="#0e0e10"/>
-  <path d="M32 12 L40 28 L32 24 L24 28 Z" fill="#7c5cff"/>
-  <path d="M32 52 L24 36 L32 40 L40 36 Z" fill="#7c5cff" opacity="0.5"/>
-  <circle cx="32" cy="32" r="5" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Osiris Watch">
+  <defs>
+    <linearGradient id="osirisG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2ee6cf"/>
+      <stop offset="0.52" stop-color="#15a99b"/>
+      <stop offset="1" stop-color="#0b4a44"/>
+    </linearGradient>
+    <linearGradient id="osirisGold" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ffe9a8"/>
+      <stop offset="0.5" stop-color="#f1c75e"/>
+      <stop offset="1" stop-color="#c2902f"/>
+    </linearGradient>
+    <radialGradient id="osirisShine" cx="0.3" cy="0.18" r="0.78">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="120" fill="url(#osirisG)"/>
+  <rect width="512" height="512" rx="120" fill="url(#osirisShine)"/>
+  <rect x="7" y="7" width="498" height="498" rx="114" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+
+  <!-- Atef-style crown accent -->
+  <g fill="url(#osirisGold)">
+    <ellipse cx="256" cy="118" rx="17" ry="30"/>
+    <path d="M232 130 C214 118 207 95 215 77 C221 95 231 110 245 119 Z"/>
+    <path d="M280 130 C298 118 305 95 297 77 C291 95 281 110 267 119 Z"/>
+    <circle cx="256" cy="90" r="9" fill="#fff2cf"/>
+  </g>
+
+  <!-- brow -->
+  <path d="M150 212 C212 182 304 182 372 214" fill="none" stroke="url(#osirisGold)" stroke-width="15" stroke-linecap="round"/>
+
+  <!-- Eye of Horus almond -->
+  <path d="M146 268 C196 230 248 222 300 232 C336 239 360 252 380 260 C350 306 268 332 196 314 C170 307 154 291 146 268 Z" fill="#fdf6e8" stroke="url(#osirisGold)" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- pupil rendered as a play triangle (the \"watch\" cue) -->
+  <path d="M236 243 L236 313 L301 278 Z" fill="#0b3b35"/>
+  <circle cx="255" cy="272" r="5" fill="#2ee6cf" opacity="0.55"/>
+
+  <!-- vertical tear marking -->
+  <path d="M206 314 C198 342 204 368 224 386" fill="none" stroke="url(#osirisGold)" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- outer spiral curl -->
+  <path d="M340 296 C357 316 357 349 330 365 C347 347 343 327 326 315 Z" fill="url(#osirisGold)"/>
 </svg>
