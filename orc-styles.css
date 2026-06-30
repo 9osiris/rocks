@@ -251,9 +251,7 @@ body.sidebar-open .sidebar {
     flex-direction: row;
     align-items: center;
     padding: 0;
-    background: linear-gradient(180deg, rgba(14,14,16,0.94) 0%, rgba(14,14,16,0.78) 65%, rgba(14,14,16,0.45) 100%);
-    backdrop-filter: blur(18px) saturate(1.4);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    background: transparent;
     border-right: none;
     border-bottom: none;
     -webkit-mask-image: none;
@@ -263,7 +261,20 @@ body.sidebar-open .sidebar {
     visibility: visible;
     pointer-events: auto;
     z-index: 400;
-    transition: background 0.3s var(--ease-out);
+  }
+  /* Blurred gradient backing that fades out at the bottom edge so there is
+     no hard line where the blur stops over the hero. Sits behind the links. */
+  .sidebar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(14,14,16,0.90) 0%, rgba(14,14,16,0.55) 55%, rgba(14,14,16,0) 100%);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-mask-image: linear-gradient(to bottom, #000 52%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 52%, transparent 100%);
   }
 
   /* Defeat the slide-out open/close states — the bar is always shown */
@@ -794,6 +805,33 @@ body.sidebar-open .sidebar-link:hover .tip {
 
 .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
+/* ===== Hero action bar: real WebGL glass state (orc-glass.js, PC only) =====
+   Only applies once the shader is live; the default state above is untouched. */
+@media (min-width: 769px) {
+  .hero.glass-webgl-on .hero-content { padding-bottom: 150px; }
+  .hero.glass-webgl-on > .hero-actions {
+    position: absolute;
+    left: 48px;
+    bottom: 60px;
+    z-index: 2;
+    margin: 0;
+    padding: 8px;
+    border-radius: var(--pill);
+  }
+  /* Hand the glassy look to the shader: drop the CSS chip backing on the
+     ghost buttons so they read as controls sitting on the liquid-glass bar. */
+  .hero.glass-webgl-on .btn-ghost.glass-chip {
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+  .hero.glass-webgl-on .btn-ghost.glass-chip::before,
+  .hero.glass-webgl-on .btn-ghost.glass-chip::after { opacity: 0; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero.glass-webgl-on .hero-content { padding-bottom: 122px; }
+  .hero.glass-webgl-on > .hero-actions { left: 32px; bottom: 42px; }
+}
+
 .btn-play {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 10px 28px;
@@ -1265,6 +1303,28 @@ body.sidebar-open .sidebar-link:hover .tip {
 .card-popup-actions .pp-play { background: #fff; color: #0e0e10; }
 .card-popup-actions .pp-save { background: var(--bg-hover); color: var(--text-muted); }
 .card-popup-actions .pp-save.saved { background: var(--accent-soft); color: var(--accent); }
+
+/* ===== Card popup: real WebGL glass state (orc-glass.js, PC only) =====
+   Only applies once the shader is live; the default frosted CSS popup above
+   stays exactly as-is when WebGL is unavailable. */
+.card-popup.glass-webgl-on {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.card-popup.glass-webgl-on .card-popup-thumb { height: 132px; }
+.card-popup.glass-webgl-on .card-popup-thumb::after { opacity: 0; }
+.card-popup.glass-webgl-on .card-popup-body {
+  margin-top: -68px;
+  background: transparent;
+}
+/* Body stays transparent so the shader shows through; keep text legible over
+   bright posters with a soft shadow instead of an opaque backing. */
+.card-popup.glass-webgl-on .card-popup-title,
+.card-popup.glass-webgl-on .card-popup-meta,
+.card-popup.glass-webgl-on .card-popup-overview {
+  text-shadow: 0 1px 4px rgba(0,0,0,0.75);
+}
 
 .detail-page .app-shell { padding-bottom: 40px; }
 
