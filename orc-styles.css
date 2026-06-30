@@ -731,38 +731,38 @@ body.sidebar-open .sidebar-link:hover .tip {
 .btn-ghost svg { width: 16px; height: 16px; }
 
 .genre-strip {
-  padding: 12px 48px 10px;
-  margin-top: 0;
+  padding: 18px 48px 14px;
+  margin-top: -6px;
   position: relative;
   z-index: 4;
   display: flex;
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
-  background: linear-gradient(to bottom, transparent, var(--bg) 28%);
+  background: transparent;
 }
 .genre-strip::-webkit-scrollbar { display: none; }
 
 .genre-pill {
   flex-shrink: 0;
   padding: 8px 18px;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.06);
   color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 600;
   border-radius: var(--pill);
-  border: 1px solid rgba(255,255,255,0.1);
-  transition: background 0.3s var(--ease-out), color 0.3s, transform 0.35s var(--ease-out), border-color 0.3s;
+  border: none;
+  transition: background 0.3s var(--ease-out), color 0.3s, transform 0.35s var(--ease-out), box-shadow 0.3s;
 }
 .genre-pill:hover {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.11);
   color: var(--text);
   transform: translateY(-2px);
 }
 .genre-pill.active {
-  background: rgba(124,92,255,0.22);
-  border-color: rgba(124,92,255,0.45);
-  color: var(--text);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(124,92,255,0.32);
 }
 
 .categories {
@@ -1621,15 +1621,14 @@ button.cast-item {
   font-weight: 600;
   color: var(--text-muted);
   background: var(--bg-elevated);
-  border-radius: var(--radius);
-  border: 1px solid transparent;
-  transition: background 0.3s var(--ease-out), color 0.3s, transform 0.35s var(--ease-out), border-color 0.3s;
+  border-radius: var(--pill);
+  border: none;
+  transition: background 0.3s var(--ease-out), color 0.3s, transform 0.35s var(--ease-out);
 }
-.filter-chip:hover { color: var(--text); transform: translateY(-1px); }
+.filter-chip:hover { color: var(--text); background: var(--bg-hover); transform: translateY(-1px); }
 .filter-chip.on {
-  background: var(--accent-soft);
-  color: var(--text);
-  border-color: rgba(124,92,255,0.35);
+  background: var(--accent);
+  color: #fff;
   transform: translateY(-1px);
 }
 
@@ -1662,11 +1661,11 @@ button.cast-item {
   font-weight: 600;
   color: var(--text-muted);
   background: var(--bg-elevated);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: none;
   border-radius: var(--pill);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
-.search-recent-pill:hover { color: var(--text); background: var(--bg-hover); border-color: rgba(124,92,255,0.25); }
+.search-recent-pill:hover { color: var(--text); background: var(--bg-hover); }
 
 .row-track:focus-visible {
   outline: 2px solid rgba(124,92,255,0.45);
