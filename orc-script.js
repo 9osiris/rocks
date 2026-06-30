@@ -331,10 +331,6 @@ function createPlayerIframe(src) {
   iframe.setAttribute("webkitallowfullscreen", "");
   iframe.setAttribute("mozallowfullscreen", "");
   iframe.setAttribute("allow", "autoplay; fullscreen; encrypted-media; picture-in-picture");
-  // Sandbox the third-party player: let it run and play video (scripts +
-  // same-origin), but block pop-up windows (no allow-popups) and redirect
-  // hijacking (no allow-top-navigation) — the main malvertising vectors.
-  iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation allow-forms");
   iframe.setAttribute("referrerpolicy", "origin");
   return iframe;
 }
