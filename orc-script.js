@@ -5,8 +5,8 @@ const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMG_W500  = "https://image.tmdb.org/t/p/w500";
 const IMG_W45   = "https://image.tmdb.org/t/p/w45";
 const IMG_ORIG  = "https://image.tmdb.org/t/p/original";
-const BRAND     = "OsirisCinema";
-const ACCENT    = "7c5cff";
+const BRAND     = "Osiris Watch";
+const ACCENT    = "2dd4bf";
 
 const PROVIDERS = [
   { id: "vidking", name: "VidKing",
@@ -282,6 +282,7 @@ const SETTINGS = {
 };
 
 const ACCENT_COLORS = [
+  { id: "2dd4bf", label: "Teal" },
   { id: "7c5cff", label: "Violet" },
   { id: "3b82f6", label: "Blue" },
   { id: "ef4444", label: "Red" },
@@ -302,7 +303,7 @@ function applyGlobalSettings() {
   hex = String(hex).replace("#", "");
   if (!/^[0-9a-fA-F]{6}$/.test(hex)) hex = ACCENT;
   document.documentElement.style.setProperty("--accent", `#${hex}`);
-  document.documentElement.style.setProperty("--accent-dim", `#${hex}`);
+  document.documentElement.style.setProperty("--accent-dim", `color-mix(in srgb, #${hex} 78%, #000)`);
   document.documentElement.style.setProperty("--accent-soft", `rgba(${parseInt(hex.slice(0, 2), 16)}, ${parseInt(hex.slice(2, 4), 16)}, ${parseInt(hex.slice(4, 6), 16)}, 0.14)`);
   document.documentElement.classList.toggle("reduce-motion", SETTINGS.get(SETTINGS.reduceMotionKey) === "1");
 }
@@ -331,7 +332,6 @@ function createPlayerIframe(src) {
   iframe.setAttribute("webkitallowfullscreen", "");
   iframe.setAttribute("mozallowfullscreen", "");
   iframe.setAttribute("allow", "autoplay; fullscreen; encrypted-media; picture-in-picture");
-  iframe.setAttribute("referrerpolicy", "origin");
   return iframe;
 }
 
@@ -470,47 +470,102 @@ const normPath = p => (p.replace(/\/$/, "") || "/");
 const isTouch = () => matchMedia("(hover: none), (pointer: coarse)").matches;
 const isMobile = () => matchMedia("(max-width: 768px)").matches;
 
-function initMobileUI(page) {
+let ACTIVE_NAV = "home";
+function initMobileUI(active) {
   document.documentElement.classList.toggle("is-touch", isTouch());
-  if (!isMobile() || page === "home") return;
-  if ($("#mobile-float-back")) return;
-  const btn = document.createElement("a");
-  btn.id = "mobile-float-back";
-  btn.className = "mobile-float-back";
-  btn.href = homeUrl();
-  btn.setAttribute("aria-label", "Back");
-  btn.innerHTML = ICONS.back;
-  document.body.appendChild(btn);
+  ACTIVE_NAV = active || ACTIVE_NAV;
+  buildMobilePillNav(ACTIVE_NAV);
+  if (!window._pillNavBound) {
+    window._pillNavBound = true;
+    let rt;
+    window.addEventListener("resize", () => {
+      clearTimeout(rt);
+      rt = setTimeout(() => buildMobilePillNav(ACTIVE_NAV), 200);
+    }, { passive: true });
+  }
+}
+
+// Liquid-glass bottom pill navigation for mobile/touch layouts.
+function buildMobilePillNav(active) {
+  const existing = $("#mobile-pill-nav");
+  if (!isMobile()) { if (existing) existing.remove(); return; }
+  injectGlassFilters();
+  const items = [
+    { href: homeUrl(), label: "Home", icon: ICONS.home, key: "home" },
+    { href: "/search?type=movie", label: "Movies", icon: ICONS.film, key: "movies" },
+    { href: "/search?type=tv", label: "Series", icon: ICONS.tv, key: "tv" },
+    { href: "/search", label: "Search", icon: ICONS.search, key: "search" },
+    { href: "/settings", label: "Settings", icon: ICONS.settings, key: "settings" },
+  ];
+  const nav = existing || document.createElement("nav");
+  nav.id = "mobile-pill-nav";
+  nav.className = "mobile-pill-nav";
+  nav.setAttribute("aria-label", "Primary");
+  nav.innerHTML = `
+    <div class="liquidGlass-wrapper pill-nav-glass">
+      <div class="liquidGlass-effect"></div>
+      <div class="liquidGlass-tint liquidGlass-tint--dark"></div>
+      <div class="liquidGlass-shine"></div>
+      <div class="liquidGlass-text pill-nav-items">
+        ${items.map(it => `
+          <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
+            <span class="pill-nav-ico">${it.icon}</span>
+            <span class="pill-nav-label">${it.label}</span>
+          </a>`).join("")}
+      </div>
+    </div>`;
+  if (!existing) document.body.appendChild(nav);
 }
 
 function initSidebar(active) {
-  const el = $("#sidebar");
+  const el = $("#topnav") || $("#sidebar");
   if (!el) return;
 
-  const link = (href, icon, label, act) =>
-    `<a href="${href}" class="sidebar-link${act ? " active" : ""}">${icon}<span class="mob-label">${label}</span><span class="tip">${label}</span></a>`;
+  const link = (href, label, act) =>
+    `<a href="${href}" class="topnav-link${act ? " active" : ""}">${label}</a>`;
 
-  el.className = "sidebar";
+  el.className = "topnav";
+  el.id = "topnav";
   el.innerHTML = `
-    <div class="sidebar-inner">
-      <a href="${homeUrl()}" class="sidebar-logo"><img src="images/favicon.svg" alt=""></a>
-      <nav class="sidebar-nav">
-        ${link("/search", ICONS.search, "Search", active === "search")}
-        ${link(homeUrl(), ICONS.home, "Home", active === "home")}
-        ${link("/search?type=movie", ICONS.film, "Movies", active === "movies")}
-        ${link("/search?type=tv", ICONS.tv, "TV", active === "tv")}
-        <div class="sidebar-divider"></div>
-        ${link(`${homeUrl()}#trending`, ICONS.trend, "Trending", false)}
-        ${link(`${homeUrl()}#my-list`, ICONS.list, "My List", false)}
-        ${link("/settings", ICONS.settings, "Settings", active === "settings")}
+    <div class="topnav-inner">
+      <a href="${homeUrl()}" class="topnav-logo" aria-label="Osiris Watch — home">
+        <img src="images/favicon.svg" alt="">
+        <span class="topnav-word">Osiris<i>Watch</i></span>
+      </a>
+      <nav class="topnav-links" aria-label="Primary">
+        ${link(homeUrl(), "Home", active === "home")}
+        ${link("/search?type=movie", "Movies", active === "movies")}
+        ${link("/search?type=tv", "Series", active === "tv")}
+        ${link(`${homeUrl()}#my-list`, "My List", false)}
+        ${link("/settings", "Settings", active === "settings")}
       </nav>
+      <div class="topnav-actions">
+        <a href="/search" class="topnav-icon${active === "search" ? " active" : ""}" aria-label="Search">${ICONS.search}</a>
+        <button type="button" class="topnav-burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      </div>
     </div>`;
 
-  initSidebarDock();
-  if (!isMobile() && PINNED_SIDEBAR_PAGES.has(PAGE)) {
-    document.body.classList.add("sidebar-open", "sidebar-pinned");
+  const burger = el.querySelector(".topnav-burger");
+  burger?.addEventListener("click", e => {
+    e.stopPropagation();
+    const open = el.classList.toggle("nav-open");
+    burger.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  el.querySelectorAll(".topnav-link").forEach(a =>
+    a.addEventListener("click", () => el.classList.remove("nav-open"))
+  );
+  document.addEventListener("click", e => {
+    if (el.classList.contains("nav-open") && !el.contains(e.target)) el.classList.remove("nav-open");
+  });
+
+  if (!el._scrollBound) {
+    el._scrollBound = true;
+    const onScroll = () => el.classList.toggle("scrolled", window.scrollY > 12);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
   }
-  initMobileUI(PAGE);
+
+  initMobileUI(active);
 }
 
 function initSidebarDock() {
@@ -948,7 +1003,7 @@ function attachPeriodDropdown(wrap, opts) {
 
 function scrollToEl(el) {
   if (!el) return;
-  const offset = isMobile() ? 12 : 28;
+  const offset = isMobile() ? 70 : 90;
   const y = el.getBoundingClientRect().top + window.scrollY - offset;
   window.scrollTo(0, y);
 }
@@ -983,16 +1038,22 @@ function initAnchorScroll() {
 }
 
 function injectGlassFilters() {
-  if ($("#glass-distortion")) return;
+  if ($("#glass-soft")) return;
   const distortion = `
-    <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
-      <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence"/>
+    <filter id="glass-distortion" x="-12%" y="-12%" width="124%" height="124%" filterUnits="objectBoundingBox">
+      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="42" result="turbulence"/>
       <feGaussianBlur in="turbulence" stdDeviation="2" result="softMap"/>
-      <feDisplacementMap in="SourceGraphic" in2="softMap" scale="55" xChannelSelector="R" yChannelSelector="G"/>
+      <feDisplacementMap in="SourceGraphic" in2="softMap" scale="34" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>`;
+  const soft = `
+    <filter id="glass-soft" x="-20%" y="-20%" width="140%" height="140%" filterUnits="objectBoundingBox">
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.009" numOctaves="2" seed="12" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="1.4" result="m"/>
+      <feDisplacementMap in="SourceGraphic" in2="m" scale="8" xChannelSelector="R" yChannelSelector="G"/>
     </filter>`;
   const existing = $(".splash-filters");
   if (existing) {
-    existing.insertAdjacentHTML("beforeend", distortion);
+    existing.insertAdjacentHTML("beforeend", ($("#glass-distortion") ? "" : distortion) + soft);
     return;
   }
   const wrap = document.createElement("div");
@@ -1005,6 +1066,7 @@ function injectGlassFilters() {
         <feDisplacementMap in="blur" in2="map" scale="0.75" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
       ${distortion}
+      ${soft}
     </svg>`;
   document.body.prepend(wrap);
 }
@@ -1706,16 +1768,24 @@ function initSearchPage() {
     });
   }
 
+  const setPlaceholder = () => {
+    if (input) input.placeholder = current === "ai"
+      ? "Describe a vibe, plot, era, or “movies like…”"
+      : "Titles, actors, keywords…";
+  };
   chips.forEach(c => c.classList.toggle("on", c.dataset.filter === current));
+  setPlaceholder();
   chips.forEach(c => c.addEventListener("click", () => {
     current = c.dataset.filter;
     chips.forEach(x => x.classList.toggle("on", x === c));
+    setPlaceholder();
     doSearch(lastQ || input?.value.trim() || "");
   }));
 
   async function doSearch(q) {
     if (!status || !grid) return;
     lastQ = q;
+    if (current === "ai") { aiSearch(q); return; }
     status.classList.remove("is-busy");
     if (!q && current === "all" && !genreId) {
       status.textContent = "";
@@ -1771,9 +1841,17 @@ function initSearchPage() {
     input.addEventListener("input", () => {
       if (clear) clear.style.display = input.value ? "flex" : "none";
       if (!input.value.trim()) renderRecent();
+      if (current === "ai") { setBusy(false); return; }
       setBusy(true);
       clearTimeout(timer);
       timer = setTimeout(() => doSearch(input.value.trim()), 400);
+    });
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter" && current === "ai") {
+        e.preventDefault();
+        clearTimeout(timer);
+        doSearch(input.value.trim());
+      }
     });
     if (q) { clear.style.display = "flex"; doSearch(q); }
     else if (genreId) doSearch("");
@@ -1783,9 +1861,87 @@ function initSearchPage() {
   renderRecent();
 }
 
+// Experimental AI Search: natural-language query -> AI recommendations -> resolved against TMDB.
+async function aiSearch(q) {
+  const status = $("#search-status");
+  const grid = $("#search-results");
+  const recentBox = $("#search-recent");
+  if (!status || !grid) return;
+  if (recentBox) recentBox.hidden = true;
+  if (!q) {
+    status.textContent = "";
+    grid.innerHTML = `<div class="no-results ai-empty"><h3>Ask AI <span class="ai-badge">Experimental</span></h3><p>Describe what you're in the mood for — a vibe, a plot, an era, an actor, or “something like Interstellar” — and AI will curate a shortlist.</p></div>`;
+    return;
+  }
+  RecentSearches.add(q);
+  status.innerHTML = `<span class="search-pending"><span class="spin-dot"></span> Asking AI…</span>`;
+  grid.innerHTML = ""; skeletons(8).forEach(s => grid.appendChild(s));
+  try {
+    const res = await fetch("/api/ai-search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: q }),
+    });
+    if (!res.ok) {
+      let msg = "AI Search is unavailable right now.";
+      try { const e = await res.json(); if (e && e.error) msg = e.error; } catch (_) {}
+      grid.innerHTML = `<div class="no-results"><h3>Couldn’t reach AI</h3><p>${esc(msg)}</p></div>`;
+      status.textContent = "";
+      return;
+    }
+    const data = await res.json();
+    const recs = Array.isArray(data.results) ? data.results : [];
+    if (!recs.length) {
+      grid.innerHTML = `<div class="no-results"><h3>No picks</h3><p>Try rephrasing your request.</p></div>`;
+      status.textContent = "";
+      return;
+    }
+    const resolved = await Promise.all(recs.map(async rec => {
+      try {
+        const path = rec.type === "tv" ? "/search/tv" : "/search/movie";
+        const r = await tmdb(`${path}?query=${encodeURIComponent(rec.title)}`);
+        const hits = (r.results || []).filter(i => i.poster_path);
+        if (rec.year) {
+          const y = String(rec.year);
+          const exact = hits.find(i => (i.release_date || i.first_air_date || "").startsWith(y));
+          if (exact) return { item: exact, type: rec.type };
+        }
+        return hits[0] ? { item: hits[0], type: rec.type } : null;
+      } catch (_) { return null; }
+    }));
+    const seen = new Set();
+    const cards = resolved.filter(c => {
+      if (!c) return false;
+      const k = `${c.type}_${c.item.id}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    grid.innerHTML = "";
+    if (data.intro) {
+      const banner = document.createElement("div");
+      banner.className = "ai-intro";
+      banner.innerHTML = `<span class="ai-intro-spark">${ICONS.spark || "✦"}</span><p>${esc(data.intro)}</p>`;
+      grid.appendChild(banner);
+    }
+    if (!cards.length) {
+      const none = document.createElement("div");
+      none.className = "no-results";
+      none.innerHTML = `<p>AI suggested titles, but none were found in the catalog.</p>`;
+      grid.appendChild(none);
+    } else {
+      cards.forEach(c => grid.appendChild(buildCard(c.item, c.type)));
+    }
+    status.textContent = `${cards.length} AI picks`;
+  } catch (_) {
+    grid.innerHTML = `<div class="no-results"><p>AI Search failed — check your connection.</p></div>`;
+    status.textContent = "";
+  }
+}
+
 function initSettingsPage() {
   initSidebar("settings");
-  document.title = "Settings — Osiris's Cinema";
+  document.title = "Settings — Osiris Watch";
 
   const providerBox = $("#settings-providers");
   if (providerBox) {
@@ -1871,14 +2027,14 @@ function initSettingsPage() {
 
 function initDmcaPage() {
   initSidebar("home");
-  document.title = "DMCA — Osiris's Cinema";
+  document.title = "DMCA — Osiris Watch";
 }
 
 function playLoader(bg, title) {
   return new Promise(resolve => {
     const el = document.createElement("div");
     el.className = "play-loader";
-    el.innerHTML = `<div class="play-loader-bg" style="background-image:url(${esc(bg || "")})"></div><div class="play-loader-veil"></div><div class="play-loader-mark">OSIRIS</div>`;
+    el.innerHTML = `<div class="play-loader-bg" style="background-image:url(${esc(bg || "")})"></div><div class="play-loader-veil"></div><div class="play-loader-mark">OSIRIS WATCH</div>`;
     document.body.appendChild(el);
     requestAnimationFrame(() => el.classList.add("on"));
     setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.remove(); resolve(); }, 450); }, 1800);
@@ -1996,7 +2152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       case "dmca": initDmcaPage(); break;
     }
   } catch (e) {
-    console.error("Osiris init failed:", e);
+    console.error("Osiris Watch init failed:", e);
     const header = $("#detail-header");
     if (header) header.innerHTML = `<p style="color:var(--text-muted)">Something went wrong loading this page. Try refreshing.</p>`;
   }
