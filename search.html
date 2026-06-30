@@ -5,19 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>OsirisCinema - Search</title>
+  <title>Osiris Watch - Search</title>
   <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
-  <meta name="theme-color" content="#0e0e10">
+  <meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f6f8" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+  <link rel="dns-prefetch" href="https://image.tmdb.org">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="orc-styles.css">
 </head>
 <body class="search-page">
 
-  <aside class="sidebar" id="sidebar"></aside>
+  <header class="topnav" id="topnav"></header>
 
   <div class="app-shell">
     <main class="search-body">
@@ -33,6 +37,7 @@
         <button class="filter-chip on" data-filter="all">All</button>
         <button class="filter-chip" data-filter="movie">Movies</button>
         <button class="filter-chip" data-filter="tv">TV Shows</button>
+        <button class="filter-chip filter-chip-ai" data-filter="ai"><span class="chip-spark">✦</span> AI <span class="chip-beta">Beta</span></button>
       </div>
 
       <div id="search-recent" class="search-recent" hidden></div>
@@ -43,8 +48,8 @@
 
     <footer class="page-foot">
       <p>Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>.</p>
-      <p>Osiris's Cinema does not store or host media. Streams are provided by third-party services; legal concerns should be raised with those hosts directly. Osiris's Cinema is not responsible for content served by external providers.</p>
-      <p>© LYRD INNO. · <a href="/dmca">DMCA</a> · <a href="/settings">Settings</a></p>
+      <p>Osiris Watch does not store or host media. Streams are provided by third-party services; legal concerns should be raised with those hosts directly. Osiris Watch is not responsible for content served by external providers.</p>
+      <p>© 2026 Osiris Industries · <a href="/dmca">DMCA</a> · <a href="/settings">Settings</a></p>
     </footer>
   </div>
 
