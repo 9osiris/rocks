@@ -39,6 +39,17 @@
         <button class="filter-chip" data-filter="tv">TV Shows</button>
       </div>
 
+      <div class="browse-filters" id="browse-filters">
+        <select id="filter-genre" class="browse-select" aria-label="Filter by genre"><option value="">All genres</option></select>
+        <select id="filter-year" class="browse-select" aria-label="Filter by year"><option value="">Any year</option></select>
+        <select id="filter-sort" class="browse-select" aria-label="Sort by">
+          <option value="popularity.desc">Most popular</option>
+          <option value="vote_average.desc">Top rated</option>
+          <option value="primary_release_date.desc">Newest</option>
+          <option value="revenue.desc">Highest grossing</option>
+        </select>
+      </div>
+
       <div id="search-recent" class="search-recent" hidden></div>
 
       <p class="search-status" id="search-status"></p>
