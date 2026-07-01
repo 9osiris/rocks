@@ -1,4 +1,4 @@
-const CACHE = "orc-static-v11";
+const CACHE = "orc-static-v12";
 const ASSETS = ["/orc-styles.css", "/orc-script.js", "/images/favicon.svg", "/favicon.svg", "/favicon.png", "/icon-192.png", "/icon-512.png", "/manifest.json", "/offline.html"];
 
 self.addEventListener("install", e => {
