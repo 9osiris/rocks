@@ -464,19 +464,21 @@ function detectPage() {
   const params = new URLSearchParams(location.search);
   const id = params.get("id");
   if ($("#player-frame") && id) return $("#ep-block") ? "tv" : "movie";
+  if ($("#list-grid") || document.body.classList.contains("list-page")) return "list";
   if ($("#main-search-input") || document.body.classList.contains("search-page")) return "search";
   if ($(".settings-body") || document.body.classList.contains("settings-page")) return "settings";
   if ($(".legal-body") || document.body.classList.contains("legal-page")) return "dmca";
   if ($("#categories") || $("#hero-title") || $("#splash-screen")) return "home";
 
   const seg = (location.pathname.split("/").pop() || "").replace(/\.html$/i, "").toLowerCase();
-  const bySeg = { movie: "movie", tv: "tv", search: "search", settings: "settings", dmca: "dmca", index: "home", osiriscinema: "home" };
+  const bySeg = { movie: "movie", tv: "tv", search: "search", list: "list", settings: "settings", dmca: "dmca", index: "home", osiriscinema: "home" };
   if (bySeg[seg]) return bySeg[seg];
 
   const p = location.pathname.replace(/\/$/, "") || "/";
   if (p === "/movie" || p.endsWith("/movie")) return "movie";
   if (p === "/tv" || p.endsWith("/tv")) return "tv";
   if (p === "/search" || p.endsWith("/search")) return "search";
+  if (p === "/list" || p.endsWith("/list")) return "list";
   if (p === "/settings" || p.endsWith("/settings")) return "settings";
   if (p === "/dmca" || p.endsWith("/dmca")) return "dmca";
   return "home";
@@ -508,9 +510,8 @@ function buildMobilePillNav(active) {
   if (!isMobile()) { if (existing) existing.remove(); return; }
   const items = [
     { href: homeUrl(), label: "Home", icon: ICONS.home, key: "home" },
-    { href: "/search?type=movie", label: "Movies", icon: ICONS.film, key: "movies" },
-    { href: "/search?type=tv", label: "Series", icon: ICONS.tv, key: "tv" },
-    { href: "/search", label: "Search", icon: ICONS.search, key: "search" },
+    { href: "/search", label: "Browse", icon: ICONS.tv, key: "search" },
+    { href: "/list", label: "My List", icon: ICONS.list, key: "list" },
     { href: "/settings", label: "Settings", icon: ICONS.settings, key: "settings" },
   ];
   const nav = existing || document.createElement("nav");
@@ -546,7 +547,7 @@ function initSidebar(active) {
         ${link(homeUrl(), "Home", active === "home")}
         ${link("/search?type=movie", "Movies", active === "movies")}
         ${link("/search?type=tv", "Series", active === "tv")}
-        ${link(`${homeUrl()}#my-list`, "My List", false)}
+        ${link("/list", "My List", active === "list")}
         ${link("/settings", "Settings", active === "settings")}
       </nav>
       <div class="topnav-actions">
@@ -1500,7 +1501,6 @@ function buildSeasonSpotlight(shows) {
       ${sn ? `<span class="spotlight-badge">${ICONS.clapper} Season ${sn}</span>` : ""}
       <div class="spotlight-foot">
         <div class="spotlight-title">${esc(s.name || s.title || "")}</div>
-        <div class="spotlight-sub">New season now airing</div>
       </div>`;
     const go = () => { location.href = `/tv?id=${s.id}`; };
     card.addEventListener("click", go);
@@ -1509,7 +1509,7 @@ function buildSeasonSpotlight(shows) {
   });
   initRowDrag(track);
   initRowKeyboard(track);
-  const scroll = 620;
+  const scroll = 360;
   wrap.querySelector(".row-arrow.left").addEventListener("click", () => track.scrollBy({ left: -scroll, behavior: "smooth" }));
   wrap.querySelector(".row-arrow.right").addEventListener("click", () => track.scrollBy({ left: scroll, behavior: "smooth" }));
   return wrap;
@@ -1933,18 +1933,6 @@ function initSearchPage() {
   let current = filter === "movie" || filter === "tv" ? filter : "all";
   let timer, lastQ = "";
 
-  const genreSel = $("#filter-genre");
-  const yearSel = $("#filter-year");
-  const sortSel = $("#filter-sort");
-  if (genreSel && genreSel.options.length <= 1) {
-    GENRES.forEach(g => { const o = document.createElement("option"); o.value = g.id; o.textContent = g.name; genreSel.appendChild(o); });
-    if (genreId) genreSel.value = genreId;
-  }
-  if (yearSel && yearSel.options.length <= 1) {
-    const nowY = new Date().getFullYear();
-    for (let y = nowY; y >= 1950; y--) { const o = document.createElement("option"); o.value = y; o.textContent = y; yearSel.appendChild(o); }
-  }
-
   function setBusy(busy) {
     if (!status) return;
     status.classList.toggle("is-busy", busy);
@@ -1984,17 +1972,14 @@ function initSearchPage() {
     doSearch(lastQ || input?.value.trim() || "");
   }));
 
-  [genreSel, yearSel, sortSel].forEach(sel => sel?.addEventListener("change", () => doSearch(input?.value.trim() || "")));
-
   async function doSearch(q) {
     if (!status || !grid) return;
     lastQ = q;
     if (current === "ai") { aiSearch(q); return; }
     status.classList.remove("is-busy");
-    const anyFilter = (genreSel && genreSel.value) || (yearSel && yearSel.value);
-    if (!q && current === "all" && !genreId && !anyFilter) {
+    if (!q && current === "all" && !genreId) {
       status.textContent = "";
-      grid.innerHTML = `<div class="no-results"><h3>What are you looking for?</h3><p>Search by title, pick a genre or year above, or browse categories from the sidebar.</p></div>`;
+      grid.innerHTML = `<div class="no-results"><h3>What are you looking for?</h3><p>Search by title, or use the Movies and Series tabs to browse.</p></div>`;
       renderRecent();
       return;
     }
@@ -2015,23 +2000,13 @@ function initSearchPage() {
         status.textContent = `${items.length} results`;
       } else {
         const media = current === "tv" ? "tv" : "movie";
-        const g = genreSel?.value || genreId || "";
-        const yr = yearSel?.value || "";
-        let sort = sortSel?.value || "popularity.desc";
-        if (media === "tv") {
-          if (sort === "primary_release_date.desc") sort = "first_air_date.desc";
-          if (sort === "revenue.desc") sort = "popularity.desc";
-        }
-        const parts = [`sort_by=${sort}`, "vote_count.gte=30"];
+        const g = genreId || "";
+        const parts = ["sort_by=popularity.desc", "vote_count.gte=30"];
         if (g) parts.push(`with_genres=${g}`);
-        if (yr) parts.push(media === "tv" ? `first_air_date_year=${yr}` : `primary_release_year=${yr}`);
         const data = await tmdb(`/discover/${media}?${parts.join("&")}`);
         items = data.results || [];
-        const bits = [];
         const gName = GENRES.find(x => String(x.id) === String(g))?.name;
-        if (gName) bits.push(gName);
-        if (yr) bits.push(yr);
-        status.textContent = `${bits.length ? bits.join(" · ") + " · " : ""}${items.length} ${media === "tv" ? "series" : "films"}`;
+        status.textContent = `${gName ? gName + " · " : ""}${items.length} ${media === "tv" ? "series" : "films"}`;
       }
 
       grid.innerHTML = "";
@@ -2254,6 +2229,33 @@ function initSettingsPage() {
   });
 }
 
+async function initListPage() {
+  initSidebar("list");
+  document.title = "My List — Osiris Watch";
+  const grid = $("#list-grid");
+  const status = $("#list-status");
+  if (!grid) return;
+
+  const emptyState = () => {
+    grid.innerHTML = `<div class="no-results list-empty"><div class="list-empty-ico">${ICONS.list}</div><h3>Your list is empty</h3><p>Add movies and series using the “+” icon on their cards.</p></div>`;
+    if (status) status.textContent = "";
+  };
+
+  const list = MyList.get();
+  if (!list.length) { emptyState(); return; }
+
+  if (status) status.textContent = `${list.length} ${list.length === 1 ? "title" : "titles"}`;
+  grid.innerHTML = ""; skeletons(Math.min(list.length, 12)).forEach(s => grid.appendChild(s));
+
+  const settled = await Promise.allSettled(list.map(i =>
+    tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
+  ));
+  const items = settled.filter(r => r.status === "fulfilled").map(r => r.value);
+  grid.innerHTML = "";
+  if (!items.length) { emptyState(); return; }
+  items.forEach(it => grid.appendChild(buildCard(it, it._type === "tv" ? "tv" : "movie")));
+}
+
 function initDmcaPage() {
   initSidebar("home");
   document.title = "DMCA — Osiris Watch";
@@ -2378,6 +2380,7 @@ document.addEventListener("DOMContentLoaded", () => {
       case "movie": initMoviePage().catch(e => console.error(e)); break;
       case "tv": initTvPage().catch(e => console.error(e)); break;
       case "search": initSearchPage(); break;
+      case "list": initListPage(); break;
       case "settings": initSettingsPage(); break;
       case "dmca": initDmcaPage(); break;
     }
