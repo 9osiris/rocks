@@ -498,16 +498,17 @@ function buildMobilePillNav(active) {
   ];
   const nav = existing || document.createElement("nav");
   nav.id = "mobile-pill-nav";
-  nav.className = "mobile-pill-nav";
+  nav.className = "mobile-pill-nav lg-surface";
   nav.setAttribute("aria-label", "Primary");
-  nav.innerHTML = `
-    <div class="pill-nav-inner">
-      ${items.map(it => `
-        <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
-          <span class="pill-nav-ico">${it.icon}</span>
-        </a>`).join("")}
-    </div>`;
+  nav.innerHTML = items.map(it => `
+    <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
+      <span class="pill-nav-ico">${it.icon}</span>
+    </a>`).join("");
   if (!existing) document.body.appendChild(nav);
+  if (!nav._lg) {
+    nav._lg = true;
+    LiquidGlass.apply(nav, { borderRadius: 34, distortionScale: -110, blur: 9, brightness: 58, opacity: 0.9, saturation: 1.55 });
+  }
 }
 
 function initSidebar(active) {
@@ -555,6 +556,11 @@ function initSidebar(active) {
     const onScroll = () => el.classList.toggle("scrolled", window.scrollY > 12);
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
+  }
+
+  if (!el._lg) {
+    el._lg = true;
+    LiquidGlass.apply(el, { id: "lg-topnav", inline: false, noClass: true, borderRadius: 0, distortionScale: -60, blur: 9, brightness: 58, opacity: 0.9 });
   }
 
   initMobileUI(active);
@@ -651,6 +657,7 @@ function initBackToTop() {
   btn.setAttribute("aria-label", "Back to top");
   btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19V5M5 12l7-7 7 7"/></svg>`;
   document.body.appendChild(btn);
+  LiquidGlass.apply(btn, { borderRadius: 22, distortionScale: -80, blur: 8, brightness: 60, opacity: 0.9, saturation: 1.5 });
   const onScroll = () => btn.classList.toggle("visible", window.scrollY > 480);
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
@@ -1063,6 +1070,101 @@ function injectGlassFilters() {
   document.body.prepend(wrap);
 }
 
+/* ============================================================
+   Real liquid glass — vanilla port of ReactBits <GlassSurface>.
+   Uses backdrop-filter: url(#svgFilter) with an feDisplacementMap
+   driven by a per-element displacement map + RGB channel offsets
+   (chromatic aberration). Chromium only; Safari/Firefox fall back
+   to a frosted blur via the .lg-fallback CSS.
+   ============================================================ */
+const LiquidGlass = (() => {
+  const NS = "http://www.w3.org/2000/svg";
+  let SUP = null, idc = 0;
+
+  function detect() {
+    const ua = navigator.userAgent || "";
+    const isWebkit = /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|Android/.test(ua);
+    const isFirefox = /Firefox/.test(ua);
+    if (isWebkit || isFirefox) return false;
+    const d = document.createElement("div");
+    try { d.style.backdropFilter = "url(#x)"; } catch (e) { return false; }
+    return d.style.backdropFilter !== "";
+  }
+  function supported() { if (SUP === null) SUP = detect(); return SUP; }
+  function init() {
+    const on = supported();
+    document.documentElement.classList.toggle("lg-on", on);
+    document.documentElement.classList.toggle("lg-fallback", !on);
+  }
+  function defs() {
+    let r = document.getElementById("lg-defs");
+    if (!r) {
+      r = document.createElementNS(NS, "svg");
+      r.setAttribute("id", "lg-defs");
+      r.setAttribute("aria-hidden", "true");
+      r.setAttribute("style", "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none");
+      document.body.appendChild(r);
+    }
+    return r;
+  }
+  const mk = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+  function dmap(w, h, o) {
+    const edge = Math.min(w, h) * (o.borderWidth * 0.5);
+    const svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="r" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/></linearGradient><linearGradient id="b" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/></linearGradient></defs><rect width="${w}" height="${h}" fill="black"/><rect width="${w}" height="${h}" rx="${o.borderRadius}" fill="url(#r)"/><rect width="${w}" height="${h}" rx="${o.borderRadius}" fill="url(#b)" style="mix-blend-mode:${o.mixBlendMode}"/><rect x="${edge}" y="${edge}" width="${w - edge * 2}" height="${h - edge * 2}" rx="${o.borderRadius}" fill="hsl(0 0% ${o.brightness}% / ${o.opacity})" style="filter:blur(${o.blur}px)"/></svg>`;
+    return "data:image/svg+xml," + encodeURIComponent(svg);
+  }
+
+  function apply(node, opts) {
+    if (!node) return;
+    const o = Object.assign({
+      borderRadius: 24, borderWidth: 0.07, brightness: 56, opacity: 0.9,
+      blur: 11, displace: 0.4, saturation: 1.5, distortionScale: -140,
+      redOffset: 0, greenOffset: 10, blueOffset: 20, xChannel: "R", yChannel: "G",
+      mixBlendMode: "difference", frost: 0, inline: true, noClass: false, id: null
+    }, opts);
+    if (!o.noClass) node.classList.add("lg-surface");
+    if (!supported()) return;
+
+    const id = o.id || ("lg-f-" + (++idc));
+    const prev = document.getElementById(id);
+    if (prev) prev.remove();
+    const f = mk("filter", { id, x: "0%", y: "0%", width: "100%", height: "100%" });
+    f.setAttribute("color-interpolation-filters", "sRGB");
+    const feImg = mk("feImage", { x: "0", y: "0", width: "100%", height: "100%", preserveAspectRatio: "none", result: "map" });
+    f.appendChild(feImg);
+    const chans = [
+      ["red", o.redOffset, "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"],
+      ["green", o.greenOffset, "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0"],
+      ["blue", o.blueOffset, "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0"]
+    ];
+    chans.forEach(([name, off, mat]) => {
+      f.appendChild(mk("feDisplacementMap", { in: "SourceGraphic", in2: "map", scale: String(o.distortionScale + off), xChannelSelector: o.xChannel, yChannelSelector: o.yChannel, result: "disp_" + name }));
+      f.appendChild(mk("feColorMatrix", { in: "disp_" + name, type: "matrix", values: mat, result: name }));
+    });
+    f.appendChild(mk("feBlend", { in: "red", in2: "green", mode: "screen", result: "rg" }));
+    f.appendChild(mk("feBlend", { in: "rg", in2: "blue", mode: "screen", result: "out" }));
+    f.appendChild(mk("feGaussianBlur", { in: "out", stdDeviation: String(o.displace) }));
+    defs().appendChild(f);
+
+    if (o.inline) {
+      const bf = (o.frost ? `blur(${o.frost}px) ` : "") + `url(#${id}) saturate(${o.saturation})`;
+      node.style.backdropFilter = bf;
+      node.style.webkitBackdropFilter = bf;
+    }
+    const upd = () => {
+      const rect = node.getBoundingClientRect();
+      if (rect.width && rect.height) feImg.setAttribute("href", dmap(Math.round(rect.width), Math.round(rect.height), o));
+    };
+    upd();
+    setTimeout(upd, 80);
+    if (window.ResizeObserver) { new ResizeObserver(() => upd()).observe(node); }
+    else window.addEventListener("resize", upd, { passive: true });
+  }
+
+  return { init, apply, supported };
+})();
+
 function initGlassFilter() {
   injectGlassFilters();
   const fe = $("#orc-glass-map");
@@ -1086,6 +1188,9 @@ function initSplash() {
     if (main) main.style.opacity = "1";
     return;
   }
+
+  const sg = s.querySelector(".splash-glass");
+  if (sg) LiquidGlass.apply(sg, { borderRadius: 80, distortionScale: -140, blur: 16, brightness: 60, opacity: 0.9, saturation: 1.7 });
 
   const finish = () => {
     s.classList.add("splash-exit");
@@ -2126,6 +2231,7 @@ function checkPlayLoader() {
 document.addEventListener("DOMContentLoaded", () => {
   PAGE = detectPage();
   try {
+    LiquidGlass.init();
     applyGlobalSettings();
     injectGlassFilters();
     initGlassFilter();
