@@ -917,34 +917,48 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   .splash-glass-word { font-size: clamp(1.4rem, 7.5vw, 1.9rem); }
   .splash-glass-logo { width: clamp(38px, 10vw, 48px); }
 
-  /* Hide desktop top links + burger on mobile — the pill nav handles navigation */
-  .topnav-links, .topnav-burger { display: none !important; }
+  /* Mobile: strip the top bar chrome, keep only the OsirisWatch wordmark */
+  .topnav-links, .topnav-burger, .topnav-actions { display: none !important; }
+  .topnav::before, .topnav::after { display: none !important; }
+  .topnav { background: transparent !important; box-shadow: none !important; }
+  .topnav-inner { justify-content: flex-start; }
+  .topnav-word { text-shadow: 0 1px 10px rgba(0,0,0,0.55); }
 
   /* Leave room for the floating bottom pill nav */
-  .app-shell { padding-bottom: calc(86px + var(--safe-bottom)); }
-  body.detail-page .app-shell { padding-bottom: calc(98px + var(--safe-bottom)); }
-  .page-foot { margin-bottom: calc(80px + var(--safe-bottom)); }
-  .back-top { bottom: calc(94px + var(--safe-bottom)); }
+  .app-shell { padding-bottom: calc(84px + var(--safe-bottom)); }
+  body.detail-page .app-shell { padding-bottom: calc(92px + var(--safe-bottom)); }
+  .page-foot { margin-bottom: calc(78px + var(--safe-bottom)); }
+  .back-top { bottom: calc(90px + var(--safe-bottom)); }
 
+  /* Clean, solid, fully-rounded bottom pill nav (icon-only, everything fits) */
   .mobile-pill-nav {
     position: fixed;
-    left: 50%; bottom: calc(14px + var(--safe-bottom));
+    left: 50%; bottom: calc(16px + var(--safe-bottom));
     transform: translateX(-50%);
     z-index: 460;
     max-width: calc(100vw - 24px);
-    animation: pillNavIn 0.5s var(--ease-out) both;
+    animation: pillNavIn 0.45s var(--ease-out) both;
   }
-  .pill-nav-glass { border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); box-shadow: 0 12px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.14); }
-  .pill-nav-glass, .pill-nav-glass > .liquidGlass-effect, .pill-nav-glass > .liquidGlass-tint, .pill-nav-glass > .liquidGlass-shine { border-radius: 999px; }
-  .pill-nav-glass > .liquidGlass-effect { backdrop-filter: blur(20px) saturate(1.7); -webkit-backdrop-filter: blur(20px) saturate(1.7); }
-  .pill-nav-glass > .liquidGlass-tint--dark { background: rgba(13,13,16,0.46); }
-  .pill-nav-items { display: flex; align-items: center; gap: 2px; padding: 7px 8px; }
-  .pill-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 10px; border-radius: 999px; color: rgba(255,255,255,0.62); font-size: 0.62rem; font-weight: 600; text-decoration: none; transition: color 0.2s, background 0.2s, transform 0.1s; min-width: 52px; }
-  .pill-nav-item:active { transform: scale(0.93); }
-  .pill-nav-ico { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
-  .pill-nav-ico svg { width: 22px; height: 22px; stroke-width: 1.9; }
-  .pill-nav-item.active { color: #fff; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 32%, transparent), color-mix(in srgb, var(--accent) 12%, transparent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent); }
-  .pill-nav-item.active .pill-nav-ico { color: var(--accent); }
+  .pill-nav-inner {
+    display: flex; align-items: center; gap: 4px;
+    padding: 8px 10px;
+    border-radius: var(--pill);
+    background: var(--surface-blur);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    border: 1px solid var(--border-2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.42);
+  }
+  .pill-nav-item {
+    display: flex; align-items: center; justify-content: center;
+    width: 46px; height: 46px; border-radius: var(--pill);
+    color: var(--text-2); text-decoration: none;
+    transition: color 0.2s, background 0.2s, transform 0.1s;
+  }
+  .pill-nav-item:active { transform: scale(0.9); }
+  .pill-nav-ico { display: flex; align-items: center; justify-content: center; }
+  .pill-nav-ico svg { width: 23px; height: 23px; stroke-width: 1.9; }
+  .pill-nav-item.active { color: var(--accent); background: var(--accent-soft); }
   @keyframes pillNavIn { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
 }
 @media (max-width: 380px) {
