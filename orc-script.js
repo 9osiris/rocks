@@ -5,6 +5,7 @@ const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMG_W500  = "https://image.tmdb.org/t/p/w500";
 const IMG_W45   = "https://image.tmdb.org/t/p/w45";
 const IMG_ORIG  = "https://image.tmdb.org/t/p/original";
+const IMG_W780  = "https://image.tmdb.org/t/p/w780";
 const BRAND     = "Osiris Watch";
 const ACCENT    = "2dd4bf";
 
@@ -48,6 +49,7 @@ const ICONS = {
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`,
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L19 7"/></svg>`,
   share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>`,
+  clapper: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 8.5h17a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1h-17a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1Z"/><path d="m3 8.5 2.2-4 4 1.1M8.5 5.6l2.2-4 4 1.1M14 4.7l2.2-4 4 1.1"/></svg>`,
 };
 
 const $ = (s, c = document) => c.querySelector(s);
@@ -1471,6 +1473,48 @@ function initGenreStrip() {
   });
 }
 
+function buildSeasonSpotlight(shows) {
+  const list = (shows || []).filter(s => s && (s.backdrop_path || s.poster_path));
+  if (!list.length) return null;
+  const wrap = document.createElement("div");
+  wrap.className = "row-wrapper spotlight-wrapper visible";
+  wrap.innerHTML = `
+    <div class="row-header"><h2 class="row-title">New Seasons Airing Now</h2></div>
+    <div class="row-track-container">
+      <button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button>
+      <div class="row-track spotlight-track"></div>
+      <button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>`;
+  const track = wrap.querySelector(".spotlight-track");
+  list.forEach(s => {
+    const img = s.backdrop_path ? `${IMG_W780}${s.backdrop_path}` : posterUrl(s.poster_path);
+    const sn = s._season || s.number_of_seasons;
+    const card = document.createElement("div");
+    card.className = "spotlight-card";
+    card.tabIndex = 0;
+    card.setAttribute("role", "link");
+    card.setAttribute("aria-label", s.name || s.title || "");
+    card.innerHTML = `
+      ${img ? `<img src="${esc(img)}" alt="" loading="lazy" draggable="false" decoding="async"/>` : `<div class="no-img">\u2014</div>`}
+      <div class="spotlight-shade"></div>
+      ${sn ? `<span class="spotlight-badge">${ICONS.clapper} Season ${sn}</span>` : ""}
+      <div class="spotlight-foot">
+        <div class="spotlight-title">${esc(s.name || s.title || "")}</div>
+        <div class="spotlight-sub">New season now airing</div>
+      </div>`;
+    const go = () => { location.href = `/tv?id=${s.id}`; };
+    card.addEventListener("click", go);
+    card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    track.appendChild(card);
+  });
+  initRowDrag(track);
+  initRowKeyboard(track);
+  const scroll = 620;
+  wrap.querySelector(".row-arrow.left").addEventListener("click", () => track.scrollBy({ left: -scroll, behavior: "smooth" }));
+  wrap.querySelector(".row-arrow.right").addEventListener("click", () => track.scrollBy({ left: scroll, behavior: "smooth" }));
+  return wrap;
+}
+
 async function initHomePage() {
   initSplash();
   initSidebar("home");
@@ -1483,8 +1527,10 @@ async function initHomePage() {
     { title: "Trending Now", path: "/trending/all/week", type: "movie", id: "trending", ranks: true },
     { title: "Top Rated", path: "/movie/top_rated", type: "movie", seeAll: "/search?type=movie" },
     { title: "Coming Soon", path: "/movie/upcoming", type: "movie" },
+    { title: "Popular Movies", path: "/movie/popular", type: "movie", seeAll: "/search?type=movie" },
     { title: "Popular TV", path: "/tv/popular", type: "tv", seeAll: "/search?type=tv" },
     { title: "On The Air", path: "/tv/on_the_air", type: "tv" },
+    { title: "Airing Today", path: "/tv/airing_today", type: "tv" },
     { title: "Top Rated TV", path: "/tv/top_rated", type: "tv" },
     { title: "Trending TV", path: "/trending/tv/week", type: "tv" },
   ];
@@ -1545,6 +1591,21 @@ async function initHomePage() {
   const main = $("#main-content");
   if (main && !$("#splash-screen")) main.style.opacity = "1";
 
+  (async () => {
+    try {
+      const air = await tmdb("/tv/on_the_air");
+      const top = (air.results || []).filter(s => s.backdrop_path).slice(0, 12);
+      const details = await Promise.allSettled(top.map(s => tmdb(`/tv/${s.id}`)));
+      const shows = details
+        .filter(r => r.status === "fulfilled")
+        .map(r => r.value)
+        .filter(s => (s.number_of_seasons || 0) >= 2)
+        .slice(0, 10);
+      const spot = buildSeasonSpotlight(shows);
+      if (spot) el.prepend(spot);
+    } catch (_) {}
+  })();
+
   const hash = location.hash.replace("#", "");
   if (hash) {
     const delay = ($("#splash-screen") && !sessionStorage.getItem("orc_splash")) ? 3000 : 500;
@@ -1590,7 +1651,7 @@ async function initMoviePage() {
 
   let m;
   try {
-    m = await tmdb(`/movie/${id}?append_to_response=credits,similar,videos,recommendations`);
+    m = await tmdb(`/movie/${id}?append_to_response=credits,similar,videos,recommendations,external_ids,release_dates`);
   } catch (e) {
     console.error(e);
     showErr("Couldn't load this title. Check your connection and try again.");
@@ -1605,6 +1666,7 @@ async function initMoviePage() {
 
     const saved = MyList.has(m.id, "movie");
     const trailer = pickTrailer(m.videos);
+    const cert = (m.release_dates?.results || []).find(r => r.iso_3166_1 === "US")?.release_dates?.map(d => d.certification).find(Boolean);
     const resume = resumeLabel(Progress.getItem(m.id, "movie"));
     header.innerHTML = `
       <h1 class="detail-title">${esc(m.title)}</h1>
@@ -1615,6 +1677,7 @@ async function initMoviePage() {
         ${m.vote_count ? `<span>${fmtVotes(m.vote_count)}</span>` : ""}
         <span>${year(m.release_date)}</span>
         ${m.runtime ? `<span>${formatRuntime(m.runtime)}</span>` : ""}
+        ${cert ? `<span class="cert">${esc(cert)}</span>` : ""}
         ${genreTags(m.genres, "movie")}
       </div>
       <p class="detail-overview">${esc(m.overview || "")}</p>
@@ -1651,6 +1714,8 @@ async function initMoviePage() {
         ${m.revenue ? `<div class="info-cell"><label>Box office</label><span>${fmtMoney(m.revenue)}</span></div>` : ""}
         ${m.production_companies?.[0] ? `<div class="info-cell"><label>Studio</label><span>${esc(m.production_companies[0].name)}</span></div>` : ""}
         ${m.production_countries?.[0] ? `<div class="info-cell"><label>Country</label><span>${esc(m.production_countries[0].name)}</span></div>` : ""}
+        ${m.external_ids?.imdb_id ? `<div class="info-cell"><label>IMDb</label><a class="ext-link" href="https://www.imdb.com/title/${esc(m.external_ids.imdb_id)}/" target="_blank" rel="noopener">View on IMDb \u2197</a></div>` : ""}
+        ${m.homepage ? `<div class="info-cell"><label>Official site</label><a class="ext-link" href="${esc(m.homepage)}" target="_blank" rel="noopener">Website \u2197</a></div>` : ""}
       </div>`;
 
     renderCastRow(m.credits?.cast?.slice(0, 16) || []);
@@ -1694,13 +1759,14 @@ async function initTvPage() {
   };
 
   try {
-    const show = await tmdb(`/tv/${id}?append_to_response=credits,similar,recommendations,videos`);
+    const show = await tmdb(`/tv/${id}?append_to_response=credits,similar,recommendations,videos,external_ids,content_ratings`);
     document.title = `${show.name} — ${BRAND}`;
     const backdropEl = $("#detail-backdrop");
     if (backdropEl && show.backdrop_path) backdropEl.style.backgroundImage = `url(${IMG_ORIG}${show.backdrop_path})`;
 
     const saved = MyList.has(show.id, "tv");
     const trailer = pickTrailer(show.videos);
+    const cert = (show.content_ratings?.results || []).find(r => r.iso_3166_1 === "US")?.rating;
     const creators = (show.created_by || []).map(c => c.name).join(", ");
     const prog = Progress.getItem(show.id, "tv");
     const seasons = (show.seasons || []).filter(s => s.season_number > 0);
@@ -1723,6 +1789,7 @@ async function initTvPage() {
         <span>${year(show.first_air_date)}</span>
         ${show.number_of_seasons ? `<span>${show.number_of_seasons} Seasons</span>` : ""}
         ${show.number_of_episodes ? `<span>${show.number_of_episodes} Eps</span>` : ""}
+        ${cert ? `<span class="cert">${esc(cert)}</span>` : ""}
         ${genreTags(show.genres, "tv")}
       </div>
       <p class="detail-overview">${esc(show.overview || "")}</p>
@@ -1824,6 +1891,8 @@ async function initTvPage() {
           ${show.networks?.[0] ? `<div class="info-cell"><label>Network</label><span>${esc(show.networks[0].name)}</span></div>` : ""}
           ${show.original_language ? `<div class="info-cell"><label>Language</label><span>${esc(show.original_language.toUpperCase())}</span></div>` : ""}
           ${show.last_air_date ? `<div class="info-cell"><label>Last aired</label><span>${esc(show.last_air_date)}</span></div>` : ""}
+          ${show.external_ids?.imdb_id ? `<div class="info-cell"><label>IMDb</label><a class="ext-link" href="https://www.imdb.com/title/${esc(show.external_ids.imdb_id)}/" target="_blank" rel="noopener">View on IMDb \u2197</a></div>` : ""}
+          ${show.homepage ? `<div class="info-cell"><label>Official site</label><a class="ext-link" href="${esc(show.homepage)}" target="_blank" rel="noopener">Website \u2197</a></div>` : ""}
         </div>`;
     }
 
@@ -1864,6 +1933,18 @@ function initSearchPage() {
   let current = filter === "movie" || filter === "tv" ? filter : "all";
   let timer, lastQ = "";
 
+  const genreSel = $("#filter-genre");
+  const yearSel = $("#filter-year");
+  const sortSel = $("#filter-sort");
+  if (genreSel && genreSel.options.length <= 1) {
+    GENRES.forEach(g => { const o = document.createElement("option"); o.value = g.id; o.textContent = g.name; genreSel.appendChild(o); });
+    if (genreId) genreSel.value = genreId;
+  }
+  if (yearSel && yearSel.options.length <= 1) {
+    const nowY = new Date().getFullYear();
+    for (let y = nowY; y >= 1950; y--) { const o = document.createElement("option"); o.value = y; o.textContent = y; yearSel.appendChild(o); }
+  }
+
   function setBusy(busy) {
     if (!status) return;
     status.classList.toggle("is-busy", busy);
@@ -1903,14 +1984,17 @@ function initSearchPage() {
     doSearch(lastQ || input?.value.trim() || "");
   }));
 
+  [genreSel, yearSel, sortSel].forEach(sel => sel?.addEventListener("change", () => doSearch(input?.value.trim() || "")));
+
   async function doSearch(q) {
     if (!status || !grid) return;
     lastQ = q;
     if (current === "ai") { aiSearch(q); return; }
     status.classList.remove("is-busy");
-    if (!q && current === "all" && !genreId) {
+    const anyFilter = (genreSel && genreSel.value) || (yearSel && yearSel.value);
+    if (!q && current === "all" && !genreId && !anyFilter) {
       status.textContent = "";
-      grid.innerHTML = `<div class="no-results"><h3>What are you looking for?</h3><p>Search by title or browse categories from the sidebar.</p></div>`;
+      grid.innerHTML = `<div class="no-results"><h3>What are you looking for?</h3><p>Search by title, pick a genre or year above, or browse categories from the sidebar.</p></div>`;
       renderRecent();
       return;
     }
@@ -1920,13 +2004,7 @@ function initSearchPage() {
 
     try {
       let items = [];
-      if (genreId && !q) {
-        const media = current === "tv" ? "tv" : "movie";
-        const genreName = GENRES.find(g => String(g.id) === genreId)?.name || "Genre";
-        const data = await tmdb(`/discover/${media}?with_genres=${genreId}&sort_by=popularity.desc`);
-        items = data.results || [];
-        status.textContent = `${genreName} · ${items.length} titles`;
-      } else if (q) {
+      if (q) {
         RecentSearches.add(q);
         let path = "/search/multi";
         if (current === "movie") path = "/search/movie";
@@ -1936,9 +2014,24 @@ function initSearchPage() {
         if (current !== "all") items = items.filter(i => (i.media_type || current) === current);
         status.textContent = `${items.length} results`;
       } else {
-        const data = await tmdb(current === "tv" ? "/tv/popular" : "/movie/popular");
+        const media = current === "tv" ? "tv" : "movie";
+        const g = genreSel?.value || genreId || "";
+        const yr = yearSel?.value || "";
+        let sort = sortSel?.value || "popularity.desc";
+        if (media === "tv") {
+          if (sort === "primary_release_date.desc") sort = "first_air_date.desc";
+          if (sort === "revenue.desc") sort = "popularity.desc";
+        }
+        const parts = [`sort_by=${sort}`, "vote_count.gte=30"];
+        if (g) parts.push(`with_genres=${g}`);
+        if (yr) parts.push(media === "tv" ? `first_air_date_year=${yr}` : `primary_release_year=${yr}`);
+        const data = await tmdb(`/discover/${media}?${parts.join("&")}`);
         items = data.results || [];
-        status.textContent = `Popular ${current === "tv" ? "series" : "films"}`;
+        const bits = [];
+        const gName = GENRES.find(x => String(x.id) === String(g))?.name;
+        if (gName) bits.push(gName);
+        if (yr) bits.push(yr);
+        status.textContent = `${bits.length ? bits.join(" · ") + " · " : ""}${items.length} ${media === "tv" ? "series" : "films"}`;
       }
 
       grid.innerHTML = "";
