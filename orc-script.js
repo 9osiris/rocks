@@ -43,7 +43,7 @@ const ICONS = {
   tv: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M8 22h8M12 19v3"/></svg>`,
   trend: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>`,
   list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>`,
-  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`,
+  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8.9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
   back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`,
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L19 7"/></svg>`,
@@ -485,11 +485,10 @@ function initMobileUI(active) {
   }
 }
 
-// Liquid-glass bottom pill navigation for mobile/touch layouts.
+// Clean, solid, fully-rounded bottom pill navigation for mobile/touch layouts.
 function buildMobilePillNav(active) {
   const existing = $("#mobile-pill-nav");
   if (!isMobile()) { if (existing) existing.remove(); return; }
-  injectGlassFilters();
   const items = [
     { href: homeUrl(), label: "Home", icon: ICONS.home, key: "home" },
     { href: "/search?type=movie", label: "Movies", icon: ICONS.film, key: "movies" },
@@ -502,17 +501,11 @@ function buildMobilePillNav(active) {
   nav.className = "mobile-pill-nav";
   nav.setAttribute("aria-label", "Primary");
   nav.innerHTML = `
-    <div class="liquidGlass-wrapper pill-nav-glass">
-      <div class="liquidGlass-effect"></div>
-      <div class="liquidGlass-tint liquidGlass-tint--dark"></div>
-      <div class="liquidGlass-shine"></div>
-      <div class="liquidGlass-text pill-nav-items">
-        ${items.map(it => `
-          <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
-            <span class="pill-nav-ico">${it.icon}</span>
-            <span class="pill-nav-label">${it.label}</span>
-          </a>`).join("")}
-      </div>
+    <div class="pill-nav-inner">
+      ${items.map(it => `
+        <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
+          <span class="pill-nav-ico">${it.icon}</span>
+        </a>`).join("")}
     </div>`;
   if (!existing) document.body.appendChild(nav);
 }
@@ -529,7 +522,6 @@ function initSidebar(active) {
   el.innerHTML = `
     <div class="topnav-inner">
       <a href="${homeUrl()}" class="topnav-logo" aria-label="Osiris Watch — home">
-        <img src="images/favicon.svg" alt="">
         <span class="topnav-word">Osiris<i>Watch</i></span>
       </a>
       <nav class="topnav-links" aria-label="Primary">
