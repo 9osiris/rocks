@@ -1,5 +1,5 @@
-const CACHE = "orc-static-v3";
-const ASSETS = ["/orc-styles.css", "/orc-script.js", "/images/favicon.svg", "/favicon.svg", "/favicon.png", "/icon-192.png", "/icon-512.png", "/manifest.json"];
+const CACHE = "orc-static-v5";
+const ASSETS = ["/orc-styles.css", "/orc-script.js", "/images/favicon.svg", "/favicon.svg", "/favicon.png", "/icon-192.png", "/icon-512.png", "/manifest.json", "/offline.html"];
 
 self.addEventListener("install", e => {
   e.waitUntil(
@@ -22,6 +22,13 @@ self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Page navigations: try the network, fall back to the offline page.
+  if (e.request.mode === "navigate") {
+    e.respondWith(fetch(e.request).catch(() => caches.match("/offline.html")));
+    return;
+  }
+
   const isStatic = ASSETS.some(a => url.pathname === a || url.pathname.endsWith(a.replace(/^\//, "")));
   if (!isStatic) return;
   e.respondWith(
