@@ -1865,6 +1865,8 @@ async function initTvPage() {
         epHead.innerHTML = `<h2>Episodes</h2>`;
         $("#ep-block").prepend(epHead);
       }
+      const seasonSel = $("#season-select");
+      if (seasonSel && seasonSel.parentElement !== epHead) epHead.appendChild(seasonSel);
       seasons.forEach(s => {
         const o = document.createElement("option");
         o.value = s.season_number;
