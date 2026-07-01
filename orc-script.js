@@ -43,7 +43,7 @@ const ICONS = {
   tv: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M8 22h8M12 19v3"/></svg>`,
   trend: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>`,
   list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>`,
-  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8.9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
   back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`,
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L19 7"/></svg>`,
@@ -270,6 +270,7 @@ const SETTINGS = {
   reduceMotionKey: "orc_reduce_motion",
   hideWatchedKey: "orc_hide_watched",
   autoplayTrailersKey: "orc_autoplay_trailers",
+  themeKey: "orc_theme",
   get(k, def = "") { return localStorage.getItem(k) ?? def; },
   set(k, v) {
     if (!safeSetItem(k, v)) toast("Couldn't save setting — storage may be full.");
@@ -305,6 +306,20 @@ function applyGlobalSettings() {
   document.documentElement.style.setProperty("--accent", `#${hex}`);
   document.documentElement.style.setProperty("--accent-dim", `color-mix(in srgb, #${hex} 78%, #000)`);
   document.documentElement.style.setProperty("--accent-soft", `rgba(${parseInt(hex.slice(0, 2), 16)}, ${parseInt(hex.slice(2, 4), 16)}, ${parseInt(hex.slice(4, 6), 16)}, 0.14)`);
+
+  const themePref = SETTINGS.get(SETTINGS.themeKey, "auto");
+  const rootEl = document.documentElement;
+  if (themePref === "dark" || themePref === "light") rootEl.setAttribute("data-theme", themePref);
+  else rootEl.removeAttribute("data-theme");
+  const resolvedTheme = themePref === "auto"
+    ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+    : themePref;
+  rootEl.style.colorScheme = resolvedTheme;
+  const themeColor = resolvedTheme === "light" ? "#f6f6f8" : "#0b0b0d";
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m, i) => {
+    if (i === 0) { m.removeAttribute("media"); m.setAttribute("content", themeColor); } else { m.remove(); }
+  });
+
   document.documentElement.classList.toggle("reduce-motion", SETTINGS.get(SETTINGS.reduceMotionKey) === "1");
 }
 function providerUrl(type, id, s, e) {
@@ -1162,7 +1177,14 @@ const LiquidGlass = (() => {
     else window.addEventListener("resize", upd, { passive: true });
   }
 
-  return { init, apply, supported };
+  function glassify(root) {
+    (root || document).querySelectorAll(".btn-ghost:not([data-lg])").forEach(b => {
+      b.setAttribute("data-lg", "1");
+      apply(b, { borderRadius: 999, distortionScale: -70, blur: 6, brightness: 60, opacity: 0.9, saturation: 1.4 });
+    });
+  }
+
+  return { init, apply, glassify, supported };
 })();
 
 function initGlassFilter() {
@@ -1604,6 +1626,7 @@ async function initMoviePage() {
         <button class="btn-ghost btn-icon-text" id="detail-share">${ICONS.share}<span>Share</span></button>
       </div>`;
 
+    LiquidGlass.glassify(header);
     $("#detail-play")?.addEventListener("click", () => scrollToSelector("#player-frame"));
     if (trailer) $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
     $("#detail-share")?.addEventListener("click", () => sharePageLink(m.title));
@@ -1711,6 +1734,7 @@ async function initTvPage() {
         <button class="btn-ghost btn-icon-text" id="detail-share">${ICONS.share}<span>Share</span></button>
       </div>`;
 
+    LiquidGlass.glassify(header);
     $("#detail-play")?.addEventListener("click", () => scrollToSelector("#player-frame"));
     if (trailer) $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
     $("#detail-share")?.addEventListener("click", () => sharePageLink(show.name));
@@ -2080,6 +2104,21 @@ function initSettingsPage() {
         toast(`Accent set to ${c.label}`);
       });
       accentBox.appendChild(btn);
+    });
+  }
+
+  const themeBox = $("#settings-theme");
+  if (themeBox) {
+    const curTheme = SETTINGS.get(SETTINGS.themeKey, "auto");
+    themeBox.querySelectorAll(".theme-opt").forEach(b => {
+      b.classList.toggle("active", b.dataset.themeVal === curTheme);
+      b.addEventListener("click", () => {
+        SETTINGS.set(SETTINGS.themeKey, b.dataset.themeVal);
+        applyGlobalSettings();
+        themeBox.querySelectorAll(".theme-opt").forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        toast(`Theme set to ${b.textContent.trim()}`);
+      });
     });
   }
 
