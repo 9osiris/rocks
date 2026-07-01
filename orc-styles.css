@@ -44,8 +44,26 @@
   --safe-right:    env(safe-area-inset-right, 0px);
 }
 
+/* Light theme variables — shared by forced light and by auto-when-OS-is-light */
+[data-theme="light"] {
+    --bg:           #f6f6f8;
+    --bg-1:         #ffffff;
+    --bg-2:         #ededf0;
+    --bg-3:         #e1e1e6;
+    --surface-blur: rgba(255,255,255,0.78);
+    --border:       rgba(0,0,0,0.10);
+    --border-2:     rgba(0,0,0,0.16);
+    --text:         #16161a;
+    --text-2:       #54545d;
+    --text-3:       #86868e;
+    --accent-soft:  rgba(45,212,191,0.16);
+    --solid-bg:     #16161a;
+    --solid-fg:     #ffffff;
+    --shadow-1:     0 4px 18px rgba(0,0,0,0.10);
+    --shadow-2:     0 18px 50px rgba(0,0,0,0.18);
+}
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
     --bg:           #f6f6f8;
     --bg-1:         #ffffff;
     --bg-2:         #ededf0;
@@ -828,6 +846,15 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
 .lg-surface { position: relative; background: hsl(0 0% 0% / var(--lg-frost, 0)); box-shadow: inset 0 0 2px 1px rgba(255,255,255,0.30), inset 0 0 10px 4px rgba(255,255,255,0.10), 0 8px 26px rgba(0,0,0,0.36); }
 .lg-surface > * { position: relative; z-index: 1; }
 .lg-fallback .lg-surface { background: rgba(18,18,24,0.55); -webkit-backdrop-filter: blur(16px) saturate(1.6); backdrop-filter: blur(16px) saturate(1.6); border: 1px solid rgba(255,255,255,0.14); }
+/* Glass ghost buttons: softer rim/shadow than the big surfaces */
+.btn-ghost.lg-surface { background: transparent; box-shadow: inset 0 0 2px 1px rgba(255,255,255,0.22), inset 0 0 8px 3px rgba(255,255,255,0.07), 0 4px 14px rgba(0,0,0,0.22); }
+.btn-ghost.lg-surface:hover { background: color-mix(in srgb, var(--text) 8%, transparent); transform: translateY(-1px); }
+.lg-fallback .btn-ghost.lg-surface { background: color-mix(in srgb, var(--text) 12%, transparent); -webkit-backdrop-filter: blur(10px) saturate(1.4); backdrop-filter: blur(10px) saturate(1.4); border: 1px solid var(--border-2); }
+/* Appearance theme segmented control (Settings) */
+.settings-theme { display: inline-flex; gap: 4px; padding: 4px; border-radius: var(--pill); background: var(--bg-2); border: 1px solid var(--border); }
+.theme-opt { padding: 8px 20px; border-radius: var(--pill); color: var(--text-2); font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: background 0.2s var(--ease-out), color 0.2s; }
+.theme-opt:hover { color: var(--text); }
+.theme-opt.active { background: var(--solid-bg); color: var(--solid-fg); }
 /* Desktop top bar becomes real glass while keeping hero transparency */
 .lg-on .topnav::before { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 .lg-on .topnav.scrolled, .lg-on body:not(:has(.hero)):not(.detail-page) .topnav { -webkit-backdrop-filter: blur(9px) url(#lg-topnav) saturate(1.3); backdrop-filter: blur(9px) url(#lg-topnav) saturate(1.3); }
