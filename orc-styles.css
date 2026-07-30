@@ -1042,3 +1042,45 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   .hero-dot.active .hero-dot-fill { animation: none; transform: scaleX(1); }
   .media-card:hover, .media-card.is-hovered { transform: none; box-shadow: none; }
 }
+/* UX polish */
+.toast.toast-mobile {
+  bottom: calc(88px + var(--safe-bottom));
+}
+
+@media (hover: none) {
+  .media-card .card-foot {
+    opacity: 1;
+    transform: none;
+    padding-top: 36px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.88));
+  }
+  .media-card .card-foot-title {
+    -webkit-line-clamp: 1;
+  }
+}
+
+.genre-pill,
+.filter-chip,
+.search-recent-pill,
+.settings-provider,
+.provider-tab {
+  min-height: 40px;
+}
+
+.search-input-wrap {
+  min-height: 52px;
+}
+
+.search-input-wrap input {
+  min-height: 44px;
+}
+
+.btn-play,
+.btn-ghost {
+  min-height: 44px;
+}
+
+.pill-nav-item {
+  min-width: 46px;
+  min-height: 46px;
+}
