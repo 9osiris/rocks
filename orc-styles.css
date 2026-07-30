@@ -1611,3 +1611,142 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     background: var(--accent-soft);
   }
 }
+/* Mobile nav: no double oval, soft active pill */
+@media (max-width: 768px) {
+  .mobile-pill-nav {
+    position: fixed;
+    left: 50%;
+    bottom: calc(14px + var(--safe-bottom));
+    transform: translateX(-50%);
+    z-index: 460;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    padding: 5px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--border-2);
+    background: color-mix(in srgb, var(--bg-1) 90%, transparent);
+    backdrop-filter: blur(20px) saturate(1.35);
+    -webkit-backdrop-filter: blur(20px) saturate(1.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    max-width: calc(100vw - 24px);
+    width: min(360px, calc(100vw - 24px));
+  }
+
+  .pill-nav-item {
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    min-height: 44px;
+    border-radius: 999px;
+    color: var(--text-3);
+    text-decoration: none;
+    transition: color 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pill-nav-item::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    opacity: 0;
+    transform: scale(0.86);
+    transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .pill-nav-item.active {
+    color: var(--accent);
+  }
+
+  .pill-nav-item.active::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .pill-nav-ico {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    background: none !important;
+    border-radius: 0;
+  }
+
+  .pill-nav-ico svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.85;
+  }
+
+  .pill-nav-item:active {
+    transform: none;
+  }
+
+  .pill-nav-item:active .pill-nav-ico {
+    opacity: 0.7;
+  }
+}
+
+/* Calmer motion on touch devices */
+@media (hover: none), (max-width: 768px) {
+  .media-card,
+  .media-card:hover,
+  .media-card.is-hovered,
+  .media-card:active {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .genre-pill:hover,
+  .filter-chip:hover,
+  .settings-provider:hover,
+  .btn-play:hover,
+  .btn-ghost:hover,
+  .cast-item:hover,
+  .spotlight-card:hover {
+    transform: none !important;
+  }
+
+  .row-wrapper {
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .hero-content {
+    animation: none;
+  }
+
+  .btn-play,
+  .btn-ghost,
+  .genre-pill,
+  .filter-chip,
+  .provider-tab,
+  .settings-provider,
+  .card-icon-btn,
+  .ep-row {
+    transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease, opacity 0.22s ease !important;
+  }
+
+  .ep-row:hover {
+    transform: none !important;
+  }
+
+  .toast {
+    transition: opacity 0.28s ease, transform 0.28s ease !important;
+  }
+
+  .back-top {
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s !important;
+  }
+}
