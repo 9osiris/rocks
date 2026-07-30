@@ -7,7 +7,7 @@ const IMG_W45   = "https://image.tmdb.org/t/p/w45";
 const IMG_ORIG  = "https://image.tmdb.org/t/p/original";
 const IMG_W780  = "https://image.tmdb.org/t/p/w780";
 const BRAND     = "Osiris Watch";
-const ACCENT    = "2dd4bf";
+const ACCENT    = "5b99fc";
 
 const PROVIDERS = [
   { id: "vidking", name: "VidKing",
@@ -287,7 +287,7 @@ const SETTINGS = {
 };
 
 const ACCENT_COLORS = [
-  { id: "2dd4bf", label: "Teal" },
+  { id: "5b99fc", label: "Default" },
   { id: "7c5cff", label: "Violet" },
   { id: "3b82f6", label: "Blue" },
   { id: "ef4444", label: "Red" },
