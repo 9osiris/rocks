@@ -1750,3 +1750,93 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s !important;
   }
 }
+/* Mobile nav active pill fade */
+@media (max-width: 768px) {
+  .pill-nav-item {
+    position: relative;
+    color: var(--text-3);
+    transition: color 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .pill-nav-item::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    opacity: 0;
+    transform: scale(0.86);
+    transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .pill-nav-item.active {
+    color: var(--accent);
+  }
+
+  .pill-nav-item.active::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .pill-nav-ico {
+    position: relative;
+    z-index: 1;
+    background: none !important;
+  }
+
+  .pill-nav-item:active {
+    transform: none;
+  }
+}
+
+/* Calm touch motion, no bounce */
+@media (hover: none), (max-width: 768px) {
+  .media-card,
+  .media-card:hover,
+  .media-card.is-hovered,
+  .media-card:active {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .genre-pill:hover,
+  .filter-chip:hover,
+  .settings-provider:hover,
+  .btn-play:hover,
+  .btn-ghost:hover,
+  .cast-item:hover,
+  .spotlight-card:hover,
+  .ep-row:hover {
+    transform: none !important;
+  }
+
+  .btn-play,
+  .btn-ghost,
+  .genre-pill,
+  .filter-chip,
+  .provider-tab,
+  .settings-provider,
+  .card-icon-btn,
+  .ep-row {
+    transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease, opacity 0.22s ease !important;
+  }
+
+  .row-wrapper {
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .hero-content {
+    animation: none;
+  }
+
+  .toast {
+    transition: opacity 0.28s ease, transform 0.28s ease !important;
+  }
+
+  .back-top {
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s !important;
+  }
+}
