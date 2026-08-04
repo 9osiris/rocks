@@ -789,10 +789,19 @@ function buildCard(item, type = "movie", opts = {}) {
       <div class="card-foot-meta">${y ? `${y} · ` : ""}${kind === "tv" ? "Series" : "Movie"}</div>
     </div>`;
 
-  card.addEventListener("click", e => {
+    card.addEventListener("click", e => {
     if (e.target.closest(".save-btn")) return;
     const bg = item.backdrop_path ? `${IMG_ORIG}${item.backdrop_path}` : (posterUrl(item.poster_path) || "");
     navigateWithLoader(href, bg, title);
+  });
+
+  card.addEventListener("keydown", e => {
+    if (e.target.closest(".save-btn")) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const bg = item.backdrop_path ? `${IMG_ORIG}${item.backdrop_path}` : (posterUrl(item.poster_path) || "");
+      navigateWithLoader(href, bg, title);
+    }
   });
 
   card.addEventListener("keydown", e => {
