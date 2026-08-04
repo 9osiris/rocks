@@ -791,17 +791,19 @@ function buildCard(item, type = "movie", opts = {}) {
 
   card.addEventListener("click", e => {
     if (e.target.closest(".save-btn")) return;
-    location.href = href;
+    const bg = item.backdrop_path ? `${IMG_ORIG}${item.backdrop_path}` : (posterUrl(item.poster_path) || "");
+    navigateWithLoader(href, bg, title);
   });
 
   card.addEventListener("keydown", e => {
     if (e.target.closest(".save-btn")) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      location.href = href;
+      const bg = item.backdrop_path ? `${IMG_ORIG}${item.backdrop_path}` : (posterUrl(item.poster_path) || "");
+      navigateWithLoader(href, bg, title);
     }
   });
-
+  
   card.querySelector(".save-btn").addEventListener("click", e => {
     e.stopPropagation();
     const added = MyList.toggle({ id, type: kind, title, poster: item.poster_path });
@@ -2260,15 +2262,61 @@ function initDmcaPage() {
   document.title = "DMCA — Osiris Watch";
 }
 
-function playLoader(bg, title) {
+function playLoader(bg, title, opts = {}) {
   if (prefersReducedMotion()) return Promise.resolve();
+  const instant = !!opts.instant;
+  const hold = opts.hold ?? 480;
   return new Promise(resolve => {
-    const el = document.createElement("div");
+    let el = document.getElementById("play-loader-live");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "play-loader-live";
+      el.className = "play-loader";
+      el.innerHTML = `<div class="play-loader-bg"></div><div class="play-loader-veil"></div><div class="play-loader-mark">OSIRIS WATCH</div>`;
+      document.body.appendChild(el);
+    }
+    const bgEl = el.querySelector(".play-loader-bg");
+    if (bgEl && bg) bgEl.style.backgroundImage = `url(${esc(bg)})`;
+    if (instant) {
+      el.classList.add("on", "instant");
+    } else {
+      el.classList.remove("instant", "is-leaving");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => el.classList.add("on"));
+      });
+    }
+    setTimeout(() => {
+      el.classList.add("is-leaving");
+      el.classList.remove("on");
+      setTimeout(() => {
+        el.remove();
+        resolve();
+      }, 320);
+    }, hold);
+  });
+}
+
+function navigateWithLoader(href, bg, title) {
+  if (prefersReducedMotion()) {
+    location.href = href;
+    return;
+  }
+  NProgress.start();
+  sessionStorage.setItem("orc_loader", JSON.stringify({ bg: bg || "", title: title || "" }));
+  let el = document.getElementById("play-loader-live");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "play-loader-live";
     el.className = "play-loader";
-    el.innerHTML = `<div class="play-loader-bg" style="background-image:url(${esc(bg || "")})"></div><div class="play-loader-veil"></div><div class="play-loader-mark">OSIRIS WATCH</div>`;
+    el.innerHTML = `<div class="play-loader-bg"></div><div class="play-loader-veil"></div><div class="play-loader-mark">OSIRIS WATCH</div>`;
     document.body.appendChild(el);
-    requestAnimationFrame(() => el.classList.add("on"));
-    setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.remove(); resolve(); }, 280); }, 900);
+  }
+  const bgEl = el.querySelector(".play-loader-bg");
+  if (bgEl && bg) bgEl.style.backgroundImage = `url(${esc(bg)})`;
+  el.classList.remove("is-leaving");
+  requestAnimationFrame(() => {
+    el.classList.add("on");
+    setTimeout(() => { location.href = href; }, 220);
   });
 }
 
