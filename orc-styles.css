@@ -1840,3 +1840,156 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s !important;
   }
 }
+/* Clean play transition */
+.play-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s ease;
+  background: #0b0b0d;
+}
+
+.play-loader.on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.play-loader.is-leaving {
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.play-loader-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(28px) brightness(0.28) saturate(0.9);
+  transform: scale(1.08);
+  opacity: 0.55;
+  transition: opacity 0.4s ease, transform 0.6s ease;
+}
+
+.play-loader.on .play-loader-bg {
+  opacity: 0.7;
+  transform: scale(1.04);
+}
+
+.play-loader-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 11, 13, 0.82);
+}
+
+.play-loader-mark {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(1.05rem, 4vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  animation: none;
+}
+
+.play-loader.on .play-loader-mark {
+  opacity: 0.92;
+  transform: translateY(0);
+}
+
+.play-loader.is-leaving .play-loader-mark {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* Calm mobile motion */
+@media (hover: none), (max-width: 768px) {
+  .media-card,
+  .media-card:hover,
+  .media-card.is-hovered,
+  .media-card:active,
+  .genre-pill:hover,
+  .filter-chip:hover,
+  .settings-provider:hover,
+  .btn-play:hover,
+  .btn-ghost:hover,
+  .cast-item:hover,
+  .spotlight-card:hover,
+  .ep-row:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .btn-play,
+  .btn-ghost,
+  .genre-pill,
+  .filter-chip,
+  .provider-tab,
+  .settings-provider,
+  .card-icon-btn,
+  .ep-row,
+  .pill-nav-item {
+    transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease, opacity 0.22s ease !important;
+  }
+
+  .row-wrapper {
+    transition: opacity 0.3s ease;
+  }
+
+  .hero-content {
+    animation: none;
+  }
+
+  .toast {
+    transition: opacity 0.25s ease, transform 0.25s ease !important;
+  }
+
+  .back-top {
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s !important;
+  }
+
+  .pill-nav-item {
+    position: relative;
+    color: var(--text-3);
+  }
+
+  .pill-nav-item::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.26s ease, transform 0.26s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .pill-nav-item.active {
+    color: var(--accent);
+  }
+
+  .pill-nav-item.active::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .pill-nav-ico {
+    position: relative;
+    z-index: 1;
+    background: none !important;
+  }
+
+  .pill-nav-item:active {
+    transform: none;
+  }
+}
