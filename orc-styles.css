@@ -15,9 +15,9 @@
   --text-2:        #a6a6b0;
   --text-3:        #75757f;
 
-  --accent:        #2dd4bf;
-  --accent-dim:    #14b8a6;
-  --accent-soft:   rgba(45,212,191,0.14);
+  --accent:        #ffffff;
+  --accent-dim:    #e5e5e5;
+  --accent-soft:   rgba(255,255,255,0.16);
   --on-accent:     #ffffff;
 
   /* Theme-aware high-contrast solid button */

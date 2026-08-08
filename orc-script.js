@@ -7,7 +7,7 @@ const IMG_W45   = "https://image.tmdb.org/t/p/w45";
 const IMG_ORIG  = "https://image.tmdb.org/t/p/original";
 const IMG_W780  = "https://image.tmdb.org/t/p/w780";
 const BRAND     = "Osiris Watch";
-const ACCENT    = "5b99fc";
+const ACCENT     = "ffffff";
 
 const PROVIDERS = [
   { id: "vidking", name: "VidKing",
