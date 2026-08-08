@@ -25,66 +25,61 @@
 
   <div class="app-shell">
     <main class="settings-body">
-      <div class="settings-title-row">
-        <svg class="settings-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <h1 class="settings-title">Settings</h1>
-      </div>
+      <h1 class="settings-title">Settings</h1>
 
-      <div class="settings-card">
-        <section class="settings-section">
-          <h2>Appearance</h2>
-          <p class="settings-desc">Switch between a dark or light interface, or follow your device.</p>
-          <div class="settings-theme" id="settings-theme" role="group" aria-label="Theme">
-            <button type="button" class="theme-opt" data-theme-val="auto">Auto</button>
-            <button type="button" class="theme-opt" data-theme-val="dark">Dark</button>
-            <button type="button" class="theme-opt" data-theme-val="light">Light</button>
-          </div>
-        </section>
+      <section class="settings-section">
+        <h2>Appearance</h2>
+        <p class="settings-desc">Switch between a dark or light interface, or follow your device.</p>
+        <div class="settings-theme" id="settings-theme" role="group" aria-label="Theme">
+          <button type="button" class="theme-opt" data-theme-val="auto">Auto</button>
+          <button type="button" class="theme-opt" data-theme-val="dark">Dark</button>
+          <button type="button" class="theme-opt" data-theme-val="light">Light</button>
+        </div>
+      </section>
 
-        <section class="settings-section">
-          <h2>Accent color</h2>
-          <p class="settings-desc">Personalize the highlight color across the interface.</p>
-          <div class="settings-accents" id="settings-accents"></div>
-        </section>
+      <section class="settings-section">
+        <h2>Accent color</h2>
+        <p class="settings-desc">Personalize the highlight color across the interface.</p>
+        <div class="settings-accents" id="settings-accents"></div>
+      </section>
 
-        <section class="settings-section">
-          <h2>Playback</h2>
-          <div class="settings-toggle-row">
-            <div><strong>Auto-play trailers</strong><span>Play YouTube trailers on the home hero when available</span></div>
-            <button type="button" class="settings-toggle" id="toggle-autoplay-trailers" aria-pressed="false"></button>
-          </div>
-          <div class="settings-toggle-row">
-            <div><strong>Hide watched content</strong><span>Dim titles you've already finished in browse rows</span></div>
-            <button type="button" class="settings-toggle" id="toggle-hide-watched" aria-pressed="false"></button>
-          </div>
-          <p class="settings-note">Continue watching progress is saved automatically when using the VidKing provider.</p>
-          <div class="settings-toggle-row">
-            <div><strong>Reduce motion</strong><span>Disable animations and transitions</span></div>
-            <button type="button" class="settings-toggle" id="toggle-reduce-motion" aria-pressed="false"></button>
-          </div>
-        </section>
+      <section class="settings-section">
+        <h2>Playback</h2>
+        <div class="settings-toggle-row">
+          <div><strong>Auto-play trailers</strong><span>Play YouTube trailers on the home hero when available</span></div>
+          <button type="button" class="settings-toggle" id="toggle-autoplay-trailers" aria-pressed="false"></button>
+        </div>
+        <div class="settings-toggle-row">
+          <div><strong>Hide watched content</strong><span>Dim titles you've already finished in browse rows</span></div>
+          <button type="button" class="settings-toggle" id="toggle-hide-watched" aria-pressed="false"></button>
+        </div>
+        <p class="settings-note">Continue watching progress is saved automatically when using the VidKing provider.</p>
+        <div class="settings-toggle-row">
+          <div><strong>Reduce motion</strong><span>Disable animations and transitions</span></div>
+          <button type="button" class="settings-toggle" id="toggle-reduce-motion" aria-pressed="false"></button>
+        </div>
+      </section>
 
-        <section class="settings-section">
-          <h2>Stream provider</h2>
-          <p class="settings-desc">Choose which embed service loads when you press Play.</p>
-          <div class="settings-providers" id="settings-providers"></div>
-        </section>
+      <section class="settings-section">
+        <h2>Stream provider</h2>
+        <p class="settings-desc">Choose which embed service loads when you press Play.</p>
+        <div class="settings-providers" id="settings-providers"></div>
+      </section>
 
-        <section class="settings-section">
-          <h2>Your data</h2>
-          <p class="settings-desc">Stored locally in your browser only.</p>
-          <div class="settings-actions">
-            <button type="button" class="settings-btn" id="clear-progress">Clear continue watching</button>
-            <button type="button" class="settings-btn" id="clear-list">Clear My List</button>
-            <button type="button" class="settings-btn subtle" id="reset-splash">Replay home intro</button>
-          </div>
-        </section>
+      <section class="settings-section">
+        <h2>Your data</h2>
+        <p class="settings-desc">Stored locally in your browser only.</p>
+        <div class="settings-actions">
+          <button type="button" class="settings-btn" id="clear-progress">Clear continue watching</button>
+          <button type="button" class="settings-btn" id="clear-list">Clear My List</button>
+          <button type="button" class="settings-btn subtle" id="reset-splash">Replay home intro</button>
+        </div>
+      </section>
 
-        <section class="settings-section">
-          <h2>Legal</h2>
-          <p class="settings-desc"><a href="/dmca">DMCA &amp; copyright policy</a></p>
-        </section>
-      </div>
+      <section class="settings-section">
+        <h2>Legal</h2>
+        <p class="settings-desc"><a href="/dmca">DMCA &amp; copyright policy</a></p>
+      </section>
     </main>
 
     <footer class="page-foot">

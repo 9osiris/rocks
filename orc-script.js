@@ -557,18 +557,17 @@ function initSidebar(active) {
   el.innerHTML = `
     <div class="topnav-inner">
       <a href="${homeUrl()}" class="topnav-logo" aria-label="Osiris Watch home">
-        <svg class="nav-logo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12 18a6 6 0 110-12 6 6 0 010 12z"/></svg>
+        <span class="topnav-word">Osiris<i>Watch</i></span>
       </a>
       <nav class="topnav-links" aria-label="Primary">
         ${link(homeUrl(), "Home", active === "home")}
         ${link("/search?type=movie", "Movies", active === "movies")}
         ${link("/search?type=tv", "Series", active === "tv")}
-        ${link("/search?type=discover", "Discover", active === "discover")}
-        ${link("/list", "List", active === "list")}
+        ${link("/list", "My List", active === "list")}
+        ${link("/settings", "Settings", active === "settings")}
       </nav>
       <div class="topnav-actions">
         <a href="/search" class="topnav-icon${active === "search" ? " active" : ""}" aria-label="Search">${ICONS.search}</a>
-        <a href="/settings" class="topnav-icon${active === "settings" ? " active" : ""}" aria-label="Settings">${ICONS.settings}</a>
         <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="topnav-icon" aria-label="Discord">${ICONS.discord}</a>
         <button type="button" class="topnav-burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
       </div>
@@ -1411,10 +1410,15 @@ async function loadHero(item) {
     const rating = d.vote_average?.toFixed(1);
     const y = year(d.release_date || d.first_air_date);
     const metaParts = [];
-    if (rating) metaParts.push(`<span class="hero-badge-pill score-pill">★ ${rating}/10</span>`);
-    if (y) metaParts.push(`<span class="hero-badge-pill">📅 ${y}</span>`);
-    if (d.runtime) metaParts.push(`<span class="hero-badge-pill">⏱ ${formatRuntime(d.runtime)}</span>`);
-    else if (d.number_of_seasons) metaParts.push(`<span class="hero-badge-pill">📺 ${d.number_of_seasons} Season${d.number_of_seasons > 1 ? "s" : ""}</span>`);
+    const svgStar = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+    const svgCalendar = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    const svgClock = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
+    const svgTv = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M8 22h8M12 19v3"/></svg>`;
+
+    if (rating) metaParts.push(`<span class="hero-badge-pill score-pill">${svgStar}${rating}/10</span>`);
+    if (y) metaParts.push(`<span class="hero-badge-pill">${svgCalendar}${y}</span>`);
+    if (d.runtime) metaParts.push(`<span class="hero-badge-pill">${svgClock}${formatRuntime(d.runtime)}</span>`);
+    else if (d.number_of_seasons) metaParts.push(`<span class="hero-badge-pill">${svgTv}${d.number_of_seasons} Season${d.number_of_seasons > 1 ? "s" : ""}</span>`);
     if (d.genres?.length) metaParts.push(`<span class="hero-badge-pill">${esc(d.genres.slice(0, 2).map(g => g.name).join(" · "))}</span>`);
     if ($("#hero-meta")) $("#hero-meta").innerHTML = metaParts.join("");
 
