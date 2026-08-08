@@ -656,11 +656,11 @@ body.detail-page .topnav:not(.scrolled) .topnav-burger span { background: #fff; 
 .detail-meta .cert { padding: 3px 8px; border: 1px solid var(--border-2); border-radius: 5px; font-size: 0.72rem; font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
 
 /* New Seasons Airing Now spotlight row */
-.spotlight-track { display: flex; gap: 16px; overflow-x: auto; padding: 6px var(--gutter) 22px; scroll-snap-type: x mandatory; }
-.spotlight-card { position: relative; flex: 0 0 auto; width: min(44vw, 320px); aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; cursor: pointer; scroll-snap-align: start; background: var(--bg-2); box-shadow: var(--shadow-1); transition: transform 0.35s var(--ease-out), box-shadow 0.35s; }
+.spotlight-track { display: flex; gap: 14px; overflow-x: auto; padding: 12px var(--gutter) 20px; margin-top: -6px; scroll-snap-type: x mandatory; scroll-padding-left: var(--gutter); }
+.spotlight-card { position: relative; flex: 0 0 auto; width: clamp(260px, 22vw, 320px); aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; cursor: pointer; scroll-snap-align: start; background: var(--bg-2); box-shadow: var(--shadow-1); transition: transform 0.35s var(--ease-out), box-shadow 0.35s; }
 .spotlight-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2); }
 .spotlight-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.spotlight-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.spotlight-card img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .spotlight-card .no-img { width: 100%; height: 100%; display: grid; place-items: center; color: var(--text-3); font-size: 2rem; }
 .spotlight-shade { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 46%, rgba(0,0,0,0) 72%); }
 .spotlight-badge { position: absolute; top: 11px; left: 11px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: var(--pill); background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.16); color: #fff; font-size: 0.72rem; font-weight: 700; letter-spacing: -0.01em; }
@@ -670,7 +670,7 @@ body.detail-page .topnav:not(.scrolled) .topnav-burger span { background: #fff; 
 .list-empty-ico { width: 46px; height: 46px; margin: 0 auto 14px; color: var(--text-3); }
 .list-empty-ico svg { width: 100%; height: 100%; }
 @media (max-width: 768px) {
-  .spotlight-track { gap: 12px; padding-bottom: 16px; }
+  .spotlight-track { gap: 12px; padding: 6px var(--gutter) 16px; margin-top: 0; }
   .spotlight-card { width: 70vw; }
   .spotlight-title { font-size: 0.92rem; }
 }
