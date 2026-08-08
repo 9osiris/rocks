@@ -343,6 +343,21 @@ function applyGlobalSettings() {
 
   document.documentElement.classList.toggle("reduce-motion", SETTINGS.get(SETTINGS.reduceMotionKey) === "1");
 }
+
+function skeletons(count = 12) {
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("div");
+    el.className = "media-card skeleton-card";
+    el.innerHTML = `
+      <div class="card-poster-wrap skeleton"></div>
+      <div class="skeleton-line skeleton-title skeleton"></div>
+      <div class="skeleton-line skeleton-sub skeleton"></div>
+    `;
+    arr.push(el);
+  }
+  return arr;
+}
 function providerUrl(type, id, s, e) {
   const p = PROVIDERS.find(x => x.id === getProvider()) || PROVIDERS[0];
   let url = type === "tv" ? p.tv(id, s, e) : p.movie(id);
