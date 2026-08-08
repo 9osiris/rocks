@@ -304,6 +304,7 @@ const SETTINGS = {
 
 const ACCENT_COLORS = [
   { id: "5b99fc", label: "Default" },
+  { id: "ffffff", label: "White" },
   { id: "7c5cff", label: "Violet" },
   { id: "3b82f6", label: "Blue" },
   { id: "ef4444", label: "Red" },
@@ -1424,11 +1425,6 @@ async function loadHero(item) {
 
     const videos = d.videos?.results || [];
     const trailer = videos.find(v => v.type === "Trailer" && v.site === "YouTube") || videos.find(v => v.site === "YouTube");
-    const trBtn = $("#hero-trailer-btn");
-    if (trBtn) {
-      trBtn.style.display = trailer ? "" : "none";
-      trBtn.dataset.key = trailer?.key || "";
-    }
     if (trailer && SETTINGS.get(SETTINGS.autoplayTrailersKey) === "1" && !prefersReducedMotion() && !window.__orcHeroTrailerPlayed) {
       const play = () => { window.__orcHeroTrailerPlayed = true; setTimeout(() => openTrailer(trailer.key), 400); };
       if (!$("#splash-screen") || sessionStorage.getItem("orc_splash")) play();
@@ -1439,6 +1435,18 @@ async function loadHero(item) {
   }
 
   bindHeroActions();
+  updateHeroListState();
+}
+
+function updateHeroListState() {
+  const btn = $("#hero-list-btn");
+  if (!btn || !heroData) return;
+  const kind = mediaType(heroData);
+  const saved = MyList.has(heroData.id, kind);
+  btn.innerHTML = saved ? ICONS.check : ICONS.plus;
+  btn.classList.toggle("saved", saved);
+  btn.setAttribute("title", saved ? "Remove from My List" : "Add to My List");
+  btn.setAttribute("aria-label", saved ? "Remove from My List" : "Add to My List");
 }
 
 function bindHeroActions() {
@@ -1457,9 +1465,12 @@ function bindHeroActions() {
     const type = mediaType(heroData);
     location.href = type === "tv" ? `/tv?id=${heroData.id}` : `/movie?id=${heroData.id}`;
   });
-  $("#hero-trailer-btn")?.addEventListener("click", () => {
-    const key = $("#hero-trailer-btn")?.dataset.key;
-    if (key) openTrailer(key);
+  $("#hero-list-btn")?.addEventListener("click", () => {
+    if (!heroData) return;
+    const kind = mediaType(heroData);
+    const saved = MyList.toggle(heroData.id, kind);
+    updateHeroListState();
+    toast(saved ? "Added to My List" : "Removed from My List");
   });
 }
 

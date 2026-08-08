@@ -46,39 +46,39 @@
 
 /* Light theme variables — shared by forced light and by auto-when-OS-is-light */
 [data-theme="light"] {
-    --bg:           #f6f6f8;
+    --bg:           #f8fafc;
     --bg-1:         #ffffff;
-    --bg-2:         #ededf0;
-    --bg-3:         #e1e1e6;
-    --surface-blur: rgba(255,255,255,0.78);
-    --border:       rgba(0,0,0,0.10);
-    --border-2:     rgba(0,0,0,0.16);
-    --text:         #16161a;
-    --text-2:       #54545d;
-    --text-3:       #86868e;
-    --accent-soft:  rgba(45,212,191,0.16);
-    --solid-bg:     #16161a;
+    --bg-2:         #f1f5f9;
+    --bg-3:         #e2e8f0;
+    --surface-blur: rgba(255, 255, 255, 0.86);
+    --border:       rgba(15, 23, 42, 0.09);
+    --border-2:     rgba(15, 23, 42, 0.16);
+    --text:         #0f172a;
+    --text-2:       #475569;
+    --text-3:       #64748b;
+    --accent-soft:  rgba(45, 212, 191, 0.14);
+    --solid-bg:     #0f172a;
     --solid-fg:     #ffffff;
-    --shadow-1:     0 4px 18px rgba(0,0,0,0.10);
-    --shadow-2:     0 18px 50px rgba(0,0,0,0.18);
+    --shadow-1:     0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-2:     0 16px 44px rgba(15, 23, 42, 0.12);
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]):not([data-theme="light"]) {
-    --bg:           #f6f6f8;
+    --bg:           #f8fafc;
     --bg-1:         #ffffff;
-    --bg-2:         #ededf0;
-    --bg-3:         #e1e1e6;
-    --surface-blur: rgba(255,255,255,0.78);
-    --border:       rgba(0,0,0,0.10);
-    --border-2:     rgba(0,0,0,0.16);
-    --text:         #16161a;
-    --text-2:       #54545d;
-    --text-3:       #86868e;
-    --accent-soft:  rgba(45,212,191,0.16);
-    --solid-bg:     #16161a;
+    --bg-2:         #f1f5f9;
+    --bg-3:         #e2e8f0;
+    --surface-blur: rgba(255, 255, 255, 0.86);
+    --border:       rgba(15, 23, 42, 0.09);
+    --border-2:     rgba(15, 23, 42, 0.16);
+    --text:         #0f172a;
+    --text-2:       #475569;
+    --text-3:       #64748b;
+    --accent-soft:  rgba(45, 212, 191, 0.14);
+    --solid-bg:     #0f172a;
     --solid-fg:     #ffffff;
-    --shadow-1:     0 4px 18px rgba(0,0,0,0.10);
-    --shadow-2:     0 18px 50px rgba(0,0,0,0.18);
+    --shadow-1:     0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-2:     0 16px 44px rgba(15, 23, 42, 0.12);
   }
 }
 
@@ -272,20 +272,65 @@ body:not(:has(.hero)):not(.detail-page) .topnav::after { opacity: 1; }
   vertical-align: middle;
 }
 
-/* ===== Buttons & Topbar Glass Effect ===== */
-.btn-play {
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 11px 26px;
+/* ===== Buttons & Hero Compact Dual-Pill ===== */
+.btn-play,
+.hero-play-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 24px;
   background: var(--solid-bg);
   color: var(--solid-fg);
   font-size: 0.92rem;
   font-weight: 700;
   border-radius: var(--pill);
-  transition: transform 0.25s var(--ease-out), opacity 0.2s;
+  transition: transform 0.25s var(--ease-out), opacity 0.2s, box-shadow 0.25s;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
 }
-.btn-play:hover { transform: translateY(-1px); opacity: 0.9; }
-.btn-play:active { transform: scale(0.98); }
-.btn-play svg { width: 18px; height: 18px; }
+.btn-play:hover,
+.hero-play-btn:hover { transform: translateY(-1px); opacity: 0.92; box-shadow: 0 6px 22px rgba(0,0,0,0.35); }
+.btn-play:active,
+.hero-play-btn:active { transform: scale(0.98); }
+.btn-play svg,
+.hero-play-btn svg { width: 16px; height: 16px; }
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-dual-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--pill);
+  background: var(--surface-blur) !important;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--border) !important;
+  padding: 3px 6px;
+  gap: 2px;
+}
+.dual-pill-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #ffffff;
+  transition: background 0.2s, transform 0.2s, color 0.2s;
+}
+.dual-pill-btn svg { width: 18px; height: 18px; stroke-width: 2; }
+.dual-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.08);
+}
+.dual-pill-btn.saved {
+  color: var(--accent);
+}
+.dual-pill-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-2);
+  margin: 0 2px;
+  opacity: 0.8;
+}
 
 .btn-ghost,
 .hero-badge-pill,
