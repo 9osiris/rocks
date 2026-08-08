@@ -402,84 +402,61 @@ body:not(:has(.hero)):not(.detail-page) .topnav::after { opacity: 1; }
   flex-shrink: 0;
 }
 
+/* ===== Screenshot Bubble Style (Solid Dark Pill with Crisp Ring) ===== */
+.genre-pill,
+.filter-chip,
+.glass-chip,
 .btn-ghost {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 20px;
-  font-size: 0.86rem;
-  font-weight: 600;
-  border-radius: var(--pill);
-  background: var(--bg-1);
-  border: 1px solid var(--border);
-  color: var(--text-2);
-  transition: background 0.25s, color 0.2s, border-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 9999px !important;
+  background: #27282d !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: background 0.2s var(--ease-out), border-color 0.2s, color 0.2s, transform 0.2s var(--ease-out);
+  box-sizing: border-box;
 }
+
+.genre-pill:hover,
+.filter-chip:hover,
+.glass-chip:hover,
 .btn-ghost:hover {
-  background: var(--bg-2);
-  border-color: var(--border-2);
-  color: var(--text);
-}
-.btn-ghost svg { width: 16px; height: 16px; }
-
-.genre-pill {
-  flex-shrink: 0;
-  padding: 8px 18px;
-  background: var(--bg-1);
-  color: var(--text-2);
-  font-size: 0.82rem;
-  font-weight: 600;
-  border-radius: var(--pill);
-  border: 1px solid var(--border);
-  transition: background 0.25s, color 0.2s, transform 0.3s var(--ease-out), border-color 0.2s;
-}
-.genre-pill:hover {
-  color: var(--text);
-  background: var(--bg-2);
-  border-color: var(--border-2);
-  transform: translateY(-2px);
-}
-.genre-pill.active {
-  background: var(--accent-soft);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  color: var(--text);
-}
-
-.filter-chip {
-  padding: 8px 18px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-2);
-  background: var(--bg-1);
-  border-radius: var(--pill);
-  border: 1px solid var(--border);
-  transition: background 0.2s, color 0.2s, transform 0.3s var(--ease-out), border-color 0.2s;
-}
-.filter-chip:hover {
-  color: var(--text);
-  background: var(--bg-2);
-  border-color: var(--border-2);
+  background: #32333a !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
 }
+
+.genre-pill.active,
 .filter-chip.on {
-  background: var(--accent-soft);
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  background: var(--accent-soft) !important;
+  border-color: var(--accent) !important;
+  color: #ffffff !important;
 }
 
 .hero-badge-pill {
-  padding: 5px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  height: 30px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--pill);
+  color: #ffffff;
+  background: #27282d;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
 }
 .hero-badge-pill.score-pill {
   color: var(--star);
-  background: color-mix(in srgb, var(--star) 14%, transparent);
-  border-color: color-mix(in srgb, var(--star) 30%, transparent);
+  background: color-mix(in srgb, var(--star) 14%, #27282d);
+  border-color: color-mix(in srgb, var(--star) 38%, transparent);
 }
 
 /* ===== Hero ===== */
@@ -1734,6 +1711,26 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     height: 44px;
     min-width: 44px;
     min-height: 44px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+  }
+  .hero-play-btn {
+    flex: 1 1 auto !important;
+    height: 42px !important;
+    min-height: 42px !important;
+  }
+  .hero-dual-pill {
+    flex: 0 0 auto !important;
+    height: 42px !important;
+    min-height: 42px !important;
   }
 }
 
