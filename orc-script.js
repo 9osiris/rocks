@@ -54,10 +54,26 @@ const ICONS = {
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L19 7"/></svg>`,
   share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>`,
   clapper: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>`,
+  discord: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>`,
+  spark: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`,
+  info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>`,
 };
 
 const $ = (s, c = document) => c.querySelector(s);
 const $$ = (s, c = document) => [...c.querySelectorAll(s)];
+
+function dedupeItems(items) {
+  if (!Array.isArray(items)) return [];
+  const seen = new Set();
+  return items.filter(item => {
+    if (!item || !item.id) return false;
+    const type = item.media_type || (item.title ? "movie" : "tv");
+    const key = `${type}_${item.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 function safeSetItem(key, val) {
   try { localStorage.setItem(key, val); return true; }
@@ -541,17 +557,19 @@ function initSidebar(active) {
   el.innerHTML = `
     <div class="topnav-inner">
       <a href="${homeUrl()}" class="topnav-logo" aria-label="Osiris Watch home">
-        <span class="topnav-word">Osiris<i>Watch</i></span>
+        <svg class="nav-logo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12 18a6 6 0 110-12 6 6 0 010 12z"/></svg>
       </a>
       <nav class="topnav-links" aria-label="Primary">
         ${link(homeUrl(), "Home", active === "home")}
         ${link("/search?type=movie", "Movies", active === "movies")}
         ${link("/search?type=tv", "Series", active === "tv")}
-        ${link("/list", "My List", active === "list")}
-        ${link("/settings", "Settings", active === "settings")}
+        ${link("/search?type=discover", "Discover", active === "discover")}
+        ${link("/list", "List", active === "list")}
       </nav>
       <div class="topnav-actions">
         <a href="/search" class="topnav-icon${active === "search" ? " active" : ""}" aria-label="Search">${ICONS.search}</a>
+        <a href="/settings" class="topnav-icon${active === "settings" ? " active" : ""}" aria-label="Settings">${ICONS.settings}</a>
+        <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="topnav-icon" aria-label="Discord">${ICONS.discord}</a>
         <button type="button" class="topnav-burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
       </div>
     </div>`;
@@ -778,7 +796,7 @@ function buildCard(item, type = "movie", opts = {}) {
   card.setAttribute("aria-label", title);
   card.innerHTML = `
     ${opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
-    ${!opts.rank && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
+    ${!opts.rank && Number.isFinite(item.vote_average) && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
     ${img ? `<img src="${esc(img)}" alt="" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img">—</div>`}
     ${prog ? `<div class="progress-bar"><span style="width:${Math.min(prog, 100)}%"></span></div>` : ""}
     <div class="card-quick">
@@ -1366,26 +1384,39 @@ async function loadHero(item) {
   await swapHeroBackdrop(backdrop);
 
   if ($("#hero-type")) $("#hero-type").textContent = realType === "tv" ? "Series" : "Film";
-  if ($("#hero-title")) $("#hero-title").textContent = title;
   if ($("#hero-desc")) $("#hero-desc").textContent = item.overview || "";
 
   const cacheKey = `${realType}_${id}`;
   try {
     let d = heroDetailCache[cacheKey];
     if (!d) {
-      d = await tmdb(`/${realType}/${id}?append_to_response=videos`);
+      d = await tmdb(`/${realType}/${id}?append_to_response=images,videos`);
       heroDetailCache[cacheKey] = d;
     }
     heroData._detail = d;
     heroData._type = realType;
+
+    // TMDB Title Logo rendering
+    const logos = d.images?.logos || [];
+    const logoObj = logos.find(l => l.iso_639_1 === "en") || logos.find(l => !l.iso_639_1) || logos[0];
+    const titleEl = $("#hero-title");
+    if (titleEl) {
+      if (logoObj?.file_path) {
+        titleEl.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${logoObj.file_path}" class="hero-title-logo" alt="${esc(title)}" />`;
+      } else {
+        titleEl.textContent = title;
+      }
+    }
+
     const rating = d.vote_average?.toFixed(1);
+    const y = year(d.release_date || d.first_air_date);
     const metaParts = [];
-    if (rating) metaParts.push(`★ ${rating}`);
-    if (year(d.release_date || d.first_air_date)) metaParts.push(year(d.release_date || d.first_air_date));
-    if (d.runtime) metaParts.push(formatRuntime(d.runtime));
-    else if (d.number_of_seasons) metaParts.push(`${d.number_of_seasons} Season${d.number_of_seasons > 1 ? "s" : ""}`);
-    if (d.genres?.length) metaParts.push(d.genres.slice(0, 3).map(g => g.name).join(", "));
-    if ($("#hero-meta")) $("#hero-meta").textContent = metaParts.join("  ·  ");
+    if (rating) metaParts.push(`<span class="hero-badge-pill score-pill">★ ${rating}/10</span>`);
+    if (y) metaParts.push(`<span class="hero-badge-pill">📅 ${y}</span>`);
+    if (d.runtime) metaParts.push(`<span class="hero-badge-pill">⏱ ${formatRuntime(d.runtime)}</span>`);
+    else if (d.number_of_seasons) metaParts.push(`<span class="hero-badge-pill">📺 ${d.number_of_seasons} Season${d.number_of_seasons > 1 ? "s" : ""}</span>`);
+    if (d.genres?.length) metaParts.push(`<span class="hero-badge-pill">${esc(d.genres.slice(0, 2).map(g => g.name).join(" · "))}</span>`);
+    if ($("#hero-meta")) $("#hero-meta").innerHTML = metaParts.join("");
 
     const videos = d.videos?.results || [];
     const trailer = videos.find(v => v.type === "Trailer" && v.site === "YouTube") || videos.find(v => v.site === "YouTube");
@@ -1399,7 +1430,9 @@ async function loadHero(item) {
       if (!$("#splash-screen") || sessionStorage.getItem("orc_splash")) play();
       else setTimeout(play, 2700);
     }
-  } catch (_) {}
+  } catch (_) {
+    if ($("#hero-title")) $("#hero-title").textContent = title;
+  }
 
   bindHeroActions();
 }
@@ -1581,7 +1614,7 @@ async function initHomePage() {
 
   results.forEach((res, i) => {
     if (res.status !== "fulfilled") return;
-    const items = res.value.results || [];
+    const items = dedupeItems(res.value.results || []);
     const c = cats[i];
     const row = buildRow(c.title, items, c.type, { id: c.id, ranks: c.ranks, seeAll: c.seeAll, periodKey: c.id === "trending" });
     if (row) el.appendChild(row);
@@ -1593,7 +1626,7 @@ async function initHomePage() {
   gRow.innerHTML = `<div class="row-header"><h2 class="row-title">${GENRES[0].name}</h2></div><div class="row-track-container"><div class="row-track"></div></div>`;
   try {
     const gd = await tmdb(`/discover/movie?with_genres=${GENRES[0].id}&sort_by=popularity.desc`);
-    (gd.results || []).slice(0, 20).forEach(it => gRow.querySelector(".row-track").appendChild(buildCard(it, "movie")));
+    dedupeItems(gd.results || []).slice(0, 20).forEach(it => gRow.querySelector(".row-track").appendChild(buildCard(it, "movie")));
   } catch (_) {}
   el.prepend(gRow);
 
@@ -1660,7 +1693,7 @@ async function initMoviePage() {
 
   let m;
   try {
-    m = await tmdb(`/movie/${id}?append_to_response=credits,similar,videos,recommendations,external_ids,release_dates`);
+    m = await tmdb(`/movie/${id}?append_to_response=images,credits,similar,videos,recommendations,external_ids,release_dates`);
   } catch (e) {
     console.error(e);
     showErr("Couldn't load this title. Check your connection and try again.");
@@ -1677,8 +1710,15 @@ async function initMoviePage() {
     const trailer = pickTrailer(m.videos);
     const cert = (m.release_dates?.results || []).find(r => r.iso_3166_1 === "US")?.release_dates?.map(d => d.certification).find(Boolean);
     const resume = resumeLabel(Progress.getItem(m.id, "movie"));
+
+    const logos = m.images?.logos || [];
+    const logoObj = logos.find(l => l.iso_639_1 === "en") || logos.find(l => !l.iso_639_1) || logos[0];
+    const titleHtml = logoObj?.file_path
+      ? `<div class="detail-logo-wrap"><img src="https://image.tmdb.org/t/p/w500${logoObj.file_path}" class="detail-title-logo" alt="${esc(m.title)}" /></div>`
+      : `<h1 class="detail-title">${esc(m.title)}</h1>`;
+
     header.innerHTML = `
-      <h1 class="detail-title">${esc(m.title)}</h1>
+      ${titleHtml}
       ${m.tagline ? `<p class="detail-tagline">${esc(m.tagline)}</p>` : ""}
       ${m.belongs_to_collection ? `<a class="collection-banner" href="/search?type=movie&q=${encodeURIComponent(m.belongs_to_collection.name)}">Part of ${esc(m.belongs_to_collection.name)}</a>` : ""}
       <div class="detail-meta">
@@ -1768,7 +1808,7 @@ async function initTvPage() {
   };
 
   try {
-    const show = await tmdb(`/tv/${id}?append_to_response=credits,similar,recommendations,videos,external_ids,content_ratings`);
+    const show = await tmdb(`/tv/${id}?append_to_response=images,credits,similar,recommendations,videos,external_ids,content_ratings`);
     document.title = `${show.name} — ${BRAND}`;
     const backdropEl = $("#detail-backdrop");
     if (backdropEl && show.backdrop_path) backdropEl.style.backgroundImage = `url(${IMG_ORIG}${show.backdrop_path})`;
@@ -1789,8 +1829,15 @@ async function initTvPage() {
     const resume = prog?.progress >= 5 && prog.progress < 98
       ? `Resume S${season} E${episode} · ${Math.round(prog.progress)}% watched`
       : "";
+
+    const logos = show.images?.logos || [];
+    const logoObj = logos.find(l => l.iso_639_1 === "en") || logos.find(l => !l.iso_639_1) || logos[0];
+    const titleHtml = logoObj?.file_path
+      ? `<div class="detail-logo-wrap"><img src="https://image.tmdb.org/t/p/w500${logoObj.file_path}" class="detail-title-logo" alt="${esc(show.name)}" /></div>`
+      : `<h1 class="detail-title">${esc(show.name)}</h1>`;
+
     if (header) header.innerHTML = `
-      <h1 class="detail-title">${esc(show.name)}</h1>
+      ${titleHtml}
       ${show.tagline ? `<p class="detail-tagline">${esc(show.tagline)}</p>` : ""}
       <div class="detail-meta">
         ${show.vote_average ? `<span class="score">★ ${show.vote_average.toFixed(1)}</span>` : ""}
@@ -2020,6 +2067,7 @@ function initSearchPage() {
         status.textContent = `${gName ? gName + " · " : ""}${items.length} ${media === "tv" ? "series" : "films"}`;
       }
 
+      items = dedupeItems(items);
       grid.innerHTML = "";
       if (!items.length) {
         grid.innerHTML = `<div class="no-results"><h3>Nothing matched</h3><p>Try different keywords.</p></div>`;
@@ -2260,7 +2308,7 @@ async function initListPage() {
   const settled = await Promise.allSettled(list.map(i =>
     tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
   ));
-  const items = settled.filter(r => r.status === "fulfilled").map(r => r.value);
+  const items = dedupeItems(settled.filter(r => r.status === "fulfilled").map(r => r.value));
   grid.innerHTML = "";
   if (!items.length) { emptyState(); return; }
   items.forEach(it => grid.appendChild(buildCard(it, it._type === "tv" ? "tv" : "movie")));
