@@ -380,15 +380,51 @@ function createPlayerIframe(src) {
   const iframe = document.createElement("iframe");
   iframe.src = src;
   iframe.title = "Video player";
-  iframe.setAttribute("allowfullscreen", "");
-  iframe.setAttribute("webkitallowfullscreen", "");
-  iframe.setAttribute("mozallowfullscreen", "");
-  iframe.setAttribute("allow", "autoplay; fullscreen; encrypted-media; picture-in-picture");
+  iframe.allowFullscreen = true;
+  iframe.setAttribute("allowfullscreen", "true");
+  iframe.setAttribute("webkitallowfullscreen", "true");
+  iframe.setAttribute("mozallowfullscreen", "true");
+  iframe.setAttribute("allow", "autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; accelerometer *; gyroscope *; display-capture *");
   return iframe;
 }
 
 function isPlayerFullscreen() {
-  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  return !!(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement
+  );
+}
+
+function togglePlayerFullscreen() {
+  const frame = $("#player-frame");
+  const iframe = frame?.querySelector("iframe");
+  const target = iframe || frame;
+  if (!target) return;
+
+  if (isPlayerFullscreen()) {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  } else {
+    if (target.requestFullscreen) {
+      target.requestFullscreen().catch(() => {
+        if (frame && frame.requestFullscreen) frame.requestFullscreen().catch(() => {});
+      });
+    } else if (target.webkitRequestFullscreen) {
+      target.webkitRequestFullscreen();
+    } else if (target.mozRequestFullScreen) {
+      target.mozRequestFullScreen();
+    } else if (target.msRequestFullscreen) {
+      target.msRequestFullscreen();
+    } else if (frame && frame.requestFullscreen) {
+      frame.requestFullscreen();
+    } else if (frame && frame.webkitRequestFullscreen) {
+      frame.webkitRequestFullscreen();
+    }
+  }
 }
 
 function loadPlayerFrame(frameEl, url) {
@@ -1495,7 +1531,7 @@ function openTrailer(youtubeKey) {
     modal = document.createElement("div");
     modal.id = "trailer-modal";
     modal.className = "modal-overlay";
-    modal.innerHTML = `<button class="modal-close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="modal-box"><iframe allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+    modal.innerHTML = `<button class="modal-close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="modal-box"><iframe allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
     document.body.appendChild(modal);
     modal.querySelector(".modal-close").addEventListener("click", closeTrailer);
     modal.addEventListener("click", e => { if (e.target === modal) closeTrailer(); });
