@@ -35,10 +35,19 @@
         <div class="player-frame" id="player-frame">
           <div class="spinner" style="position:absolute;top:50%;left:50%;margin:-18px 0 0 -18px"></div>
         </div>
+        <div id="next-ep-wrap" class="next-ep-wrap" style="display:none">
+          <button type="button" id="next-ep-btn" class="next-ep-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
+            <span>Next Episode</span>
+          </button>
+        </div>
       </section>
 
       <div class="ep-block" id="ep-block" style="display:none">
-        <select id="season-select"></select>
+        <div class="ep-controls-bar">
+          <select id="season-select"></select>
+          <input type="search" id="ep-search-input" class="ep-search-input" placeholder="Search episodes…" aria-label="Filter episodes" />
+        </div>
         <div class="ep-grid" id="ep-grid"></div>
       </div>
 

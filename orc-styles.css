@@ -921,6 +921,221 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
 .ep-row-desc { font-size: 0.78rem; color: var(--text-2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ep-row-dur { font-size: 0.72rem; color: var(--text-3); white-space: nowrap; align-self: start; padding-top: 4px; }
 
+/* ===== My List Sort Select & Filter Controls ===== */
+.list-sort-select {
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--pill);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.list-sort-select:hover { border-color: var(--border-2); background: var(--bg-2); }
+.list-sort-select option { background: var(--bg-1); color: var(--text); }
+
+/* ===== TV Episode Controls & Next Episode Button ===== */
+.ep-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.ep-controls-bar select {
+  padding: 8px 14px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  cursor: pointer;
+}
+.ep-search-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 14px;
+  font-size: 0.84rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.ep-search-input:focus { border-color: var(--accent); }
+
+.next-ep-wrap {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 10;
+  pointer-events: auto;
+}
+.next-ep-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 9999px !important;
+  background: #27282d !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  font-size: 0.84rem;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+.next-ep-btn:hover {
+  background: #32333a !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-2px);
+}
+
+/* ===== Continue Watching Progress Bar on Media Cards ===== */
+.card-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  z-index: 4;
+}
+.card-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ===== Instant Search Dropdown Menu ===== */
+.search-input-wrap {
+  position: relative;
+}
+.instant-search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: var(--bg-1);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 360px;
+  overflow-y: auto;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.instant-search-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.2s;
+}
+.instant-search-item:hover, .instant-search-item:focus-visible {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+.instant-search-poster {
+  width: 40px;
+  aspect-ratio: 2/3;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--bg-2);
+  flex-shrink: 0;
+}
+.instant-search-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.instant-search-sub {
+  font-size: 0.76rem;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+/* ===== Stream Provider Fallback Overlay ===== */
+.player-fallback-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: rgba(11, 11, 13, 0.92);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+}
+.player-fallback-overlay p {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  max-width: 400px;
+}
+.player-fallback-btn {
+  padding: 10px 22px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  border-radius: var(--pill);
+  background: var(--accent);
+  color: #000000;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.player-fallback-btn:hover { transform: translateY(-1px); opacity: 0.92; }
+
+/* ===== Stylized Fallback Poster ===== */
+.no-img-poster {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #1c1c24, #121217);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  color: var(--text-2);
+  border-radius: var(--radius);
+}
+.no-img-poster svg {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+.no-img-poster span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .search-body, .list-body {
   max-width: 1400px;
   width: 100%;

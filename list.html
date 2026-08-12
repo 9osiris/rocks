@@ -24,8 +24,21 @@
   <header class="topnav" id="topnav"></header>
 
   <div class="app-shell">
-    <main class="search-body">
+    <main class="search-body list-body">
       <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:8px;letter-spacing:-.02em">My List</h1>
+      <div class="list-controls-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+        <div class="filter-row" id="list-filter-chips" style="margin-bottom:0">
+          <button type="button" class="filter-chip on" data-type="all">All</button>
+          <button type="button" class="filter-chip" data-type="movie">Movies</button>
+          <button type="button" class="filter-chip" data-type="tv">TV Shows</button>
+        </div>
+        <select id="list-sort-select" class="list-sort-select" aria-label="Sort My List">
+          <option value="recent">Recently Added</option>
+          <option value="rating">Rating (High to Low)</option>
+          <option value="title">Title (A-Z)</option>
+          <option value="release">Release Date</option>
+        </select>
+      </div>
       <p class="search-status" id="list-status"></p>
       <div class="search-grid" id="list-grid"></div>
     </main>
