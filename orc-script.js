@@ -778,6 +778,38 @@ const SupabaseSync = {
     });
     if (error) throw error;
     return data;
+  },
+
+  async updateProfile(updates) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error("Supabase client is not initialized.");
+    const user = await this.getUser();
+    if (!user) throw new Error("User is not signed in.");
+
+    const currentMeta = user.user_metadata || {};
+    const newMeta = { ...currentMeta, ...updates };
+
+    const { data, error } = await client.auth.updateUser({
+      data: newMeta
+    });
+    if (error) throw error;
+    safeSetItem("orc_local_meta", JSON.stringify(newMeta));
+    return data;
+  },
+
+  async getProfile() {
+    const user = await this.getUser();
+    if (!user) return null;
+    const local = safeGetItem("orc_local_meta", null);
+    let meta = user.user_metadata || {};
+    if (local) {
+      try { meta = { ...meta, ...JSON.parse(local) }; } catch (_) {}
+    }
+    return {
+      email: user.email,
+      username: meta.username || user.email.split("@")[0],
+      avatar_url: meta.avatar_url || null
+    };
   }
 };
 
@@ -785,12 +817,22 @@ async function initAuthUI() {
   const btn = $("#topnav-account-btn");
   if (!btn) return;
 
-  const user = await SupabaseSync.getUser();
-  if (user && user.email) {
-    const initial = user.email.charAt(0).toUpperCase();
-    btn.innerHTML = `<span class="account-avatar-badge">${initial}</span>`;
-    btn.title = `Account (${user.email})`;
-    btn.onclick = () => openProfileModal(user);
+  const profile = await SupabaseSync.getProfile();
+  if (profile && profile.email) {
+    if (profile.avatar_url) {
+      btn.innerHTML = `<img src="${esc(profile.avatar_url)}" class="account-avatar-badge-img" alt="PFP" />`;
+    } else {
+      const initial = (profile.username || profile.email).charAt(0).toUpperCase();
+      btn.innerHTML = `<span class="account-avatar-badge">${initial}</span>`;
+    }
+    btn.title = `Account (${profile.username || profile.email})`;
+    btn.onclick = () => {
+      if (location.pathname.endsWith("/settings") || location.pathname.endsWith("/settings.html")) {
+        $("#settings-account-section")?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        location.href = "/settings#settings-account-section";
+      }
+    };
   } else {
     btn.innerHTML = ICONS.user;
     btn.title = "Sign In / Create Account";
@@ -948,50 +990,25 @@ function openAuthModal() {
 
   modal.querySelector("#auth-main-view").style.display = "flex";
   modal.querySelector("#auth-reset-view").style.display = "none";
-  modal.classList.add("open");
-  trapModalFocus(modal, "Authentication");
-  setTimeout(() => modal.querySelector("#auth-email")?.focus(), 120);
-}
-
-function openProfileModal(user) {
-  let modal = $("#profile-modal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "profile-modal";
-    modal.className = "modal-overlay auth-modal";
-    document.body.appendChild(modal);
-  }
-  const initial = user.email?.charAt(0).toUpperCase() || "U";
-  modal.innerHTML = `
-    <div class="modal-box auth-box" style="text-align:center">
-      <button class="modal-close" id="profile-modal-close" aria-label="Close">✕</button>
-      <div style="width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:1.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-        ${initial}
-      </div>
-      <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:4px;word-break:break-all">${esc(user.email)}</h3>
-      <p style="font-size:0.78rem;color:#22c55e;font-weight:600;margin-bottom:20px">✓ Cloud Sync Active</p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="/list" class="btn-ghost" style="justify-content:center;text-decoration:none">View My List</a>
-        <button type="button" class="btn-ghost" id="profile-logout-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.4)">Sign Out</button>
-      </div>
-    </div>`;
-
-  modal.querySelector("#profile-modal-close")?.addEventListener("click", () => closeModal("#profile-modal"));
-  modal.addEventListener("click", e => { if (e.target === modal) closeModal("#profile-modal"); });
-
-  modal.querySelector("#profile-logout-btn")?.addEventListener("click", async () => {
-    await SupabaseSync.signOut();
-    toast("Signed out");
-    closeModal("#profile-modal");
-    initAuthUI();
+  modal.style.display = "flex";
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modal.classList.add("open");
+      trapModalFocus(modal, "Authentication");
+      setTimeout(() => modal.querySelector("#auth-email")?.focus(), 120);
+    });
   });
-
-  modal.classList.add("open");
-  trapModalFocus(modal, "Account Profile");
 }
 
 function closeModal(sel = ".modal-overlay") {
-  $$(sel).forEach(m => m.classList.remove("open"));
+  $$(sel).forEach(m => {
+    m.classList.remove("open");
+    setTimeout(() => {
+      if (!m.classList.contains("open")) {
+        m.style.display = "";
+      }
+    }, 380);
+  });
   releaseModalFocus();
 }
 
@@ -2455,7 +2472,7 @@ async function renderRecommendedForYouRow() {
   } catch (_) {}
 }
 
-const DEVLOG_ID = "v2.5_aug2026";
+const DEVLOG_ID = "v2.6_aug2026";
 
 function renderDevLogAnnouncement() {
   if (localStorage.getItem("orc_devlog_dismissed") === DEVLOG_ID) return;
@@ -2473,8 +2490,9 @@ function renderDevLogAnnouncement() {
     </div>
     <div class="devlog-title">Platform & Engine Updates</div>
     <div class="devlog-body">
-      <p>Mobile bottom navigation has been reshaped into a floating liquid glass pill with scroll auto hide.</p>
-      <p>Added a new landscape card view setting for 16:9 media grids, exact timestamp watch progress resume labels, and optimized light theme contrast.</p>
+      <p>Authentication now features a smooth slide-up drawer sheet with animated backdrop blur fade and interactive password reset.</p>
+      <p>Added account management in Settings for editing display usernames, uploading custom profile pictures, and managing cloud sync.</p>
+      <p>Removed white focus outlines across all search bars and input fields for a cleaner interface.</p>
     </div>
     <div class="devlog-foot">
       <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="devlog-discord-link">
@@ -3180,9 +3198,114 @@ async function aiSearch(q) {
   }
 }
 
+async function renderAccountSettingsSection() {
+  const container = $("#settings-account-container");
+  if (!container) return;
+
+  const profile = await SupabaseSync.getProfile();
+  if (!profile) {
+    container.innerHTML = `
+      <div class="account-settings-card">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span class="account-avatar-badge" style="width:44px;height:44px;font-size:1.2rem">?</span>
+          <div>
+            <div style="font-weight:700;font-size:1rem;color:var(--text)">Not Signed In</div>
+            <div style="font-size:0.82rem;color:var(--text-2);margin-top:2px">Sign in or create an account to sync your watchlist and watch history across all your devices.</div>
+          </div>
+        </div>
+        <button type="button" class="btn-play" id="settings-open-auth" style="align-self:flex-start;margin-top:4px">Sign In / Create Account</button>
+      </div>`;
+    container.querySelector("#settings-open-auth")?.addEventListener("click", () => openAuthModal());
+    return;
+  }
+
+  const initial = (profile.username || profile.email).charAt(0).toUpperCase();
+  container.innerHTML = `
+    <div class="account-settings-card">
+      <div class="account-profile-header">
+        <div class="account-avatar-wrapper" id="change-avatar-btn" title="Click to upload custom profile picture">
+          ${profile.avatar_url ? `<img src="${esc(profile.avatar_url)}" alt="PFP" />` : `<span>${esc(initial)}</span>`}
+          <div class="account-avatar-overlay">Change</div>
+        </div>
+        <input type="file" id="avatar-file-input" accept="image/*" style="display:none" />
+        <div class="account-details">
+          <div class="account-username-display" id="account-username-title">${esc(profile.username)}</div>
+          <div class="account-email-display">${esc(profile.email)}</div>
+          <div class="account-sync-badge">✓ Cloud Sync Active</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;max-width:480px;margin-top:8px">
+        <label style="font-size:0.8rem;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em">Display Username</label>
+        <div class="account-edit-grid">
+          <input type="text" id="account-username-input" value="${esc(profile.username)}" placeholder="Enter username" class="ep-search-input" />
+          <button type="button" class="retry-btn" id="save-username-btn">Save</button>
+        </div>
+      </div>
+
+      <div style="margin-top:8px">
+        <button type="button" class="btn-ghost" id="settings-signout-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.4)">Sign Out</button>
+      </div>
+    </div>`;
+
+  const avatarInput = container.querySelector("#avatar-file-input");
+  container.querySelector("#change-avatar-btn")?.addEventListener("click", () => avatarInput?.click());
+
+  avatarInput?.addEventListener("change", e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast("Image must be smaller than 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = 256;
+        canvas.height = 256;
+        ctx.drawImage(img, 0, 0, 256, 256);
+        const base64 = canvas.toDataURL("image/jpeg", 0.88);
+        SupabaseSync.updateProfile({ avatar_url: base64 })
+          .then(() => {
+            toast("Profile picture updated!");
+            renderAccountSettingsSection();
+            initAuthUI();
+          })
+          .catch(err => toast(err.message || "Could not save profile picture."));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  container.querySelector("#save-username-btn")?.addEventListener("click", async () => {
+    const newUsername = container.querySelector("#account-username-input").value.trim();
+    if (!newUsername) return;
+    try {
+      await SupabaseSync.updateProfile({ username: newUsername });
+      toast("Username updated!");
+      renderAccountSettingsSection();
+      initAuthUI();
+    } catch (err) {
+      toast(err.message || "Failed to update username.");
+    }
+  });
+
+  container.querySelector("#settings-signout-btn")?.addEventListener("click", async () => {
+    await SupabaseSync.signOut();
+    toast("Signed out");
+    renderAccountSettingsSection();
+    initAuthUI();
+  });
+}
+
 function initSettingsPage() {
   initSidebar("settings");
   document.title = "Settings — Osiris Watch";
+  renderAccountSettingsSection();
 
   const providerBox = $("#settings-providers");
   if (providerBox) {
