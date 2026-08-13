@@ -57,6 +57,7 @@ const ICONS = {
   discord: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>`,
   spark: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`,
   info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>`,
+  user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
 };
 
 const $ = (s, c = document) => c.querySelector(s);
@@ -770,6 +771,143 @@ const SupabaseSync = {
   }
 };
 
+async function initAuthUI() {
+  const btn = $("#topnav-account-btn");
+  if (!btn) return;
+
+  const user = await SupabaseSync.getUser();
+  if (user && user.email) {
+    const initial = user.email.charAt(0).toUpperCase();
+    btn.innerHTML = `<span class="account-avatar-badge">${initial}</span>`;
+    btn.title = `Account (${user.email})`;
+    btn.onclick = () => openProfileModal(user);
+  } else {
+    btn.innerHTML = ICONS.user;
+    btn.title = "Sign In / Create Account";
+    btn.onclick = () => openAuthModal();
+  }
+}
+
+function openAuthModal() {
+  let modal = $("#auth-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "auth-modal";
+    modal.className = "modal-overlay auth-modal";
+    modal.innerHTML = `
+      <div class="modal-box auth-box">
+        <button class="modal-close" id="auth-modal-close" aria-label="Close">✕</button>
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-tab="signin">Sign In</button>
+          <button type="button" class="auth-tab" data-tab="signup">Create Account</button>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <div class="auth-field">
+            <label for="auth-email">Email Address</label>
+            <input type="email" id="auth-email" required placeholder="you@example.com" class="ep-search-input" />
+          </div>
+          <div class="auth-field">
+            <label for="auth-password">Password</label>
+            <input type="password" id="auth-password" required placeholder="••••••••" class="ep-search-input" minlength="6" />
+          </div>
+          <div id="auth-status" class="auth-status"></div>
+          <button type="submit" class="btn-play auth-submit-btn" id="auth-submit-btn">Sign In</button>
+        </form>
+      </div>`;
+    document.body.appendChild(modal);
+
+    modal.querySelector("#auth-modal-close")?.addEventListener("click", () => closeModal("#auth-modal"));
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal("#auth-modal"); });
+
+    let currentTab = "signin";
+    const tabs = modal.querySelectorAll(".auth-tab");
+    const submitBtn = modal.querySelector("#auth-submit-btn");
+    const status = modal.querySelector("#auth-status");
+
+    tabs.forEach(t => {
+      t.addEventListener("click", () => {
+        tabs.forEach(x => x.classList.remove("active"));
+        t.classList.add("active");
+        currentTab = t.dataset.tab;
+        submitBtn.textContent = currentTab === "signin" ? "Sign In" : "Create Account";
+        status.textContent = "";
+      });
+    });
+
+    const form = modal.querySelector("#auth-form");
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = $("#auth-email").value.trim();
+      const password = $("#auth-password").value;
+      status.className = "auth-status";
+      status.textContent = "Processing...";
+      submitBtn.disabled = true;
+
+      try {
+        if (currentTab === "signin") {
+          await SupabaseSync.signIn(email, password);
+          toast(`Signed in as ${email}`);
+        } else {
+          await SupabaseSync.signUp(email, password);
+          toast("Account created! Check your email or sign in.");
+        }
+        closeModal("#auth-modal");
+        initAuthUI();
+      } catch (err) {
+        status.textContent = err.message || "Authentication failed.";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
+  modal.classList.add("open");
+  trapModalFocus(modal, "Authentication");
+  setTimeout(() => modal.querySelector("#auth-email")?.focus(), 100);
+}
+
+function openProfileModal(user) {
+  let modal = $("#profile-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "profile-modal";
+    modal.className = "modal-overlay auth-modal";
+    document.body.appendChild(modal);
+  }
+  const initial = user.email?.charAt(0).toUpperCase() || "U";
+  modal.innerHTML = `
+    <div class="modal-box auth-box" style="text-align:center">
+      <button class="modal-close" id="profile-modal-close" aria-label="Close">✕</button>
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:1.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        ${initial}
+      </div>
+      <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:4px;word-break:break-all">${esc(user.email)}</h3>
+      <p style="font-size:0.78rem;color:#22c55e;font-weight:600;margin-bottom:20px">✓ Cloud Sync Active</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="/list" class="btn-ghost" style="justify-content:center;text-decoration:none">View My List</a>
+        <button type="button" class="btn-ghost" id="profile-logout-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.4)">Sign Out</button>
+      </div>
+    </div>`;
+
+  modal.querySelector("#profile-modal-close")?.addEventListener("click", () => closeModal("#profile-modal"));
+  modal.addEventListener("click", e => { if (e.target === modal) closeModal("#profile-modal"); });
+
+  modal.querySelector("#profile-logout-btn")?.addEventListener("click", async () => {
+    await SupabaseSync.signOut();
+    toast("Signed out");
+    closeModal("#profile-modal");
+    initAuthUI();
+  });
+
+  modal.classList.add("open");
+  trapModalFocus(modal, "Account Profile");
+}
+
+function closeModal(sel = ".modal-overlay") {
+  $$(sel).forEach(m => m.classList.remove("open"));
+  releaseModalFocus();
+}
+
 const MyList = {
   key: "orc_mylist",
   get() { try { return JSON.parse(localStorage.getItem(this.key) || "[]"); } catch { return []; } },
@@ -971,9 +1109,12 @@ function initSidebar(active) {
       <div class="topnav-actions">
         <a href="/search" class="topnav-icon${active === "search" ? " active" : ""}" aria-label="Search">${ICONS.search}</a>
         <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="topnav-icon" aria-label="Discord">${ICONS.discord}</a>
+        <button type="button" class="topnav-icon topnav-account-btn" id="topnav-account-btn" aria-label="Account">${ICONS.user}</button>
         <button type="button" class="topnav-burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
       </div>
     </div>`;
+
+  initAuthUI();
 
   const burger = el.querySelector(".topnav-burger");
   burger?.addEventListener("click", e => {
