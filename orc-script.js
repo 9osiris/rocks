@@ -82,6 +82,24 @@ const DB_VERSION = 1;
 const STORE_NAME = "keyValueStore";
 let _dbPromise = null;
 
+function safeGetItem(key, fallback = null) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? val : fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function safeSetItem(key, val) {
+  try {
+    localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function getDB() {
   if (_dbPromise) return _dbPromise;
   _dbPromise = new Promise((resolve) => {
@@ -654,11 +672,20 @@ const SupabaseSync = {
     } catch (_) { return null; }
   },
 
-  async signUp(email, password) {
+  async signUp(email, password, username) {
     const client = getSupabaseClient();
     if (!client) throw new Error("Supabase client is not initialized.");
-    const { data, error } = await client.auth.signUp({ email, password });
+    const uname = (username || email.split("@")[0]).trim();
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+      options: { data: { username: uname } }
+    });
     if (error) throw error;
+    if (data?.user?.user_metadata) {
+      safeSetItem("orc_local_meta", JSON.stringify(data.user.user_metadata));
+    }
+    await this.pullFromCloud();
     return data;
   },
 
@@ -667,6 +694,9 @@ const SupabaseSync = {
     if (!client) throw new Error("Supabase client is not initialized.");
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    if (data?.user?.user_metadata) {
+      safeSetItem("orc_local_meta", JSON.stringify(data.user.user_metadata));
+    }
     await this.pullFromCloud();
     return data;
   },
@@ -857,8 +887,12 @@ function openAuthModal() {
               <button type="button" class="auth-tab" data-tab="signup">Create Account</button>
             </div>
             <form id="auth-form" class="auth-form">
+              <div class="auth-field" id="auth-username-field" style="display:none">
+                <label for="auth-username">Username</label>
+                <input type="text" id="auth-username" placeholder="Choose a username" class="ep-search-input" />
+              </div>
               <div class="auth-field">
-                <label for="auth-email">Username or Email</label>
+                <label for="auth-email">Email Address</label>
                 <input type="email" id="auth-email" required placeholder="Enter your email" class="ep-search-input" />
               </div>
               <div class="auth-field">
@@ -897,7 +931,7 @@ function openAuthModal() {
     document.body.appendChild(modal);
 
     modal.addEventListener("click", e => {
-      if (e.target === modal || e.target.classList.contains("auth-drag-handle")) closeModal("#auth-modal");
+      if (e.target === modal) closeModal("#auth-modal");
     });
 
     const mainView = modal.querySelector("#auth-main-view");
@@ -927,6 +961,7 @@ function openAuthModal() {
     const tabs = modal.querySelectorAll(".auth-tab");
     const submitBtn = modal.querySelector("#auth-submit-btn");
     const status = modal.querySelector("#auth-status");
+    const unameField = modal.querySelector("#auth-username-field");
 
     tabs.forEach(t => {
       t.addEventListener("click", () => {
@@ -934,6 +969,7 @@ function openAuthModal() {
         t.classList.add("active");
         currentTab = t.dataset.tab;
         submitBtn.textContent = currentTab === "signin" ? "Sign In" : "Create Account";
+        unameField.style.display = currentTab === "signup" ? "flex" : "none";
         status.textContent = "";
       });
     });
@@ -943,6 +979,7 @@ function openAuthModal() {
       e.preventDefault();
       const email = $("#auth-email").value.trim();
       const password = pwdInput.value;
+      const username = $("#auth-username")?.value.trim() || email.split("@")[0];
       status.className = "auth-status";
       status.textContent = "Processing...";
       submitBtn.disabled = true;
@@ -952,8 +989,8 @@ function openAuthModal() {
           await SupabaseSync.signIn(email, password);
           toast(`Signed in as ${email}`);
         } else {
-          await SupabaseSync.signUp(email, password);
-          toast("Account created! Check your email or sign in.");
+          await SupabaseSync.signUp(email, password, username);
+          toast(`Account created for ${username}!`);
         }
         closeModal("#auth-modal");
         initAuthUI();
