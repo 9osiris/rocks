@@ -768,6 +768,16 @@ const SupabaseSync = {
       progress_pct: p.progress || 0,
       updated_at: new Date().toISOString()
     }, { onConflict: "user_id,media_id,media_type" });
+  },
+
+  async resetPassword(email) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error("Supabase client is not initialized.");
+    const { data, error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/settings`
+    });
+    if (error) throw error;
+    return data;
   }
 };
 
@@ -795,29 +805,81 @@ function openAuthModal() {
     modal.id = "auth-modal";
     modal.className = "modal-overlay auth-modal";
     modal.innerHTML = `
-      <div class="modal-box auth-box">
-        <button class="modal-close" id="auth-modal-close" aria-label="Close">✕</button>
-        <div class="auth-tabs">
-          <button type="button" class="auth-tab active" data-tab="signin">Sign In</button>
-          <button type="button" class="auth-tab" data-tab="signup">Create Account</button>
+      <div class="auth-drawer modal-box">
+        <div class="auth-drag-handle"></div>
+        <div class="auth-content-wrap">
+          
+          <div id="auth-main-view" style="width:100%;display:flex;flex-direction:column;align-items:center">
+            <div class="auth-tabs">
+              <button type="button" class="auth-tab active" data-tab="signin">Sign In</button>
+              <button type="button" class="auth-tab" data-tab="signup">Create Account</button>
+            </div>
+            <form id="auth-form" class="auth-form">
+              <div class="auth-field">
+                <label for="auth-email">Username or Email</label>
+                <input type="email" id="auth-email" required placeholder="Enter your email" class="ep-search-input" />
+              </div>
+              <div class="auth-field">
+                <label for="auth-password">Password</label>
+                <div class="input-with-eye">
+                  <input type="password" id="auth-password" required placeholder="Enter your password" class="ep-search-input" minlength="6" />
+                  <button type="button" class="eye-btn" id="auth-toggle-pwd" aria-label="Toggle password visibility">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div id="auth-status" class="auth-status"></div>
+              <button type="submit" class="auth-submit-btn" id="auth-submit-btn">Sign In</button>
+            </form>
+            <button type="button" class="auth-forgot-btn" id="auth-forgot-btn">Forgot password?</button>
+          </div>
+
+          <div id="auth-reset-view" style="width:100%;display:none;flex-direction:column;align-items:flex-start">
+            <div class="auth-reset-header">
+              <button type="button" class="auth-back-btn" id="auth-back-btn" aria-label="Back">‹</button>
+              <h2 class="auth-reset-title">Reset Password</h2>
+            </div>
+            <p class="auth-reset-sub">Enter your email address to receive a password reset link.</p>
+            <form id="auth-reset-form" class="auth-form">
+              <div class="auth-field">
+                <label for="reset-email">Email Address</label>
+                <input type="email" id="reset-email" required placeholder="Enter your email" class="ep-search-input" />
+              </div>
+              <div id="reset-status" class="auth-status"></div>
+              <button type="submit" class="auth-submit-btn" id="reset-submit-btn">Send Reset Link</button>
+            </form>
+          </div>
+
         </div>
-        <form id="auth-form" class="auth-form">
-          <div class="auth-field">
-            <label for="auth-email">Email Address</label>
-            <input type="email" id="auth-email" required placeholder="you@example.com" class="ep-search-input" />
-          </div>
-          <div class="auth-field">
-            <label for="auth-password">Password</label>
-            <input type="password" id="auth-password" required placeholder="••••••••" class="ep-search-input" minlength="6" />
-          </div>
-          <div id="auth-status" class="auth-status"></div>
-          <button type="submit" class="btn-play auth-submit-btn" id="auth-submit-btn">Sign In</button>
-        </form>
       </div>`;
     document.body.appendChild(modal);
 
-    modal.querySelector("#auth-modal-close")?.addEventListener("click", () => closeModal("#auth-modal"));
-    modal.addEventListener("click", e => { if (e.target === modal) closeModal("#auth-modal"); });
+    modal.addEventListener("click", e => {
+      if (e.target === modal || e.target.classList.contains("auth-drag-handle")) closeModal("#auth-modal");
+    });
+
+    const mainView = modal.querySelector("#auth-main-view");
+    const resetView = modal.querySelector("#auth-reset-view");
+    const forgotBtn = modal.querySelector("#auth-forgot-btn");
+    const backBtn = modal.querySelector("#auth-back-btn");
+
+    forgotBtn?.addEventListener("click", () => {
+      mainView.style.display = "none";
+      resetView.style.display = "flex";
+    });
+
+    backBtn?.addEventListener("click", () => {
+      resetView.style.display = "none";
+      mainView.style.display = "flex";
+    });
+
+    const pwdInput = modal.querySelector("#auth-password");
+    const eyeBtn = modal.querySelector("#auth-toggle-pwd");
+    eyeBtn?.addEventListener("click", () => {
+      const type = pwdInput.type === "password" ? "text" : "password";
+      pwdInput.type = type;
+      eyeBtn.style.color = type === "text" ? "var(--text)" : "var(--text-2)";
+    });
 
     let currentTab = "signin";
     const tabs = modal.querySelectorAll(".auth-tab");
@@ -838,7 +900,7 @@ function openAuthModal() {
     form.addEventListener("submit", async e => {
       e.preventDefault();
       const email = $("#auth-email").value.trim();
-      const password = $("#auth-password").value;
+      const password = pwdInput.value;
       status.className = "auth-status";
       status.textContent = "Processing...";
       submitBtn.disabled = true;
@@ -859,11 +921,36 @@ function openAuthModal() {
         submitBtn.disabled = false;
       }
     });
+
+    const resetForm = modal.querySelector("#auth-reset-form");
+    const resetStatus = modal.querySelector("#reset-status");
+    const resetBtn = modal.querySelector("#reset-submit-btn");
+
+    resetForm?.addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = $("#reset-email").value.trim();
+      resetStatus.className = "auth-status";
+      resetStatus.textContent = "Sending link...";
+      resetBtn.disabled = true;
+
+      try {
+        await SupabaseSync.resetPassword(email);
+        resetStatus.className = "auth-status success";
+        resetStatus.textContent = "Password reset link sent to your email!";
+        toast("Password reset link sent!");
+      } catch (err) {
+        resetStatus.textContent = err.message || "Failed to send reset link.";
+      } finally {
+        resetBtn.disabled = false;
+      }
+    });
   }
 
+  modal.querySelector("#auth-main-view").style.display = "flex";
+  modal.querySelector("#auth-reset-view").style.display = "none";
   modal.classList.add("open");
   trapModalFocus(modal, "Authentication");
-  setTimeout(() => modal.querySelector("#auth-email")?.focus(), 100);
+  setTimeout(() => modal.querySelector("#auth-email")?.focus(), 120);
 }
 
 function openProfileModal(user) {
