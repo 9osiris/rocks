@@ -878,7 +878,7 @@ function openAuthModal() {
     modal.className = "modal-overlay auth-modal";
     modal.innerHTML = `
       <div class="auth-drawer modal-box">
-        <div class="auth-drag-handle"></div>
+        <button type="button" class="modal-close" id="auth-modal-close" aria-label="Close">✕</button>
         <div class="auth-content-wrap">
           
           <div id="auth-main-view" style="width:100%;display:flex;flex-direction:column;align-items:center">
@@ -929,6 +929,8 @@ function openAuthModal() {
         </div>
       </div>`;
     document.body.appendChild(modal);
+
+    modal.querySelector("#auth-modal-close")?.addEventListener("click", () => closeModal("#auth-modal"));
 
     modal.addEventListener("click", e => {
       if (e.target === modal) closeModal("#auth-modal");

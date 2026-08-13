@@ -488,12 +488,12 @@ select:focus {
   border-color: var(--accent) !important;
 }
 
-/* ===== Centered User Auth Modal ===== */
+/* ===== Centered User Auth Modal (Mobile & Desktop Safe) ===== */
 .modal-overlay.auth-modal {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   background: rgba(0, 0, 0, 0.78);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -502,6 +502,8 @@ select:focus {
   pointer-events: none;
   transition: opacity 0.35s var(--ease), visibility 0.35s var(--ease);
   z-index: 10000;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .modal-overlay.auth-modal.open {
   opacity: 1;
@@ -511,10 +513,13 @@ select:focus {
 
 .auth-drawer {
   width: min(92vw, 400px);
+  max-height: min(90vh, 620px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--bg-1, #16161a);
   border: 1px solid var(--border-2, rgba(255, 255, 255, 0.12));
   border-radius: 24px;
-  padding: 28px 24px;
+  padding: 28px 24px 24px 24px;
   transform: scale(0.92) translateY(14px);
   transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
@@ -523,18 +528,26 @@ select:focus {
   align-items: center;
   position: relative;
   margin: auto;
+  box-sizing: border-box;
 }
 .modal-overlay.auth-modal.open .auth-drawer {
   transform: scale(1) translateY(0);
 }
 
 .auth-drag-handle {
-  width: 48px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 4px;
-  margin-bottom: 24px;
-  cursor: grab;
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .modal-overlay.auth-modal {
+    padding: 12px;
+  }
+  .auth-drawer {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    padding: 24px 18px 20px 18px;
+    border-radius: 20px;
+  }
 }
 
 .auth-content-wrap {
