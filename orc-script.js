@@ -643,21 +643,152 @@ function initPlayerGuard() {
   });
 }
 
+const SupabaseSync = {
+  async getUser() {
+    const client = getSupabaseClient();
+    if (!client) return null;
+    try {
+      const { data: { session } } = await client.auth.getSession();
+      return session?.user || null;
+    } catch (_) { return null; }
+  },
+
+  async signUp(email, password) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error("Supabase client is not initialized.");
+    const { data, error } = await client.auth.signUp({ email, password });
+    if (error) throw error;
+    return data;
+  },
+
+  async signIn(email, password) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error("Supabase client is not initialized.");
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    await this.pullFromCloud();
+    return data;
+  },
+
+  async signOut() {
+    const client = getSupabaseClient();
+    if (!client) return;
+    await client.auth.signOut();
+  },
+
+  async pullFromCloud() {
+    const user = await this.getUser();
+    if (!user) return;
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    try {
+      const { data: listData } = await client
+        .from("watchlists")
+        .select("*")
+        .eq("user_id", user.id);
+      if (listData && listData.length) {
+        const localList = MyList.get();
+        const mergedMap = new Map();
+        localList.forEach(item => mergedMap.set(`${item.type}_${item.id}`, item));
+        listData.forEach(item => {
+          mergedMap.set(`${item.media_type}_${item.media_id}`, {
+            id: item.media_id,
+            type: item.media_type,
+            title: item.title,
+            poster: item.poster_path
+          });
+        });
+        MyList.save(Array.from(mergedMap.values()));
+      }
+    } catch (_) {}
+
+    try {
+      const { data: progData } = await client
+        .from("progress")
+        .select("*")
+        .eq("user_id", user.id);
+      if (progData && progData.length) {
+        const localProg = Progress.get();
+        progData.forEach(p => {
+          localProg[`${p.media_type}_${p.media_id}`] = {
+            id: p.media_id,
+            mediaType: p.media_type,
+            season: p.season,
+            episode: p.episode,
+            currentTime: p.current_time,
+            duration: p.duration,
+            progress: p.progress_pct,
+            savedAt: p.updated_at ? new Date(p.updated_at).getTime() : Date.now()
+          };
+        });
+        Progress.saveAll(localProg);
+      }
+    } catch (_) {}
+  },
+
+  async pushWatchlistItem(item, isAdd) {
+    const user = await this.getUser();
+    if (!user) return;
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    if (isAdd) {
+      await client.from("watchlists").upsert({
+        user_id: user.id,
+        media_id: String(item.id),
+        media_type: item.type,
+        title: item.title,
+        poster_path: item.poster
+      }, { onConflict: "user_id,media_id,media_type" });
+    } else {
+      await client.from("watchlists").delete().match({
+        user_id: user.id,
+        media_id: String(item.id),
+        media_type: item.type
+      });
+    }
+  },
+
+  async pushProgressItem(p) {
+    const user = await this.getUser();
+    if (!user) return;
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    await client.from("progress").upsert({
+      user_id: user.id,
+      media_id: String(p.id),
+      media_type: p.mediaType,
+      season: p.season || 1,
+      episode: p.episode || 1,
+      current_time: p.currentTime || 0,
+      duration: p.duration || 0,
+      progress_pct: p.progress || 0,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "user_id,media_id,media_type" });
+  }
+};
+
 const MyList = {
   key: "orc_mylist",
   get() { try { return JSON.parse(localStorage.getItem(this.key) || "[]"); } catch { return []; } },
   has(id, t) { return this.get().some(i => i.id === id && i.type === t); },
+  save(list) { safeSetItem(this.key, JSON.stringify(list)); idbSet(this.key, list); },
   toggle(item) {
     const list = this.get();
     const i = list.findIndex(x => x.id === item.id && x.type === item.type);
+    let added = false;
     if (i >= 0) {
       list.splice(i, 1);
-      if (!safeSetItem(this.key, JSON.stringify(list))) toast("Couldn't update My List. Storage may be full.");
-      return false;
+      added = false;
+    } else {
+      list.unshift(item);
+      added = true;
     }
-    list.unshift(item);
-    if (!safeSetItem(this.key, JSON.stringify(list))) toast("Couldn't update My List. Storage may be full.");
-    return true;
+    this.save(list);
+    SupabaseSync.pushWatchlistItem(item, added).catch(() => {});
+    return added;
   },
 };
 
@@ -680,10 +811,13 @@ const Progress = {
     return Object.values(this.get()).sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
   },
   getItem(id, type) { return this.get()[`${type}_${id}`]; },
+  saveAll(allObj) { safeSetItem(this.key, JSON.stringify(allObj)); idbSet(this.key, allObj); },
   save(id, type, data) {
     const all = this.get();
-    all[`${type}_${id}`] = { ...data, savedAt: Date.now() };
-    safeSetItem(this.key, JSON.stringify(all));
+    const item = { ...data, id, mediaType: type, savedAt: Date.now() };
+    all[`${type}_${id}`] = item;
+    this.saveAll(all);
+    SupabaseSync.pushProgressItem(item).catch(() => {});
   },
 };
 
