@@ -50,17 +50,26 @@
     --bg-1:         #ffffff;
     --bg-2:         #f1f5f9;
     --bg-3:         #e2e8f0;
-    --surface-blur: rgba(255, 255, 255, 0.86);
-    --border:       rgba(15, 23, 42, 0.09);
-    --border-2:     rgba(15, 23, 42, 0.16);
+    --surface-blur: rgba(255, 255, 255, 0.92);
+    --border:       rgba(15, 23, 42, 0.12);
+    --border-2:     rgba(15, 23, 42, 0.22);
     --text:         #0f172a;
-    --text-2:       #475569;
+    --text-2:       #334155;
     --text-3:       #64748b;
-    --accent-soft:  rgba(45, 212, 191, 0.14);
+    --accent:       #0f172a;
+    --accent-dim:   #1e293b;
+    --accent-soft:  rgba(15, 23, 42, 0.08);
+    --on-accent:    #ffffff;
     --solid-bg:     #0f172a;
     --solid-fg:     #ffffff;
-    --shadow-1:     0 4px 16px rgba(15, 23, 42, 0.06);
-    --shadow-2:     0 16px 44px rgba(15, 23, 42, 0.12);
+    --shadow-1:     0 4px 18px rgba(15, 23, 42, 0.08);
+    --shadow-2:     0 18px 48px rgba(15, 23, 42, 0.15);
+}
+
+/* Enhanced Focus-Visible Rings */
+:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px !important;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]):not([data-theme="light"]) {
@@ -844,7 +853,18 @@ body:not(:has(.hero)):not(.detail-page) .topnav::after { opacity: 1; }
 .provider-tab:hover { color: var(--text); background: var(--bg-2); }
 .provider-tab.active { background: var(--accent-soft); color: var(--text); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
 .provider-rec { display: inline-flex; align-items: center; margin-left: 5px; padding: 1px 5px; font-size: 0.58rem; font-weight: 700; color: var(--star); background: color-mix(in srgb, var(--star) 16%, transparent); border-radius: 4px; vertical-align: middle; }
-.player-frame { position: relative; width: 100%; padding-top: 56.25%; border-radius: var(--radius-lg); overflow: hidden; background: #000; }
+.player-frame { position: relative; width: 100%; padding-top: 56.25%; border-radius: var(--radius-lg); overflow: hidden; background: #000; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6); }
+.player-frame::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  z-index: -1;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 28%, transparent) 0%, transparent 72%);
+  filter: blur(24px);
+  opacity: 0.75;
+  pointer-events: none;
+}
 .player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
 
 .section-head { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; padding: 0 var(--gutter); }

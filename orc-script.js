@@ -2838,37 +2838,8 @@ function playLoader(bg, title, opts = {}) {
 }
 
 function navigateWithLoader(href, bg, title) {
-  if (prefersReducedMotion()) {
-    location.href = href;
-    return;
-  }
-  NProgress.start();
-  sessionStorage.setItem("orc_loader", JSON.stringify({ bg: bg || "", title: title || "" }));
-  let el = document.getElementById("play-loader-live");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "play-loader-live";
-    el.className = "play-loader";
-    el.innerHTML = `<div class="play-loader-bg"></div><div class="play-loader-veil"></div><div class="play-loader-mark">OSIRIS WATCH</div>`;
-    document.body.appendChild(el);
-  }
-  const bgEl = el.querySelector(".play-loader-bg");
-  if (bgEl && bg) bgEl.style.backgroundImage = `url(${esc(bg)})`;
-  el.classList.remove("is-leaving");
-  requestAnimationFrame(() => {
-    el.classList.add("on");
-    setTimeout(() => { location.href = href; }, 220);
-  });
-}
-
-function navigateWithLoader(href, bg, title) {
-  if (prefersReducedMotion()) {
-    location.href = href;
-    return;
-  }
-  NProgress.start();
-  sessionStorage.setItem("orc_loader", JSON.stringify({ bg, title }));
-  playLoader(bg, title).then(() => { location.href = href; });
+  if (window.NProgress) NProgress.start();
+  location.href = href;
 }
 
 const NProgress = {
