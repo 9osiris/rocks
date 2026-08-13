@@ -75,9 +75,23 @@ function dedupeItems(items) {
   });
 }
 
+const _memoryStorage = new Map();
 function safeSetItem(key, val) {
-  try { localStorage.setItem(key, val); return true; }
-  catch { return false; }
+  try {
+    localStorage.setItem(key, val);
+    _memoryStorage.set(key, val);
+    return true;
+  } catch {
+    _memoryStorage.set(key, val);
+    return false;
+  }
+}
+function safeGetItem(key, def = null) {
+  try {
+    const v = localStorage.getItem(key);
+    if (v !== null) return v;
+  } catch (_) {}
+  return _memoryStorage.get(key) ?? def;
 }
 
 function prefersReducedMotion() {
@@ -100,23 +114,45 @@ function releaseModalFocus() {
   modalReturnFocus = null;
 }
 
+const TMDB_CACHE_MAX = 100;
+const TMDB_CACHE_TTL = 10 * 60 * 1000;
 const _tmdbCache = new Map();
-function tmdb(path) {
-  if (_tmdbCache.has(path)) return _tmdbCache.get(path);
+
+function tmdb(path, retries = 1) {
+  const now = Date.now();
+  const cached = _tmdbCache.get(path);
+  if (cached && (now - cached.time < TMDB_CACHE_TTL)) {
+    return cached.req;
+  }
+
   const req = (async () => {
     const sep = path.includes("?") ? "&" : "?";
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 15000);
-    try {
-      const res = await fetch(`${TMDB_BASE}${path}${sep}api_key=${TMDB_KEY}`, { signal: ctrl.signal });
-      if (!res.ok) throw new Error(`TMDB ${res.status}`);
-      return await res.json();
-    } finally {
-      clearTimeout(timer);
+    let attempts = 0;
+    while (attempts <= retries) {
+      attempts++;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      try {
+        const res = await fetch(`${TMDB_BASE}${path}${sep}api_key=${TMDB_KEY}`, { signal: ctrl.signal });
+        if (!res.ok) throw new Error(`TMDB ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        if (attempts > retries) throw err;
+        await new Promise(r => setTimeout(r, 600));
+      } finally {
+        clearTimeout(timer);
+      }
     }
   })();
+
   req.catch(() => _tmdbCache.delete(path));
-  _tmdbCache.set(path, req);
+
+  if (_tmdbCache.size >= TMDB_CACHE_MAX) {
+    const oldestKey = _tmdbCache.keys().next().value;
+    if (oldestKey) _tmdbCache.delete(oldestKey);
+  }
+
+  _tmdbCache.set(path, { req, time: now });
   return req;
 }
 
@@ -623,6 +659,45 @@ function buildMobilePillNav(active) {
   if (!nav._lg) {
     nav._lg = true;
     LiquidGlass.apply(nav, { borderRadius: 34, distortionScale: -110, blur: 9, brightness: 58, opacity: 0.9, saturation: 1.55 });
+  }
+  initMobilePillNavScroll();
+  initScrollRestoration();
+}
+
+function initMobilePillNavScroll() {
+  const nav = $("#mobile-pill-nav");
+  if (!nav || nav._scrollBound) return;
+  nav._scrollBound = true;
+
+  let lastY = window.scrollY;
+  window.addEventListener("scroll", () => {
+    const curY = window.scrollY;
+    if (curY < 50) {
+      nav.classList.remove("nav-hidden");
+    } else if (curY - lastY > 15) {
+      nav.classList.add("nav-hidden");
+    } else if (lastY - curY > 15) {
+      nav.classList.remove("nav-hidden");
+    }
+    lastY = curY;
+  }, { passive: true });
+}
+
+function initScrollRestoration() {
+  if (window._scrollRestored) return;
+  window._scrollRestored = true;
+  const pageKey = `orc_scroll_${location.pathname}${location.search}`;
+
+  window.addEventListener("beforeunload", () => {
+    try { sessionStorage.setItem(pageKey, String(window.scrollY)); } catch (_) {}
+  });
+
+  const savedY = sessionStorage.getItem(pageKey);
+  if (savedY && !isNaN(savedY)) {
+    const y = parseInt(savedY, 10);
+    if (y > 0) {
+      setTimeout(() => window.scrollTo({ top: y, behavior: "auto" }), 60);
+    }
   }
 }
 
@@ -1440,6 +1515,11 @@ async function setHeroSlide(i, animate = false) {
     if (animate) heroFading = false;
   }
   restartDotFill(i);
+  const nextSlide = heroSlides[(i + 1) % heroSlides.length];
+  if (nextSlide?.backdrop_path) {
+    const pImg = new Image();
+    pImg.src = `${IMG_ORIG}${nextSlide.backdrop_path}`;
+  }
 }
 
 function initHeroCarousel(slides) {
