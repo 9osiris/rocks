@@ -125,14 +125,15 @@ async function idbSet(key, val) {
   } catch (_) { return false; }
 }
 
-// ===== Supabase Client Prep =====
+// ===== Supabase Client Initialization =====
+const SUPABASE_URL = "https://ewuiiwaqjsyilinkdobm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3dWlpd2FxanN5aWxpbmtkb2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODAxMTcsImV4cCI6MjEwMjE1NjExN30.S2ogyCUHzaQuXV5jCyT-u3zIX2wzt1m23qFvMeEL05I";
+
 let supabaseClient = null;
 function getSupabaseClient() {
-  const url = safeGetItem("orc_supabase_url", "");
-  const key = safeGetItem("orc_supabase_key", "");
-  if (window.supabase && url && key) {
+  if (window.supabase) {
     try {
-      if (!supabaseClient) supabaseClient = window.supabase.createClient(url, key);
+      if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       return supabaseClient;
     } catch (_) {}
   }
@@ -2911,29 +2912,6 @@ function initSettingsPage() {
     langSel.addEventListener("change", e => {
       SETTINGS.set(SETTINGS.prefLangKey, e.target.value);
       toast(`Preferred language updated`);
-    });
-  }
-
-  const sbUrlInput = $("#supabase-url");
-  const sbKeyInput = $("#supabase-key");
-  const sbSaveBtn = $("#save-supabase-config");
-
-  if (sbUrlInput && sbKeyInput && sbSaveBtn) {
-    sbUrlInput.value = safeGetItem("orc_supabase_url", "");
-    sbKeyInput.value = safeGetItem("orc_supabase_key", "");
-
-    sbSaveBtn.addEventListener("click", () => {
-      const url = sbUrlInput.value.trim();
-      const key = sbKeyInput.value.trim();
-      safeSetItem("orc_supabase_url", url);
-      safeSetItem("orc_supabase_key", key);
-      supabaseClient = null;
-      if (url && key) {
-        getSupabaseClient();
-        toast("Supabase credentials saved!");
-      } else {
-        toast("Supabase credentials cleared");
-      }
     });
   }
 
