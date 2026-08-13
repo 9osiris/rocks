@@ -39,6 +39,27 @@
         <button class="filter-chip" data-filter="tv">TV Shows</button>
       </div>
 
+      <div class="discover-filters-bar" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <select id="filter-era" class="list-sort-select" aria-label="Filter by Era">
+          <option value="all">All Eras</option>
+          <option value="2020s">2020s (2020-Now)</option>
+          <option value="2010s">2010s (2010-2019)</option>
+          <option value="2000s">2000s (2000-2009)</option>
+          <option value="1990s">1990s (1990-1999)</option>
+          <option value="classic">Classics (Pre-1990)</option>
+        </select>
+        <select id="filter-rating" class="list-sort-select" aria-label="Filter by Rating">
+          <option value="all">Any Rating</option>
+          <option value="7">★ 7.0+ Rated</option>
+          <option value="8">★ 8.0+ Top Rated</option>
+        </select>
+        <select id="filter-sort" class="list-sort-select" aria-label="Sort Results">
+          <option value="pop">Most Popular</option>
+          <option value="rating">Highest Rated</option>
+          <option value="newest">Newest First</option>
+        </select>
+      </div>
+
       <div id="search-recent" class="search-recent" hidden></div>
 
       <p class="search-status" id="search-status"></p>

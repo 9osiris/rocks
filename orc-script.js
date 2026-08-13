@@ -290,6 +290,7 @@ const SETTINGS = {
   reduceMotionKey: "orc_reduce_motion",
   hideWatchedKey: "orc_hide_watched",
   autoplayTrailersKey: "orc_autoplay_trailers",
+  prefLangKey: "orc_pref_lang",
   themeKey: "orc_theme",
   get(k, def = "") { return localStorage.getItem(k) ?? def; },
   set(k, v) {
@@ -1805,11 +1806,47 @@ async function renderContinueWatchingRow() {
   }
 }
 
+function initHeroSwipe() {
+  const heroEl = $("#hero") || $(".hero");
+  if (!heroEl || heroEl.dataset.swipeBound) return;
+  heroEl.dataset.swipeBound = "1";
+
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  heroEl.addEventListener("touchstart", e => {
+    if (e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  heroEl.addEventListener("touchend", e => {
+    if (!touchStartX) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      clearInterval(heroTimer);
+      if (deltaX < 0) {
+        setHeroSlide((heroIndex + 1) % heroSlides.length, true);
+      } else {
+        setHeroSlide((heroIndex - 1 + heroSlides.length) % heroSlides.length, true);
+      }
+      startHeroTimer();
+    }
+    touchStartX = 0;
+    touchStartY = 0;
+  }, { passive: true });
+}
+
 async function initHomePage() {
   initSplash();
   initSidebar("home");
   initGenreStrip();
   initGlobalShortcuts();
+  initHeroSwipe();
   renderContinueWatchingRow();
 
   const main = $("#main-content");
@@ -2358,19 +2395,55 @@ function initSearchPage() {
       }
 
       items = dedupeItems(items);
+
+      const eraVal = $("#filter-era")?.value || "all";
+      const ratingVal = $("#filter-rating")?.value || "all";
+      const sortVal = $("#filter-sort")?.value || "pop";
+
+      if (eraVal !== "all") {
+        items = items.filter(it => {
+          const y = parseInt(year(it.release_date || it.first_air_date), 10);
+          if (!y) return false;
+          if (eraVal === "2020s") return y >= 2020;
+          if (eraVal === "2010s") return y >= 2010 && y <= 2019;
+          if (eraVal === "2000s") return y >= 2000 && y <= 2009;
+          if (eraVal === "1990s") return y >= 1990 && y <= 1999;
+          if (eraVal === "classic") return y < 1990;
+          return true;
+        });
+      }
+
+      if (ratingVal !== "all") {
+        const minRating = parseFloat(ratingVal);
+        items = items.filter(it => (it.vote_average || 0) >= minRating);
+      }
+
+      if (sortVal === "rating") {
+        items.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+      } else if (sortVal === "newest") {
+        items.sort((a, b) => (b.release_date || b.first_air_date || "").localeCompare(a.release_date || a.first_air_date || ""));
+      } else if (sortVal === "pop") {
+        items.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      }
+
       grid.innerHTML = "";
       if (!items.length) {
-        grid.innerHTML = `<div class="no-results"><h3>Nothing matched</h3><p>Try different keywords.</p></div>`;
+        grid.innerHTML = `<div class="no-results"><h3>Nothing matched</h3><p>Try adjusting your search query or filters.</p></div>`;
         if (!genreId) status.textContent = "";
         renderRecent();
         return;
       }
+      if (status) status.textContent = `${items.length} ${items.length === 1 ? "result" : "results"}`;
       items.forEach(item => grid.appendChild(buildCard(item, mediaType(item, current === "tv" ? "tv" : "movie"))));
     } catch {
       grid.innerHTML = `<div class="no-results"><p>Search failed. Check your connection.</p></div>`;
       status.textContent = "";
     }
   }
+
+  ["#filter-era", "#filter-rating", "#filter-sort"].forEach(sel => {
+    $(sel)?.addEventListener("change", () => doSearch(lastQ || input?.value.trim() || ""));
+  });
 
   const q = params.get("q") || "";
   if (input && !q && !genreId) setTimeout(() => input.focus(), 120);
@@ -2563,6 +2636,15 @@ function initSettingsPage() {
   bindToggle("#toggle-hide-watched", SETTINGS.hideWatchedKey, "Hide watched");
   bindToggle("#toggle-autoplay-trailers", SETTINGS.autoplayTrailersKey, "Auto-play trailers");
 
+  const langSel = $("#settings-pref-lang");
+  if (langSel) {
+    langSel.value = SETTINGS.get(SETTINGS.prefLangKey, "en");
+    langSel.addEventListener("change", e => {
+      SETTINGS.set(SETTINGS.prefLangKey, e.target.value);
+      toast(`Preferred language updated`);
+    });
+  }
+
   $("#clear-progress")?.addEventListener("click", () => {
     localStorage.removeItem(Progress.key);
     toast("Continue watching cleared");
@@ -2589,19 +2671,76 @@ async function initListPage() {
     if (status) status.textContent = "";
   };
 
-  const list = MyList.get();
-  if (!list.length) { emptyState(); return; }
+  const rawList = MyList.get();
+  if (!rawList.length) { emptyState(); return; }
 
-  if (status) status.textContent = `${list.length} ${list.length === 1 ? "title" : "titles"}`;
-  grid.innerHTML = ""; skeletons(Math.min(list.length, 12)).forEach(s => grid.appendChild(s));
+  grid.innerHTML = ""; skeletons(Math.min(rawList.length, 12)).forEach(s => grid.appendChild(s));
 
-  const settled = await Promise.allSettled(list.map(i =>
+  const settled = await Promise.allSettled(rawList.map(i =>
     tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
   ));
-  const items = dedupeItems(settled.filter(r => r.status === "fulfilled").map(r => r.value));
-  grid.innerHTML = "";
-  if (!items.length) { emptyState(); return; }
-  items.forEach(it => grid.appendChild(buildCard(it, it._type === "tv" ? "tv" : "movie")));
+  let loadedItems = dedupeItems(settled.filter(r => r.status === "fulfilled").map(r => r.value));
+  if (!loadedItems.length) { emptyState(); return; }
+
+  let currentType = "all";
+  let currentSort = "recent";
+
+  const renderListGrid = () => {
+    let items = [...loadedItems];
+    if (currentType === "movie" || currentType === "tv") {
+      items = items.filter(it => (it._type || (it.title ? "movie" : "tv")) === currentType);
+    } else if (currentType === "favorite") {
+      items = items.filter(it => (it.vote_average || 0) >= 7.5);
+    } else if (currentType === "planning") {
+      items = items.filter(it => {
+        const prog = Progress.getItem(it.id, it._type || "movie");
+        return !prog || prog.progress < 15;
+      });
+    } else if (currentType === "completed") {
+      items = items.filter(it => {
+        const prog = Progress.getItem(it.id, it._type || "movie");
+        return prog && prog.progress >= 85;
+      });
+    }
+
+    if (currentSort === "rating") {
+      items.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+    } else if (currentSort === "title") {
+      items.sort((a, b) => (a.title || a.name || "").localeCompare(b.title || b.name || ""));
+    } else if (currentSort === "release") {
+      items.sort((a, b) => ((b.release_date || b.first_air_date || "")).localeCompare(a.release_date || a.first_air_date || ""));
+    }
+
+    if (status) status.textContent = `${items.length} ${items.length === 1 ? "title" : "titles"}`;
+    grid.innerHTML = "";
+    if (!items.length) {
+      grid.innerHTML = `<div class="no-results"><h3>No titles match filter</h3><p>Try switching filters.</p></div>`;
+      return;
+    }
+    items.forEach(it => grid.appendChild(buildCard(it, it._type === "tv" ? "tv" : "movie")));
+  };
+
+  const filterRow = $("#list-filter-chips");
+  if (filterRow) {
+    filterRow.querySelectorAll(".filter-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        filterRow.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("on"));
+        chip.classList.add("on");
+        currentType = chip.dataset.type || "all";
+        renderListGrid();
+      });
+    });
+  }
+
+  const sortSel = $("#list-sort-select");
+  if (sortSel) {
+    sortSel.addEventListener("change", e => {
+      currentSort = e.target.value;
+      renderListGrid();
+    });
+  }
+
+  renderListGrid();
 }
 
 function initDmcaPage() {
