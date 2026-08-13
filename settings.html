@@ -29,11 +29,14 @@
 
       <section class="settings-section">
         <h2>Appearance</h2>
-        <p class="settings-desc">Switch between a dark or light interface, or follow your device.</p>
+        <p class="settings-desc">Switch between dark or light interface.</p>
         <div class="settings-theme" id="settings-theme" role="group" aria-label="Theme">
-          <button type="button" class="theme-opt" data-theme-val="auto">Auto</button>
           <button type="button" class="theme-opt" data-theme-val="dark">Dark</button>
           <button type="button" class="theme-opt" data-theme-val="light">Light</button>
+        </div>
+        <div class="settings-toggle-row" style="margin-top:14px">
+          <div><strong>Landscape Card View</strong><span>Display 16:9 backdrop cards instead of standard 2:3 poster cards</span></div>
+          <button type="button" class="settings-toggle" id="toggle-grid-backdrop" aria-pressed="false"></button>
         </div>
       </section>
 

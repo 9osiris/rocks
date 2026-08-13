@@ -723,6 +723,14 @@ body:not(:has(.hero)):not(.detail-page) .topnav::after { opacity: 1; }
   display: flex; align-items: center; justify-content: center;
   color: var(--text-3); font-size: 0.7rem;
 }
+.grid-backdrop-mode .media-card {
+  width: clamp(230px, 20vw, 290px);
+}
+.grid-backdrop-mode .media-card img,
+.grid-backdrop-mode .media-card .no-img,
+.grid-backdrop-mode .media-card .no-img-poster {
+  aspect-ratio: 16 / 9;
+}
 .media-card .rank {
   position: absolute; top: 7px; left: 7px; z-index: 2;
   background: var(--accent); color: var(--on-accent);

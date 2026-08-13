@@ -291,6 +291,7 @@ const SETTINGS = {
   hideWatchedKey: "orc_hide_watched",
   autoplayTrailersKey: "orc_autoplay_trailers",
   prefLangKey: "orc_pref_lang",
+  layoutKey: "orc_grid_layout",
   themeKey: "orc_theme",
   get(k, def = "") { return localStorage.getItem(k) ?? def; },
   set(k, v) {
@@ -329,20 +330,17 @@ function applyGlobalSettings() {
   document.documentElement.style.setProperty("--accent-dim", `color-mix(in srgb, #${hex} 78%, #000)`);
   document.documentElement.style.setProperty("--accent-soft", `rgba(${parseInt(hex.slice(0, 2), 16)}, ${parseInt(hex.slice(2, 4), 16)}, ${parseInt(hex.slice(4, 6), 16)}, 0.14)`);
 
-  const themePref = SETTINGS.get(SETTINGS.themeKey, "auto");
+  const themePref = SETTINGS.get(SETTINGS.themeKey, "dark") === "light" ? "light" : "dark";
   const rootEl = document.documentElement;
-  if (themePref === "dark" || themePref === "light") rootEl.setAttribute("data-theme", themePref);
-  else rootEl.removeAttribute("data-theme");
-  const resolvedTheme = themePref === "auto"
-    ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
-    : themePref;
-  rootEl.style.colorScheme = resolvedTheme;
-  const themeColor = resolvedTheme === "light" ? "#f6f6f8" : "#0b0b0d";
+  rootEl.setAttribute("data-theme", themePref);
+  rootEl.style.colorScheme = themePref;
+  const themeColor = themePref === "light" ? "#f6f6f8" : "#0b0b0d";
   document.querySelectorAll('meta[name="theme-color"]').forEach((m, i) => {
     if (i === 0) { m.removeAttribute("media"); m.setAttribute("content", themeColor); } else { m.remove(); }
   });
 
-  document.documentElement.classList.toggle("reduce-motion", SETTINGS.get(SETTINGS.reduceMotionKey) === "1");
+  rootEl.classList.toggle("reduce-motion", SETTINGS.get(SETTINGS.reduceMotionKey) === "1");
+  rootEl.classList.toggle("grid-backdrop-mode", SETTINGS.get(SETTINGS.layoutKey) === "1");
 }
 
 function skeletons(count = 12) {
@@ -1841,6 +1839,61 @@ function initHeroSwipe() {
   }, { passive: true });
 }
 
+function resumeLabel(progressObj) {
+  if (!progressObj) return "";
+  if (progressObj.season && progressObj.episode) {
+    return `Resumes at S${progressObj.season} E${progressObj.episode}`;
+  }
+  const watchedSec = progressObj.currentTime;
+  if (watchedSec && watchedSec > 10) {
+    const m = Math.floor(watchedSec / 60);
+    const h = Math.floor(m / 60);
+    const rM = m % 60;
+    if (h > 0) return `Resumes at ${h}h ${rM}m`;
+    return `Resumes at ${rM}m`;
+  }
+  return "Resumes playback";
+}
+
+async function renderRecommendedForYouRow() {
+  const container = $("#categories");
+  if (!container) return;
+  const items = Progress.getAll();
+  if (!items || !items.length) return;
+
+  const lastItem = items[0];
+  if (!lastItem || !lastItem.id) return;
+
+  const type = lastItem.mediaType === "tv" ? "tv" : "movie";
+  try {
+    const data = await tmdb(`/${type}/${lastItem.id}/recommendations`);
+    const recs = (data.results || []).filter(i => i.poster_path || i.backdrop_path).slice(0, 14);
+    if (!recs.length) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "row-wrapper recommended-for-you-wrapper visible";
+    wrap.innerHTML = `
+      <div class="row-header"><h2 class="row-title">Recommended For You</h2></div>
+      <div class="row-track-container">
+        <button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button>
+        <div class="row-track recommended-for-you-track"></div>
+        <button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
+      </div>`;
+    const track = wrap.querySelector(".recommended-for-you-track");
+    recs.forEach(it => track.appendChild(buildCard(it, mediaType(it, type))));
+
+    const contRow = container.querySelector(".continue-watching-wrapper");
+    if (contRow) contRow.after(wrap);
+    else container.prepend(wrap);
+
+    initRowDrag(track);
+    initRowKeyboard(track);
+    const scroll = 360;
+    wrap.querySelector(".row-arrow.left")?.addEventListener("click", () => track.scrollBy({ left: -scroll, behavior: "smooth" }));
+    wrap.querySelector(".row-arrow.right")?.addEventListener("click", () => track.scrollBy({ left: scroll, behavior: "smooth" }));
+  } catch (_) {}
+}
+
 async function initHomePage() {
   initSplash();
   initSidebar("home");
@@ -1848,6 +1901,7 @@ async function initHomePage() {
   initGlobalShortcuts();
   initHeroSwipe();
   renderContinueWatchingRow();
+  renderRecommendedForYouRow();
 
   const main = $("#main-content");
   if (main && (!$("#splash-screen") || sessionStorage.getItem("orc_splash"))) {
@@ -2598,7 +2652,7 @@ function initSettingsPage() {
 
   const themeBox = $("#settings-theme");
   if (themeBox) {
-    const curTheme = SETTINGS.get(SETTINGS.themeKey, "auto");
+    const curTheme = SETTINGS.get(SETTINGS.themeKey, "dark") === "light" ? "light" : "dark";
     themeBox.querySelectorAll(".theme-opt").forEach(b => {
       b.classList.toggle("active", b.dataset.themeVal === curTheme);
       b.addEventListener("click", () => {
@@ -2623,8 +2677,8 @@ function initSettingsPage() {
     el.addEventListener("click", () => {
       const on = SETTINGS.toggle(key);
       sync();
+      applyGlobalSettings();
       if (key === SETTINGS.reduceMotionKey) {
-        applyGlobalSettings();
         if (on) clearInterval(heroTimer);
         else startHeroTimer();
       }
@@ -2635,6 +2689,7 @@ function initSettingsPage() {
   bindToggle("#toggle-reduce-motion", SETTINGS.reduceMotionKey, "Reduce motion");
   bindToggle("#toggle-hide-watched", SETTINGS.hideWatchedKey, "Hide watched");
   bindToggle("#toggle-autoplay-trailers", SETTINGS.autoplayTrailersKey, "Auto-play trailers");
+  bindToggle("#toggle-grid-backdrop", SETTINGS.layoutKey, "Landscape Card View");
 
   const langSel = $("#settings-pref-lang");
   if (langSel) {
