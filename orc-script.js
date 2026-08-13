@@ -2332,28 +2332,6 @@ async function initTvPage() {
       toast(a ? "Added to My List" : "Removed");
     });
 
-    const updateNextEpBtn = (epsList) => {
-      const wrap = $("#next-ep-wrap");
-      const btn = $("#next-ep-btn");
-      if (!wrap || !btn) return;
-      const curEpIndex = epsList.findIndex(e => e.episode_number === episode);
-      if (curEpIndex >= 0 && curEpIndex < epsList.length - 1) {
-        const nextEpObj = epsList[curEpIndex + 1];
-        wrap.style.display = "";
-        btn.querySelector("span").textContent = `Next Episode (S${season} E${nextEpObj.episode_number})`;
-        btn.onclick = () => {
-          episode = nextEpObj.episode_number;
-          $$(".ep-row").forEach(x => x.classList.remove("on"));
-          const nextRow = $$(".ep-row")[curEpIndex + 1];
-          if (nextRow) nextRow.classList.add("on");
-          update();
-          scrollToSelector("#player-frame");
-        };
-      } else {
-        wrap.style.display = "none";
-      }
-    };
-
     const update = () => {
       loadPlayerFrame(frame, providerUrl("tv", id, season, episode));
       const u = new URL(location.href);
@@ -2390,12 +2368,10 @@ async function initTvPage() {
             $$(".ep-row").forEach(x => x.classList.remove("on"));
             el.classList.add("on");
             update();
-            updateNextEpBtn(eps);
             scrollToSelector("#player-frame");
           });
           $("#ep-grid").appendChild(el);
         });
-        updateNextEpBtn(eps);
 
         $("#ep-search-input")?.addEventListener("input", e => {
           const q = e.target.value.toLowerCase().trim();
