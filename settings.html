@@ -72,6 +72,14 @@
             <option value="pt">Portuguese</option>
           </select>
         </div>
+      <section class="settings-section">
+        <h2>Cloud Sync & Supabase Account</h2>
+        <p class="settings-desc">Connect your Supabase project URL and Anon Key to sync watchlists and watch history across devices.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;max-width:540px;margin-top:12px">
+          <input type="text" id="supabase-url" class="ep-search-input" placeholder="https://your-project.supabase.co" aria-label="Supabase Project URL" style="width:100%" />
+          <input type="password" id="supabase-key" class="ep-search-input" placeholder="eyJhbGciOiJIUzI1NiIsIn..." aria-label="Supabase Anon Key" style="width:100%" />
+          <button type="button" class="retry-btn" id="save-supabase-config" style="align-self:flex-start">Save Supabase Credentials</button>
+        </div>
       </section>
 
       <section class="settings-section">
@@ -104,6 +112,7 @@
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="orc-script.js"></script>
 </body>
 </html>

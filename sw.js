@@ -1,43 +1,75 @@
-const CACHE = "orc-static-v14";
-const ASSETS = ["/orc-styles.css", "/orc-script.js", "/images/favicon.svg", "/favicon.svg", "/favicon.png", "/icon-192.png", "/icon-512.png", "/manifest.json", "/offline.html"];
+const CACHE_NAME = "orc-static-v15";
+const STATIC_ASSETS = [
+  "/",
+  "/index.html",
+  "/search.html",
+  "/list.html",
+  "/settings.html",
+  "/dmca.html",
+  "/movie.html",
+  "/tv.html",
+  "/orc-styles.css",
+  "/orc-script.js",
+  "/manifest.json",
+  "/favicon.svg",
+  "/favicon.png",
+  "/icon-192.png",
+  "/icon-512.png"
+];
 
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open(CACHE).then(async c => {
-      await Promise.allSettled(ASSETS.map(a => c.add(a)));
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async cache => {
+      await Promise.allSettled(STATIC_ASSETS.map(asset => cache.add(asset)));
       await self.skipWaiting();
     })
   );
 });
 
-self.addEventListener("activate", e => {
-  e.waitUntil(
+self.addEventListener("activate", event => {
+  event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
     ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
-  const url = new URL(e.request.url);
+// Stale-While-Revalidate Strategy for Local Assets
+self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+
+  // Only handle local same-origin requests
   if (url.origin !== self.location.origin) return;
 
-  // Page navigations: try the network, fall back to the offline page.
-  if (e.request.mode === "navigate") {
-    e.respondWith(fetch(e.request).catch(() => caches.match("/offline.html")));
-    return;
-  }
+  event.respondWith(
+    caches.open(CACHE_NAME).then(async cache => {
+      const cachedResponse = await cache.match(event.request);
+      const networkFetch = fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+          cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      }).catch(() => null);
 
-  const isStatic = ASSETS.some(a => url.pathname === a || url.pathname.endsWith(a.replace(/^\//, "")));
-  if (!isStatic) return;
-  e.respondWith(
-    fetch(e.request).then(res => {
-      if (res && res.status === 200) {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
+      // Return cached version immediately if available, revalidating in background
+      if (cachedResponse) {
+        // Trigger background revalidation
+        event.waitUntil(networkFetch);
+        return cachedResponse;
       }
-      return res;
-    }).catch(() => caches.match(e.request))
+
+      // If not cached, wait for network
+      const res = await networkFetch;
+      if (res) return res;
+
+      // Fallback for HTML page navigations offline
+      if (event.request.mode === "navigate") {
+        const fallbackPage = await cache.match("/index.html") || await cache.match("/");
+        if (fallbackPage) return fallbackPage;
+      }
+
+      return new Response("Offline", { status: 503, statusText: "Service Unavailable" });
+    })
   );
 });

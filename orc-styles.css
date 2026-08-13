@@ -885,7 +885,8 @@ body:not(:has(.hero)):not(.detail-page) .topnav::after { opacity: 1; }
   box-shadow: var(--shadow-2);
   z-index: 8;
 }
-.media-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; background: var(--bg-2); }
+.media-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; background: var(--bg-2); transition: transform 0.45s var(--ease-out); }
+.media-card:hover img, .media-card.is-hovered img { transform: scale(1.06); }
 .media-card .no-img {
   aspect-ratio: 2/3; background: var(--bg-2);
   display: flex; align-items: center; justify-content: center;

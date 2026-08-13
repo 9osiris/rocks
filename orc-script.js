@@ -75,23 +75,134 @@ function dedupeItems(items) {
   });
 }
 
-const _memoryStorage = new Map();
-function safeSetItem(key, val) {
-  try {
-    localStorage.setItem(key, val);
-    _memoryStorage.set(key, val);
-    return true;
-  } catch {
-    _memoryStorage.set(key, val);
-    return false;
-  }
+// ===== IndexedDB Async Storage Adapter =====
+const DB_NAME = "OsirisWatchDB";
+const DB_VERSION = 1;
+const STORE_NAME = "keyValueStore";
+let _dbPromise = null;
+
+function getDB() {
+  if (_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((resolve) => {
+    if (!window.indexedDB) { resolve(null); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = () => resolve(null);
+  });
+  return _dbPromise;
 }
-function safeGetItem(key, def = null) {
+
+async function idbGet(key) {
   try {
-    const v = localStorage.getItem(key);
-    if (v !== null) return v;
-  } catch (_) {}
-  return _memoryStorage.get(key) ?? def;
+    const db = await getDB();
+    if (!db) return safeGetItem(key, null);
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, "readonly");
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result ?? safeGetItem(key, null));
+      req.onerror = () => resolve(safeGetItem(key, null));
+    });
+  } catch (_) { return safeGetItem(key, null); }
+}
+
+async function idbSet(key, val) {
+  safeSetItem(key, typeof val === "string" ? val : JSON.stringify(val));
+  try {
+    const db = await getDB();
+    if (!db) return false;
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put(val, key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => resolve(false);
+    });
+  } catch (_) { return false; }
+}
+
+// ===== Supabase Client Prep =====
+let supabaseClient = null;
+function getSupabaseClient() {
+  const url = safeGetItem("orc_supabase_url", "");
+  const key = safeGetItem("orc_supabase_key", "");
+  if (window.supabase && url && key) {
+    try {
+      if (!supabaseClient) supabaseClient = window.supabase.createClient(url, key);
+      return supabaseClient;
+    } catch (_) {}
+  }
+  return null;
+}
+
+// ===== Swipe-To-Dismiss Mobile Modals =====
+function initSwipeToDismissModals() {
+  if (window._swipeModalBound) return;
+  window._swipeModalBound = true;
+  document.addEventListener("touchstart", e => {
+    const box = e.target.closest(".modal-box");
+    if (!box) return;
+    const startY = e.touches[0].clientY;
+    let currentY = startY;
+
+    const onTouchMove = (ev) => {
+      currentY = ev.touches[0].clientY;
+      const diffY = currentY - startY;
+      if (diffY > 0) {
+        box.style.transform = `translateY(${diffY}px)`;
+        box.style.transition = "none";
+      }
+    };
+
+    const onTouchEnd = () => {
+      const diffY = currentY - startY;
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", onTouchEnd);
+      if (diffY > 65) {
+        box.style.transform = "translateY(100%)";
+        box.style.transition = "transform 0.25s var(--ease)";
+        setTimeout(() => {
+          box.style.transform = "";
+          closeModal();
+        }, 250);
+      } else {
+        box.style.transform = "";
+        box.style.transition = "transform 0.25s var(--ease)";
+      }
+    };
+
+    document.addEventListener("touchmove", onTouchMove, { passive: true });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+  }, { passive: true });
+}
+
+// ===== IntersectionObserver Lazy DOM Card Loading =====
+let _rowObserver = null;
+function observeLazyRow(rowWrapper, loadCardsFn) {
+  if (!("IntersectionObserver" in window)) {
+    loadCardsFn();
+    return;
+  }
+  if (!_rowObserver) {
+    _rowObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const wrapper = entry.target;
+          if (wrapper._loadCardsFn) {
+            wrapper._loadCardsFn();
+            delete wrapper._loadCardsFn;
+          }
+          obs.unobserve(wrapper);
+        }
+      });
+    }, { rootMargin: "250px 0px" });
+  }
+  rowWrapper._loadCardsFn = loadCardsFn;
+  _rowObserver.observe(rowWrapper);
 }
 
 function prefersReducedMotion() {
@@ -1140,14 +1251,21 @@ function buildRow(title, items, type = "movie", opts = {}) {
     </div>`;
 
   const track = wrap.querySelector(".row-track");
-  list.forEach((item, i) => {
-    const cardOpts = { ...(opts.cardOpts || {}) };
-    if (opts.ranks) cardOpts.rank = i + 1;
-    if (item._progress) cardOpts.progressValue = item._progress;
-    track.appendChild(buildCard(item, mediaType(item, type), cardOpts));
-  });
-  initRowDrag(track);
-  initRowKeyboard(track);
+  skeletons(6).forEach(s => track.appendChild(s));
+
+  const loadCards = () => {
+    track.innerHTML = "";
+    list.forEach((item, i) => {
+      const cardOpts = { ...(opts.cardOpts || {}) };
+      if (opts.ranks) cardOpts.rank = i + 1;
+      if (item._progress) cardOpts.progressValue = item._progress;
+      track.appendChild(buildCard(item, mediaType(item, type), cardOpts));
+    });
+    initRowDrag(track);
+    initRowKeyboard(track);
+  };
+
+  observeLazyRow(wrap, loadCards);
 
   const scroll = 480;
   wrap.querySelector(".row-arrow.left").addEventListener("click", () => track.scrollBy({ left: -scroll, behavior: "smooth" }));
@@ -2793,6 +2911,29 @@ function initSettingsPage() {
     langSel.addEventListener("change", e => {
       SETTINGS.set(SETTINGS.prefLangKey, e.target.value);
       toast(`Preferred language updated`);
+    });
+  }
+
+  const sbUrlInput = $("#supabase-url");
+  const sbKeyInput = $("#supabase-key");
+  const sbSaveBtn = $("#save-supabase-config");
+
+  if (sbUrlInput && sbKeyInput && sbSaveBtn) {
+    sbUrlInput.value = safeGetItem("orc_supabase_url", "");
+    sbKeyInput.value = safeGetItem("orc_supabase_key", "");
+
+    sbSaveBtn.addEventListener("click", () => {
+      const url = sbUrlInput.value.trim();
+      const key = sbKeyInput.value.trim();
+      safeSetItem("orc_supabase_url", url);
+      safeSetItem("orc_supabase_key", key);
+      supabaseClient = null;
+      if (url && key) {
+        getSupabaseClient();
+        toast("Supabase credentials saved!");
+      } else {
+        toast("Supabase credentials cleared");
+      }
     });
   }
 
