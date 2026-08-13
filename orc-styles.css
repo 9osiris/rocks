@@ -297,9 +297,7 @@ body:not(:has(.hero)):not(.detail-page) .topnav::after { opacity: 1; }
 [data-theme="light"] .skeleton {
   background: linear-gradient(90deg, rgba(15, 23, 42, 0.04) 20%, rgba(15, 23, 42, 0.10) 38%, rgba(15, 23, 42, 0.04) 56%) !important;
   background-size: 300% 100% !important;
-}
-
-.skeleton-card {
+}.skeleton-card {
   pointer-events: none;
   user-select: none;
   width: 100%;
@@ -308,8 +306,169 @@ body:not(:has(.hero)):not(.detail-page) .topnav::after { opacity: 1; }
   width: 100%;
   aspect-ratio: 2/3;
   border-radius: var(--radius);
+}
+.skeleton-card .skeleton-line {
+  height: 12px;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+.skeleton-card .skeleton-title { width: 75%; }
+.skeleton-card .skeleton-sub { width: 45%; }
+
+/* Hero full-page skeleton loader matching stripped down layout (Image 1) */
+.hero-skeleton-wrap {
+  padding: clamp(24px, 5vw, 60px) var(--gutter);
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.hero-skel-title {
+  width: min(280px, 75vw);
+  height: 64px;
+  border-radius: 12px;
+}
+.hero-skel-tags {
+  display: flex;
+  gap: 8px;
+}
+.hero-skel-tag {
+  width: 54px;
+  height: 20px;
+  border-radius: 999px;
+}
+.hero-skel-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.hero-skel-line {
+  height: 14px;
+  border-radius: 6px;
+}
+.hero-skel-line.l1 { width: 90%; }
+.hero-skel-line.l2 { width: 72%; }
+.hero-skel-line.l3 { width: 55%; }
+
+.hero-skel-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.hero-skel-btn {
+  height: 42px;
+  border-radius: 999px;
+}
+.hero-skel-btn.b1 { width: 105px; }
+.hero-skel-btn.b2 { width: 115px; }
+
+/* Dev Logs Announcement Floating Card Overlay (Image 2) */
+.devlog-card {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  z-index: 450;
+  width: 350px;
+  max-width: calc(100vw - 32px);
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: rgba(18, 18, 22, 0.94);
+  border: 1px solid var(--border-2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  animation: devlogSlideIn 0.4s var(--ease-out) both;
+}
+[data-theme="light"] .devlog-card {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: 0 16px 44px rgba(15, 23, 42, 0.18);
+}
+.devlog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.devlog-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.devlog-date {
+  color: var(--text-3);
+  font-weight: 600;
+}
+.devlog-close {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.2s, background 0.2s;
+}
+.devlog-close:hover {
+  color: var(--text);
+  background: var(--bg-2);
+}
+.devlog-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
   margin-bottom: 8px;
 }
+.devlog-body {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-2);
+  margin-bottom: 14px;
+}
+.devlog-body p + p {
+  margin-top: 8px;
+}
+.devlog-foot {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.devlog-discord-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.devlog-discord-link svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+.devlog-discord-link:hover {
+  color: var(--accent);
+}
+@keyframes devlogSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (max-width: 600px) {
+  .devlog-card {
+    bottom: calc(78px + var(--safe-bottom));
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+}
+
 .skeleton-line {
   height: 12px;
   border-radius: 6px;
