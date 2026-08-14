@@ -2030,6 +2030,24 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
 }
 
+/* ===== Theater Mode Styling ===== */
+body.theater-mode .detail-hero-bg,
+body.theater-mode #detail-header,
+body.theater-mode #detail-info,
+body.theater-mode #cast-section,
+body.theater-mode #similar-section,
+body.theater-mode .page-foot,
+body.theater-mode .topnav {
+  opacity: 0.08;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+body.theater-mode .player-wrap {
+  box-shadow: 0 0 100px rgba(0, 0, 0, 0.95);
+  z-index: 100;
+  position: relative;
+}
+
 .account-field-label {
   display: block;
   font-size: 0.8rem;

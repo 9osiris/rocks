@@ -4514,6 +4514,80 @@ function registerServiceWorker() {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
+function openWatchPartyModal(title, mediaId, mediaType) {
+  const roomId = "OSIRIS-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const partyUrl = `${window.location.origin}/${mediaType || 'movie'}.html?id=${mediaId || ''}&room=${roomId}`;
+
+  let modal = $("#party-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.className = "modal-overlay";
+    modal.id = "party-modal";
+    modal.innerHTML = `
+      <div class="modal-box glass-surface" style="max-width:460px;padding:24px;aspect-ratio:auto;border-radius:16px">
+        <button type="button" class="modal-close" id="party-close" aria-label="Close">✕</button>
+        <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:#fff">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Watch Party Room
+        </h2>
+        <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:16px">Share this link with friends to watch <strong id="party-media-title" style="color:#fff"></strong> in real-time sync!</p>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <input type="text" id="party-url-input" readonly class="ep-search-input" style="font-family:monospace;font-size:0.82rem" />
+          <button type="button" class="btn-play" id="party-copy-btn">Copy Link</button>
+        </div>
+        <div style="font-size:0.78rem;color:#10b981;font-weight:700;display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span>
+          Room Created: 1 Member Active
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector("#party-close").addEventListener("click", () => closeModal(modal));
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(modal); });
+  }
+  modal.querySelector("#party-media-title").textContent = title || "Title";
+  modal.querySelector("#party-url-input").value = partyUrl;
+  modal.querySelector("#party-copy-btn").onclick = () => {
+    navigator.clipboard.writeText(partyUrl).then(() => toast("Watch Party link copied to clipboard!"));
+  };
+  openModal(modal);
+}
+
+function toggleTheaterMode() {
+  const isTheater = document.body.classList.toggle("theater-mode");
+  toast(isTheater ? "Theater Mode Active (Dimmed)" : "Theater Mode Disabled");
+}
+
+function openTrailerModal(tmdbId, mediaType, title) {
+  let modal = $("#trailer-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.className = "modal-overlay";
+    modal.id = "trailer-modal";
+    modal.innerHTML = `
+      <div class="modal-box glass-surface" style="max-width:800px;width:92%;padding:0;aspect-ratio:16/9;border-radius:16px;overflow:hidden">
+        <button type="button" class="modal-close" id="trailer-close" aria-label="Close" style="z-index:10;top:12px;right:12px">✕</button>
+        <iframe id="trailer-iframe" style="width:100%;height:100%;border:none" allowfullscreen allow="autoplay"></iframe>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector("#trailer-close").addEventListener("click", () => {
+      modal.querySelector("#trailer-iframe").src = "";
+      closeModal(modal);
+    });
+    modal.addEventListener("click", e => {
+      if (e.target === modal) {
+        modal.querySelector("#trailer-iframe").src = "";
+        closeModal(modal);
+      }
+    });
+  }
+
+  const query = encodeURIComponent(`${title || ''} trailer`);
+  modal.querySelector("#trailer-iframe").src = `https://www.youtube-nocookie.com/embed?listType=search&list=${query}&autoplay=1`;
+  openModal(modal);
+}
+
 function openKeyboardShortcutsModal() {
   let modal = $("#shortcuts-modal");
   if (!modal) {
