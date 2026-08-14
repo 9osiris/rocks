@@ -671,7 +671,53 @@ function initPlayerGuard() {
   });
 }
 
+const AVATAR_PRESETS = [
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80"
+];
+
 const SupabaseSync = {
+  initializedListener: false,
+
+  init() {
+    if (this.initializedListener) return;
+    this.initializedListener = true;
+    const client = getSupabaseClient();
+    if (client && client.auth) {
+      try {
+        client.auth.onAuthStateChange((event, session) => {
+          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+            if (session?.user?.user_metadata) {
+              safeSetItem("orc_local_meta", JSON.stringify(session.user.user_metadata));
+            }
+            this.pullFromCloud().then(() => {
+              initAuthUI();
+              if (location.pathname.endsWith("/settings") || location.pathname.endsWith("/settings.html")) {
+                renderAccountSettingsSection();
+              }
+            });
+          } else if (event === "SIGNED_OUT") {
+            safeRemoveItem("orc_local_meta");
+            initAuthUI();
+            if (location.pathname.endsWith("/settings") || location.pathname.endsWith("/settings.html")) {
+              renderAccountSettingsSection();
+            }
+          }
+        });
+      } catch (_) {}
+    }
+  },
+
   async getUser() {
     const client = getSupabaseClient();
     if (!client) return null;
@@ -685,10 +731,11 @@ const SupabaseSync = {
     const client = getSupabaseClient();
     if (!client) throw new Error("Supabase client is not initialized.");
     const uname = (username || email.split("@")[0]).trim();
+    const joinedAt = new Date().toISOString();
     const { data, error } = await client.auth.signUp({
       email,
       password,
-      options: { data: { username: uname } }
+      options: { data: { username: uname, joined_at: joinedAt, bio: "" } }
     });
     if (error) throw error;
     if (data?.user?.user_metadata) {
@@ -713,7 +760,8 @@ const SupabaseSync = {
   async signOut() {
     const client = getSupabaseClient();
     if (!client) return;
-    await client.auth.signOut();
+    try { await client.auth.signOut(); } catch (_) {}
+    safeRemoveItem("orc_local_meta");
   },
 
   async pullFromCloud() {
@@ -773,21 +821,23 @@ const SupabaseSync = {
     const client = getSupabaseClient();
     if (!client) return;
 
-    if (isAdd) {
-      await client.from("watchlists").upsert({
-        user_id: user.id,
-        media_id: String(item.id),
-        media_type: item.type,
-        title: item.title,
-        poster_path: item.poster
-      }, { onConflict: "user_id,media_id,media_type" });
-    } else {
-      await client.from("watchlists").delete().match({
-        user_id: user.id,
-        media_id: String(item.id),
-        media_type: item.type
-      });
-    }
+    try {
+      if (isAdd) {
+        await client.from("watchlists").upsert({
+          user_id: user.id,
+          media_id: String(item.id),
+          media_type: item.type,
+          title: item.title,
+          poster_path: item.poster
+        }, { onConflict: "user_id,media_id,media_type" });
+      } else {
+        await client.from("watchlists").delete().match({
+          user_id: user.id,
+          media_id: String(item.id),
+          media_type: item.type
+        });
+      }
+    } catch (_) {}
   },
 
   async pushProgressItem(p) {
@@ -796,17 +846,19 @@ const SupabaseSync = {
     const client = getSupabaseClient();
     if (!client) return;
 
-    await client.from("progress").upsert({
-      user_id: user.id,
-      media_id: String(p.id),
-      media_type: p.mediaType,
-      season: p.season || 1,
-      episode: p.episode || 1,
-      current_time: p.currentTime || 0,
-      duration: p.duration || 0,
-      progress_pct: p.progress || 0,
-      updated_at: new Date().toISOString()
-    }, { onConflict: "user_id,media_id,media_type" });
+    try {
+      await client.from("progress").upsert({
+        user_id: user.id,
+        media_id: String(p.id),
+        media_type: p.mediaType,
+        season: p.season || 1,
+        episode: p.episode || 1,
+        current_time: p.currentTime || 0,
+        duration: p.duration || 0,
+        progress_pct: p.progress || 0,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_id,media_id,media_type" });
+    } catch (_) {}
   },
 
   async resetPassword(email) {
@@ -815,6 +867,14 @@ const SupabaseSync = {
     const { data, error } = await client.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/settings`
     });
+    if (error) throw error;
+    return data;
+  },
+
+  async changePassword(newPassword) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error("Supabase client is not initialized.");
+    const { data, error } = await client.auth.updateUser({ password: newPassword });
     if (error) throw error;
     return data;
   },
@@ -847,10 +907,99 @@ const SupabaseSync = {
     return {
       email: user.email,
       username: meta.username || user.email.split("@")[0],
-      avatar_url: meta.avatar_url || null
+      avatar_url: meta.avatar_url || null,
+      bio: meta.bio || "",
+      joined_at: meta.joined_at || user.created_at || new Date().toISOString(),
+      tier: meta.tier || "Pro Cinephile"
     };
+  },
+
+  getStats() {
+    const list = MyList.get();
+    const prog = Progress.get();
+    const progEntries = Object.values(prog || {});
+
+    let totalSecs = 0;
+    let moviesCount = 0;
+    let seriesCount = 0;
+
+    progEntries.forEach(entry => {
+      if (entry.currentTime) totalSecs += entry.currentTime;
+      if (entry.mediaType === "movie" && (entry.progress || 0) >= 85) moviesCount++;
+      if (entry.mediaType === "tv") seriesCount++;
+    });
+
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+
+    const badges = [];
+    if (hours >= 1) badges.push({ icon: "🎬", name: "Cinephile", desc: "Watched over 1 hour of content" });
+    if (moviesCount >= 5) badges.push({ icon: "🍿", name: "Movie Buff", desc: "Completed 5+ movies" });
+    if (seriesCount >= 10) badges.push({ icon: "📺", name: "Binge Master", desc: "Watched 10+ TV episodes" });
+    if (list.length >= 10) badges.push({ icon: "⭐", name: "Tastemaker", desc: "Saved 10+ titles to My List" });
+    if (badges.length === 0) badges.push({ icon: "🚀", name: "Pioneer", desc: "New OsirisWatch Explorer" });
+
+    return {
+      totalTimeFormatted: `${hours}h ${mins}m`,
+      savedCount: list.length,
+      moviesCount,
+      seriesCount,
+      badges
+    };
+  },
+
+  exportBackup() {
+    const data = {
+      version: "2.7",
+      timestamp: new Date().toISOString(),
+      watchlist: MyList.get(),
+      progress: Progress.get(),
+      settings: {
+        accent: SETTINGS.get(SETTINGS.accentKey),
+        reduceMotion: SETTINGS.get(SETTINGS.reduceMotionKey),
+        hideWatched: SETTINGS.get(SETTINGS.hideWatchedKey),
+        provider: getProvider()
+      }
+    };
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `OsirisWatch_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  importBackup(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.watchlist && Array.isArray(parsed.watchlist)) {
+            MyList.save(parsed.watchlist);
+          }
+          if (parsed.progress && typeof parsed.progress === "object") {
+            Progress.saveAll(parsed.progress);
+          }
+          if (parsed.settings) {
+            if (parsed.settings.accent) SETTINGS.set(SETTINGS.accentKey, parsed.settings.accent);
+            if (parsed.settings.provider) setProvider(parsed.settings.provider);
+          }
+          this.pullFromCloud();
+          resolve(true);
+        } catch (err) {
+          reject(new Error("Invalid backup JSON format"));
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsText(file);
+    });
   }
 };
+
+SupabaseSync.init();
 
 async function initAuthUI() {
   const btn = $("#topnav-account-btn");
@@ -3583,16 +3732,18 @@ async function renderAccountSettingsSection() {
           <span class="account-avatar-badge" style="width:44px;height:44px;font-size:1.2rem">?</span>
           <div>
             <div style="font-weight:700;font-size:1rem;color:var(--text)">Not Signed In</div>
-            <div style="font-size:0.82rem;color:var(--text-2);margin-top:2px">Sign in or create an account to sync your watchlist and watch history across all your devices.</div>
+            <div style="font-size:0.82rem;color:var(--text-2);margin-top:2px">Sign in or create an account to sync your watchlist, progress, and settings across all devices.</div>
           </div>
         </div>
-        <button type="button" class="btn-play" id="settings-open-auth" style="align-self:flex-start;margin-top:4px">Sign In / Create Account</button>
+        <button type="button" class="btn-play" id="settings-open-auth" style="align-self:flex-start;margin-top:8px">Sign In / Create Account</button>
       </div>`;
     container.querySelector("#settings-open-auth")?.addEventListener("click", () => openAuthModal());
     return;
   }
 
   const initial = (profile.username || profile.email).charAt(0).toUpperCase();
+  const stats = SupabaseSync.getStats();
+
   container.innerHTML = `
     <div class="account-settings-card">
       <div class="account-profile-header">
@@ -3601,25 +3752,147 @@ async function renderAccountSettingsSection() {
           <div class="account-avatar-overlay">Change</div>
         </div>
         <input type="file" id="avatar-file-input" accept="image/*" style="display:none" />
+
         <div class="account-details">
-          <div class="account-username-display" id="account-username-title">${esc(profile.username)}</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="account-username-display" id="account-username-title">${esc(profile.username)}</div>
+            <span class="account-tier-badge">${esc(profile.tier)}</span>
+          </div>
           <div class="account-email-display">${esc(profile.email)}</div>
-          <div class="account-sync-badge">✓ Cloud Sync Active</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:6px;flex-wrap:wrap">
+            <div class="account-sync-badge">✓ Cloud Sync Active</div>
+            <button type="button" class="account-sync-trigger" id="account-manual-sync-btn">↻ Sync Now</button>
+          </div>
         </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:8px;max-width:480px;margin-top:8px">
-        <label style="font-size:0.8rem;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em">Display Username</label>
-        <div class="account-edit-grid">
-          <input type="text" id="account-username-input" value="${esc(profile.username)}" placeholder="Enter username" class="ep-search-input" />
-          <button type="button" class="retry-btn" id="save-username-btn">Save</button>
+      <div class="account-tabs">
+        <button type="button" class="account-tab-btn active" data-atab="identity">👤 Profile & Bio</button>
+        <button type="button" class="account-tab-btn" data-atab="stats">📊 Stats & Badges</button>
+        <button type="button" class="account-tab-btn" data-atab="security">🔒 Security</button>
+        <button type="button" class="account-tab-btn" data-atab="vault">☁️ Data Vault</button>
+      </div>
+
+      <!-- TAB 1: PROFILE & IDENTITY -->
+      <div class="account-tab-pane active" id="atab-identity">
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:520px;margin-top:8px">
+          <div>
+            <label class="account-field-label">Display Username</label>
+            <div class="account-edit-grid">
+              <input type="text" id="account-username-input" value="${esc(profile.username)}" placeholder="Enter username" class="ep-search-input" />
+              <button type="button" class="retry-btn" id="save-username-btn">Save Username</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="account-field-label">Bio / Tagline</label>
+            <div class="account-edit-grid">
+              <input type="text" id="account-bio-input" value="${esc(profile.bio)}" placeholder="Share your favorite genres or films..." class="ep-search-input" />
+              <button type="button" class="retry-btn" id="save-bio-btn">Save Bio</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="account-field-label">Choose Avatar Preset</label>
+            <div class="avatar-preset-grid">
+              ${AVATAR_PRESETS.map(url => `
+                <button type="button" class="avatar-preset-btn${profile.avatar_url === url ? " selected" : ""}" data-url="${esc(url)}">
+                  <img src="${esc(url)}" alt="Preset Avatar" />
+                </button>
+              `).join("")}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div style="margin-top:8px">
-        <button type="button" class="btn-ghost" id="settings-signout-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.4)">Sign Out</button>
+      <!-- TAB 2: STATS & ACHIEVEMENTS -->
+      <div class="account-tab-pane" id="atab-stats" style="display:none">
+        <div class="account-stats-grid">
+          <div class="account-stat-box">
+            <div class="account-stat-val">${stats.totalTimeFormatted}</div>
+            <div class="account-stat-lbl">Total Watch Time</div>
+          </div>
+          <div class="account-stat-box">
+            <div class="account-stat-val">${stats.moviesCount}</div>
+            <div class="account-stat-lbl">Movies Watched</div>
+          </div>
+          <div class="account-stat-box">
+            <div class="account-stat-val">${stats.seriesCount}</div>
+            <div class="account-stat-lbl">Series Watched</div>
+          </div>
+          <div class="account-stat-box">
+            <div class="account-stat-val">${stats.savedCount}</div>
+            <div class="account-stat-lbl">Saved Titles</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px">
+          <label class="account-field-label">Unlocked Badges & Achievements</label>
+          <div class="badge-chips-wrap">
+            ${stats.badges.map(b => `
+              <div class="badge-chip" title="${esc(b.desc)}">
+                <span class="badge-icon">${b.icon}</span>
+                <div class="badge-info">
+                  <span class="badge-name">${esc(b.name)}</span>
+                  <span class="badge-desc">${esc(b.desc)}</span>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: SECURITY -->
+      <div class="account-tab-pane" id="atab-security" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:480px;margin-top:8px">
+          <div>
+            <label class="account-field-label">Change Password</label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <input type="password" id="account-new-pwd" placeholder="New Password (min 6 chars)" class="ep-search-input" />
+              <button type="button" class="btn-play" id="account-change-pwd-btn">Update Password</button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:14px">
+            <label class="account-field-label">Reset Link</label>
+            <button type="button" class="btn-ghost" id="account-send-reset-btn">Send Password Reset Email</button>
+          </div>
+
+          <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:14px">
+            <button type="button" class="btn-ghost" id="settings-signout-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.4)">Sign Out Account</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: DATA VAULT & BACKUP -->
+      <div class="account-tab-pane" id="atab-vault" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:480px;margin-top:8px">
+          <div>
+            <label class="account-field-label">Export Account Backup</label>
+            <p style="font-size:0.82rem;color:var(--text-2);margin:0 0 8px">Save all your watchlists, progress, and settings to a JSON file.</p>
+            <button type="button" class="btn-play" id="vault-export-btn">📥 Download Data Vault (JSON)</button>
+          </div>
+
+          <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:14px">
+            <label class="account-field-label">Import Account Backup</label>
+            <p style="font-size:0.82rem;color:var(--text-2);margin:0 0 8px">Restore your watchlist and progress from a saved JSON file.</p>
+            <button type="button" class="btn-ghost" id="vault-import-btn">📤 Restore Data Vault</button>
+            <input type="file" id="vault-file-input" accept=".json" style="display:none" />
+          </div>
+        </div>
       </div>
     </div>`;
+
+  // Attach event listeners for tabs & actions
+  container.querySelectorAll(".account-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      container.querySelectorAll(".account-tab-btn").forEach(b => b.classList.remove("active"));
+      container.querySelectorAll(".account-tab-pane").forEach(p => p.style.display = "none");
+      btn.classList.add("active");
+      const targetPane = container.querySelector(`#atab-${btn.dataset.atab}`);
+      if (targetPane) targetPane.style.display = "block";
+    });
+  });
 
   const avatarInput = container.querySelector("#avatar-file-input");
   container.querySelector("#change-avatar-btn")?.addEventListener("click", () => avatarInput?.click());
@@ -3654,6 +3927,19 @@ async function renderAccountSettingsSection() {
     reader.readAsDataURL(file);
   });
 
+  container.querySelectorAll(".avatar-preset-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.url;
+      SupabaseSync.updateProfile({ avatar_url: url })
+        .then(() => {
+          toast("Avatar updated!");
+          renderAccountSettingsSection();
+          initAuthUI();
+        })
+        .catch(err => toast(err.message || "Failed to set avatar."));
+    });
+  });
+
   container.querySelector("#save-username-btn")?.addEventListener("click", async () => {
     const newUsername = container.querySelector("#account-username-input").value.trim();
     if (!newUsername) return;
@@ -3664,6 +3950,67 @@ async function renderAccountSettingsSection() {
       initAuthUI();
     } catch (err) {
       toast(err.message || "Failed to update username.");
+    }
+  });
+
+  container.querySelector("#save-bio-btn")?.addEventListener("click", async () => {
+    const newBio = container.querySelector("#account-bio-input").value.trim();
+    try {
+      await SupabaseSync.updateProfile({ bio: newBio });
+      toast("Bio updated!");
+      renderAccountSettingsSection();
+    } catch (err) {
+      toast(err.message || "Failed to update bio.");
+    }
+  });
+
+  container.querySelector("#account-manual-sync-btn")?.addEventListener("click", async () => {
+    toast("Syncing cloud data...");
+    await SupabaseSync.pullFromCloud();
+    toast("Cloud data synced!");
+    renderAccountSettingsSection();
+  });
+
+  container.querySelector("#account-change-pwd-btn")?.addEventListener("click", async () => {
+    const pwd = container.querySelector("#account-new-pwd").value;
+    if (!pwd || pwd.length < 6) {
+      toast("Password must be at least 6 characters.");
+      return;
+    }
+    try {
+      await SupabaseSync.changePassword(pwd);
+      toast("Password changed successfully!");
+      container.querySelector("#account-new-pwd").value = "";
+    } catch (err) {
+      toast(err.message || "Password update failed.");
+    }
+  });
+
+  container.querySelector("#account-send-reset-btn")?.addEventListener("click", async () => {
+    try {
+      await SupabaseSync.resetPassword(profile.email);
+      toast(`Password reset email sent to ${profile.email}`);
+    } catch (err) {
+      toast(err.message || "Failed to send reset email.");
+    }
+  });
+
+  container.querySelector("#vault-export-btn")?.addEventListener("click", () => {
+    SupabaseSync.exportBackup();
+    toast("Data vault backup downloaded!");
+  });
+
+  const vaultInput = container.querySelector("#vault-file-input");
+  container.querySelector("#vault-import-btn")?.addEventListener("click", () => vaultInput?.click());
+  vaultInput?.addEventListener("change", async e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await SupabaseSync.importBackup(file);
+      toast("Data vault restored successfully!");
+      renderAccountSettingsSection();
+    } catch (err) {
+      toast(err.message || "Failed to import backup.");
     }
   });
 
