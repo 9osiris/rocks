@@ -672,18 +672,18 @@ function initPlayerGuard() {
 }
 
 const AVATAR_PRESETS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80"
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g1' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2314b8a6'/><stop offset='100%' stop-color='%230f766e'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g1)'/><circle cx='50' cy='50' r='30' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='50' r='14' fill='%23ffffff'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g2' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%238b5cf6'/><stop offset='100%' stop-color='%236d28d9'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g2)'/><polygon points='50,18 82,78 18,78' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='55' r='10' fill='%23ffffff'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g3' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23ec4899'/><stop offset='100%' stop-color='%23be185d'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g3)'/><rect x='25' y='25' width='50' height='50' rx='12' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='50' r='12' fill='%23ffffff'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g4' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23f59e0b'/><stop offset='100%' stop-color='%23b45309'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g4)'/><path d='M50 20 L80 50 L50 80 L20 50 Z' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='50' r='10' fill='%23ffffff'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g5' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%233b82f6'/><stop offset='100%' stop-color='%231d4ed8'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g5)'/><circle cx='50' cy='50' r='32' fill='none' stroke='%23ffffff' stroke-width='4' stroke-dasharray='10 6'/><circle cx='50' cy='50' r='14' fill='%23ffffff'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g6' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2310b981'/><stop offset='100%' stop-color='%23047857'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g6)'/><path d='M25,50 Q50,20 75,50 T25,50' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='50' r='10' fill='%23ffffff'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g7' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23ef4444'/><stop offset='100%' stop-color='%23b91c1c'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g7)'/><circle cx='50' cy='50' r='28' fill='none' stroke='%23ffffff' stroke-width='6'/><polygon points='44,36 66,50 44,64' fill='%23ffffff'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g8' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%236366f1'/><stop offset='100%' stop-color='%234338ca'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g8)'/><path d='M30 30 h40 v40 h-40 z' fill='none' stroke='%23ffffff' stroke-width='6'/><path d='M20 20 h60 v60 h-60 z' fill='none' stroke='%23ffffff' stroke-width='3' opacity='0.6'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g9' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2306b6d4'/><stop offset='100%' stop-color='%230e7490'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g9)'/><circle cx='50' cy='50' r='34' fill='none' stroke='%23ffffff' stroke-width='4'/><path d='M30 50 L70 50' stroke='%23ffffff' stroke-width='6'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g10' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2384cc16'/><stop offset='100%' stop-color='%234d7c0f'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g10)'/><polygon points='50,20 62,40 85,42 67,58 72,80 50,68 28,80 33,58 15,42 38,40' fill='none' stroke='%23ffffff' stroke-width='5'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g11' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23f97316'/><stop offset='100%' stop-color='%23c2410c'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g11)'/><circle cx='50' cy='50' r='26' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='50' r='6' fill='%23ffffff'/></svg>",
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g12' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23a855f7'/><stop offset='100%' stop-color='%237e22ce'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g12)'/><path d='M30 70 L50 30 L70 70 Z' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='55' r='8' fill='%23ffffff'/></svg>"
 ];
 
 const SupabaseSync = {
@@ -3889,10 +3889,22 @@ async function renderAccountSettingsSection() {
       </div>
 
       <div class="account-tabs">
-        <button type="button" class="account-tab-btn active" data-atab="identity">👤 Profile & Bio</button>
-        <button type="button" class="account-tab-btn" data-atab="stats">📊 Stats & Badges</button>
-        <button type="button" class="account-tab-btn" data-atab="security">🔒 Security</button>
-        <button type="button" class="account-tab-btn" data-atab="vault">☁️ Data Vault</button>
+        <button type="button" class="account-tab-btn active" data-atab="identity">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Profile & Bio</span>
+        </button>
+        <button type="button" class="account-tab-btn" data-atab="stats">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Stats & Badges</span>
+        </button>
+        <button type="button" class="account-tab-btn" data-atab="security">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Security</span>
+        </button>
+        <button type="button" class="account-tab-btn" data-atab="vault">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Data Vault</span>
+        </button>
       </div>
 
       <!-- TAB 1: PROFILE & IDENTITY -->
@@ -4500,6 +4512,61 @@ function initPullRefresh() {
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
+
+function openKeyboardShortcutsModal() {
+  let modal = $("#shortcuts-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.className = "modal-overlay";
+    modal.id = "shortcuts-modal";
+    modal.innerHTML = `
+      <div class="modal-box glass-surface" style="max-width:440px;padding:24px;aspect-ratio:auto;border-radius:16px">
+        <button type="button" class="modal-close" id="shortcuts-close" aria-label="Close">✕</button>
+        <h2 style="font-size:1.15rem;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#fff">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></svg>
+          Keyboard Shortcuts
+        </h2>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-2)">Focus Search Input</span>
+            <kbd class="shortcut-key">/</kbd>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-2)">Keyboard Shortcuts Cheat Sheet</span>
+            <kbd class="shortcut-key">?</kbd>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-2)">Close Modals & Player</span>
+            <kbd class="shortcut-key">ESC</kbd>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+            <span style="color:var(--text-2)">Surprise Me Reel</span>
+            <kbd class="shortcut-key">R</kbd>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector("#shortcuts-close").addEventListener("click", () => closeModal(modal));
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(modal); });
+  }
+  openModal(modal);
+}
+
+function initGlobalShortcuts() {
+  document.addEventListener("keydown", e => {
+    const tag = document.activeElement?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement?.isContentEditable) return;
+    if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      const s = $("#search-input") || $(".ep-search-input");
+      if (s) { s.focus(); s.select(); }
+    } else if (e.key === "?" && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      openKeyboardShortcutsModal();
+    }
+  });
 }
 
 function checkPlayLoader() {

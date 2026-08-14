@@ -1985,16 +1985,27 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
 }
 
 .account-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-2);
   background: none;
-  border: none;
+  border: 1px solid transparent;
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.account-tab-btn svg {
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+.account-tab-btn:hover svg,
+.account-tab-btn.active svg {
+  opacity: 1;
 }
 .account-tab-btn:hover {
   color: var(--text);
@@ -2004,6 +2015,19 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   color: #ffffff;
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.shortcut-key {
+  display: inline-block;
+  padding: 3px 8px;
+  font-family: monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
 }
 
 .account-field-label {
