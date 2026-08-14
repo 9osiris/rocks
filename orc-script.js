@@ -877,6 +877,7 @@ async function initAuthUI() {
     btn.title = "Sign In / Create Account";
     btn.onclick = () => openAuthModal();
   }
+  updateMobileBubbleAvatar();
 }
 
 function openAuthModal() {
@@ -1174,46 +1175,79 @@ function initMobileUI(active) {
   }
 }
 
+async function updateMobileBubbleAvatar() {
+  const btn = $("#mobile-profile-bubble");
+  if (!btn) return;
+
+  const profile = await SupabaseSync.getProfile();
+  if (profile && profile.email) {
+    if (profile.avatar_url) {
+      btn.innerHTML = `<img src="${esc(profile.avatar_url)}" class="mobile-bubble-avatar-img" alt="Profile" />`;
+    } else {
+      const initial = (profile.username || profile.email).charAt(0).toUpperCase();
+      btn.innerHTML = `<span class="mobile-bubble-initial">${initial}</span>`;
+    }
+    btn.onclick = () => {
+      if (location.pathname.endsWith("/settings") || location.pathname.endsWith("/settings.html")) {
+        $("#settings-account-section")?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        location.href = "/settings#settings-account-section";
+      }
+    };
+  } else {
+    btn.innerHTML = `<span class="mobile-bubble-ico">${ICONS.user}</span>`;
+    btn.onclick = () => openAuthModal();
+  }
+}
+
 function buildMobilePillNav(active) {
-  const existing = $("#mobile-pill-nav");
+  const existing = $("#mobile-pill-dock");
   if (!isMobile()) { if (existing) existing.remove(); return; }
+
   const items = [
     { href: homeUrl(), label: "Home", icon: ICONS.home, key: "home" },
     { href: "/search", label: "Browse", icon: ICONS.tv, key: "search" },
     { href: "/list", label: "My List", icon: ICONS.list, key: "list" },
-    { href: "/settings", label: "Settings", icon: ICONS.settings, key: "settings" },
   ];
-  const nav = existing || document.createElement("nav");
-  nav.id = "mobile-pill-nav";
-  nav.className = "mobile-pill-nav lg-surface";
-  nav.setAttribute("aria-label", "Primary");
-  nav.innerHTML = items.map(it => `
-    <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
-      <span class="pill-nav-ico">${it.icon}</span>
-    </a>`).join("");
-  if (!existing) document.body.appendChild(nav);
-  if (!nav._lg) {
-    nav._lg = true;
-    LiquidGlass.apply(nav, { borderRadius: 34, distortionScale: -110, blur: 9, brightness: 58, opacity: 0.9, saturation: 1.55 });
-  }
+
+  const dock = existing || document.createElement("div");
+  dock.id = "mobile-pill-dock";
+  dock.className = "mobile-pill-dock";
+
+  dock.innerHTML = `
+    <nav class="mobile-pill-nav" aria-label="Primary">
+      ${items.map(it => `
+        <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
+          <span class="pill-nav-ico">${it.icon}</span>
+        </a>
+      `).join("")}
+    </nav>
+    <button type="button" class="mobile-profile-bubble${active === "settings" ? " active" : ""}" id="mobile-profile-bubble" aria-label="Account & Settings">
+      <span class="mobile-bubble-ico">${ICONS.user}</span>
+    </button>
+  `;
+
+  if (!existing) document.body.appendChild(dock);
+
+  updateMobileBubbleAvatar();
   initMobilePillNavScroll();
   initScrollRestoration();
 }
 
 function initMobilePillNavScroll() {
-  const nav = $("#mobile-pill-nav");
-  if (!nav || nav._scrollBound) return;
-  nav._scrollBound = true;
+  const dock = $("#mobile-pill-dock");
+  if (!dock || dock._scrollBound) return;
+  dock._scrollBound = true;
 
   let lastY = window.scrollY;
   window.addEventListener("scroll", () => {
     const curY = window.scrollY;
     if (curY < 50) {
-      nav.classList.remove("nav-hidden");
+      dock.classList.remove("nav-hidden");
     } else if (curY - lastY > 15) {
-      nav.classList.add("nav-hidden");
+      dock.classList.add("nav-hidden");
     } else if (lastY - curY > 15) {
-      nav.classList.remove("nav-hidden");
+      dock.classList.remove("nav-hidden");
     }
     lastY = curY;
   }, { passive: true });

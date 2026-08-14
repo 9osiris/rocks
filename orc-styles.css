@@ -2632,46 +2632,51 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   flex-shrink: 0;
 }
 
-/* ===== Redone Mobile Floating Glass Pill Nav ===== */
+/* ===== Redesigned Mobile 2-Part Dock (Nav Pill + Standalone Profile Bubble) ===== */
 @media (max-width: 768px) {
-  .mobile-pill-nav {
+  .mobile-pill-dock {
     position: fixed;
     left: 50%;
-    bottom: calc(14px + var(--safe-bottom, 0px));
+    bottom: calc(16px + var(--safe-bottom, 0px));
     transform: translateX(-50%);
     z-index: 460;
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    gap: 10px;
+    transition: transform 0.35s var(--ease), opacity 0.35s var(--ease);
+    animation: pillNavIn 0.45s var(--ease-out) both;
+  }
+
+  .mobile-pill-dock.nav-hidden {
+    transform: translate(-50%, 140%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Main 3-item navigation glass pill */
+  .mobile-pill-nav {
+    display: flex;
+    align-items: center;
     gap: 4px;
     padding: 4px 6px;
     height: 52px;
-    width: min(340px, calc(100vw - 28px));
     border-radius: 999px !important;
     background: rgba(14, 14, 20, 0.78) !important;
     backdrop-filter: blur(24px) saturate(1.5) !important;
     -webkit-backdrop-filter: blur(24px) saturate(1.5) !important;
     border: 1px solid rgba(255, 255, 255, 0.16) !important;
     box-shadow: inset 0 0 2px 1px rgba(255, 255, 255, 0.12), 0 12px 36px rgba(0, 0, 0, 0.5) !important;
-    transition: transform 0.35s var(--ease), opacity 0.35s var(--ease);
-    animation: pillNavIn 0.45s var(--ease-out) both;
-  }
-
-  .mobile-pill-nav.nav-hidden {
-    transform: translate(-50%, 140%);
-    opacity: 0;
-    pointer-events: none;
   }
 
   .pill-nav-item {
     position: relative;
-    flex: 1 1 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 56px;
     height: 44px;
     border-radius: 999px;
-    color: rgba(255, 255, 255, 0.52);
+    color: rgba(255, 255, 255, 0.55);
     text-decoration: none;
     transition: color 0.22s var(--ease), transform 0.12s var(--ease);
     -webkit-tap-highlight-color: transparent;
@@ -2680,7 +2685,7 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   .pill-nav-item::before {
     content: "";
     position: absolute;
-    inset: 3px 4px;
+    inset: 3px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -2717,6 +2722,58 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
 
   .pill-nav-item:active {
     transform: scale(0.92);
+  }
+
+  /* Standalone Profile Glass Bubble */
+  .mobile-profile-bubble {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+    border-radius: 50% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(14, 14, 20, 0.78) !important;
+    backdrop-filter: blur(24px) saturate(1.5) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: inset 0 0 2px 1px rgba(255, 255, 255, 0.14), 0 12px 36px rgba(0, 0, 0, 0.5) !important;
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    padding: 0;
+    overflow: hidden;
+    transition: transform 0.15s var(--ease), border-color 0.2s, background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-profile-bubble:active {
+    transform: scale(0.90);
+  }
+
+  .mobile-profile-bubble.active {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: inset 0 0 2px 1px rgba(255, 255, 255, 0.25), 0 0 16px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+  }
+
+  .mobile-bubble-ico svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+  }
+
+  .mobile-bubble-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .mobile-bubble-initial {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--accent);
   }
 }
 
