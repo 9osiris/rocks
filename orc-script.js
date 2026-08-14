@@ -3145,6 +3145,9 @@ function initSearchPage() {
   const chips = $$(".filter-chip");
   let current = filter === "movie" || filter === "tv" ? filter : "all";
   let timer, lastQ = "";
+  let searchPage = 1;
+  let isFetchingMore = false;
+  let hasMorePages = true;
 
   if (input) initInstantSearch(input);
 
@@ -3169,6 +3172,7 @@ function initSearchPage() {
   const mediaTypeSelect = $("#media-type-select");
   if (mediaTypeSelect) {
     if (filter === "movie" || filter === "tv") mediaTypeSelect.value = filter;
+    else mediaTypeSelect.value = "all";
     mediaTypeSelect.addEventListener("change", () => {
       current = mediaTypeSelect.value;
       doSearch(lastQ || input?.value.trim() || "");
@@ -3214,20 +3218,20 @@ function initSearchPage() {
     doSearch(lastQ || input?.value.trim() || "");
   }));
 
-  async function doSearch(q) {
+  async function doSearch(q, append = false) {
     if (!status || !grid) return;
+    if (!append) {
+      searchPage = 1;
+      hasMorePages = true;
+      grid.textContent = "";
+      skeletons(12).forEach(s => grid.appendChild(s));
+    }
     lastQ = q;
     if (current === "ai") { aiSearch(q); return; }
     status.classList.remove("is-busy");
-    if (!q && current === "all" && !genreId) {
-      status.textContent = "";
-      grid.innerHTML = `<div class="no-results"><h3>What are you looking for?</h3><p>Search by title, or use the Movies and Series tabs to browse.</p></div>`;
-      renderRecent();
-      return;
-    }
+
     if (recentBox) recentBox.hidden = true;
-    status.textContent = "Loading…";
-    grid.textContent = ""; skeletons(12).forEach(s => grid.appendChild(s));
+    if (!append && status) status.textContent = "Loading…";
 
     try {
       let items = [];
@@ -3236,19 +3240,33 @@ function initSearchPage() {
         let path = "/search/multi";
         if (current === "movie") path = "/search/movie";
         if (current === "tv") path = "/search/tv";
-        const data = await tmdb(`${path}?query=${encodeURIComponent(q)}`);
+        const data = await tmdb(`${path}?query=${encodeURIComponent(q)}&page=${searchPage}`);
         items = (data.results || []).filter(i => i.poster_path || i.backdrop_path);
         if (current !== "all") items = items.filter(i => (i.media_type || current) === current);
-        status.textContent = `${items.length} results`;
+        if (data.page >= (data.total_pages || 1)) hasMorePages = false;
       } else {
-        const media = current === "tv" ? "tv" : "movie";
-        const g = genreId || "";
-        const parts = ["sort_by=popularity.desc", "vote_count.gte=30"];
-        if (g) parts.push(`with_genres=${g}`);
-        const data = await tmdb(`/discover/${media}?${parts.join("&")}`);
-        items = data.results || [];
-        const gName = GENRES.find(x => String(x.id) === String(g))?.name;
-        status.textContent = `${gName ? gName + " · " : ""}${items.length} ${media === "tv" ? "series" : "films"}`;
+        const g = genreId || $("#filter-genre")?.value || "";
+        const gParam = (g && g !== "all") ? `&with_genres=${g}` : "";
+        const sortVal = $("#filter-sort")?.value || "pop";
+        let sortParam = "popularity.desc";
+        if (sortVal === "rating") sortParam = "vote_average.desc";
+        if (sortVal === "newest") sortParam = "primary_release_date.desc";
+
+        if (current === "all") {
+          const [movData, tvData] = await Promise.all([
+            tmdb(`/discover/movie?sort_by=${sortParam}&vote_count.gte=30${gParam}&page=${searchPage}`).catch(() => ({ results: [] })),
+            tmdb(`/discover/tv?sort_by=${sortParam}&vote_count.gte=30${gParam}&page=${searchPage}`).catch(() => ({ results: [] }))
+          ]);
+          const movs = (movData.results || []).map(m => ({ ...m, media_type: "movie" }));
+          const tvs = (tvData.results || []).map(t => ({ ...t, media_type: "tv" }));
+          items = [...movs, ...tvs];
+          if ((movData.page >= (movData.total_pages || 1)) && (tvData.page >= (tvData.total_pages || 1))) hasMorePages = false;
+        } else {
+          const media = current === "tv" ? "tv" : "movie";
+          const data = await tmdb(`/discover/${media}?sort_by=${sortParam}&vote_count.gte=30${gParam}&page=${searchPage}`);
+          items = (data.results || []).map(i => ({ ...i, media_type: media }));
+          if (data.page >= (data.total_pages || 1)) hasMorePages = false;
+        }
       }
 
       items = dedupeItems(items);
@@ -3261,11 +3279,12 @@ function initSearchPage() {
         items = items.filter(it => {
           const y = parseInt(year(it.release_date || it.first_air_date), 10);
           if (!y) return false;
+          if (eraVal === "2026") return y === 2026;
+          if (eraVal === "2025") return y === 2025;
+          if (eraVal === "2024") return y === 2024;
           if (eraVal === "2020s") return y >= 2020;
           if (eraVal === "2010s") return y >= 2010 && y <= 2019;
-          if (eraVal === "2000s") return y >= 2000 && y <= 2009;
-          if (eraVal === "1990s") return y >= 1990 && y <= 1999;
-          if (eraVal === "classic") return y < 1990;
+          if (eraVal === "classic") return y < 2010;
           return true;
         });
       }
@@ -3283,23 +3302,45 @@ function initSearchPage() {
         items.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
       }
 
-      grid.textContent = "";
-      if (!items.length) {
+      if (!append) grid.textContent = "";
+
+      if (!items.length && !append) {
         grid.innerHTML = `<div class="no-results"><h3>Nothing matched</h3><p>Try adjusting your search query or filters.</p></div>`;
-        if (!genreId) status.textContent = "";
+        if (status) status.textContent = "";
         renderRecent();
         return;
       }
-      if (status) status.textContent = `${items.length} ${items.length === 1 ? "result" : "results"}`;
-      items.forEach(item => grid.appendChild(buildCard(item, mediaType(item, current === "tv" ? "tv" : "movie"))));
-    } catch {
-      grid.innerHTML = `<div class="no-results"><p>Search failed. Check your connection.</p></div>`;
-      status.textContent = "";
+
+      const count = grid.querySelectorAll(".media-card").length + items.length;
+      if (status) status.textContent = `${count} ${count === 1 ? "result" : "results"}`;
+
+      items.forEach(item => {
+        grid.appendChild(buildCard(item, item.media_type || (current === "tv" ? "tv" : "movie")));
+      });
+    } catch (e) {
+      if (!append) {
+        grid.innerHTML = `<div class="no-results"><p>Failed to load titles. Please check your connection.</p></div>`;
+        if (status) status.textContent = "";
+      }
     }
   }
 
-  ["#filter-era", "#filter-rating", "#filter-sort"].forEach(sel => {
-    $(sel)?.addEventListener("change", () => doSearch(lastQ || input?.value.trim() || ""));
+  // Infinite Scroll Listener
+  window.addEventListener("scroll", () => {
+    if (isFetchingMore || !hasMorePages) return;
+    const scrollPos = window.innerHeight + window.scrollY;
+    const threshold = document.body.offsetHeight - 700;
+    if (scrollPos >= threshold) {
+      isFetchingMore = true;
+      searchPage++;
+      doSearch(lastQ || input?.value.trim() || "", true).finally(() => {
+        isFetchingMore = false;
+      });
+    }
+  }, { passive: true });
+
+  ["#filter-genre", "#filter-provider", "#filter-era", "#filter-rating", "#filter-sort"].forEach(sel => {
+    $(sel)?.addEventListener("change", () => doSearch(input?.value.trim() || ""));
   });
 
   const q = params.get("q") || "";
@@ -3314,16 +3355,7 @@ function initSearchPage() {
       clearTimeout(timer);
       timer = setTimeout(() => doSearch(input.value.trim()), 400);
     });
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter" && current === "ai") {
-        e.preventDefault();
-        clearTimeout(timer);
-        doSearch(input.value.trim());
-      }
-    });
-    if (q) { clear.style.display = "flex"; doSearch(q); }
-    else if (genreId) doSearch("");
-    else doSearch(current !== "all" ? "" : "");
+    doSearch(q);
   }
   clear?.addEventListener("click", () => { input.value = ""; clear.style.display = "none"; doSearch(""); input.focus(); });
   renderRecent();
