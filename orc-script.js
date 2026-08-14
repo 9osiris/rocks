@@ -893,24 +893,46 @@ const SupabaseSync = {
     });
     if (error) throw error;
     safeSetItem("orc_local_meta", JSON.stringify(newMeta));
+
+    try {
+      await client.from("profiles").upsert({
+        user_id: user.id,
+        username: newMeta.username || user.email.split("@")[0],
+        avatar_url: newMeta.avatar_url || null,
+        bio: newMeta.bio || "",
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_id" });
+    } catch (_) {}
+
     return data;
   },
 
   async getProfile() {
     const user = await this.getUser();
     if (!user) return null;
+    const client = getSupabaseClient();
+
+    let dbProfile = null;
+    if (client) {
+      try {
+        const { data } = await client.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
+        if (data) dbProfile = data;
+      } catch (_) {}
+    }
+
     const local = safeGetItem("orc_local_meta", null);
     let meta = user.user_metadata || {};
     if (local) {
       try { meta = { ...meta, ...JSON.parse(local) }; } catch (_) {}
     }
+
     return {
       email: user.email,
-      username: meta.username || user.email.split("@")[0],
-      avatar_url: meta.avatar_url || null,
-      bio: meta.bio || "",
+      username: dbProfile?.username || meta.username || user.email.split("@")[0],
+      avatar_url: dbProfile?.avatar_url || meta.avatar_url || null,
+      bio: dbProfile?.bio || meta.bio || "",
       joined_at: meta.joined_at || user.created_at || new Date().toISOString(),
-      tier: meta.tier || "Pro Cinephile"
+      tier: dbProfile?.tier || meta.tier || "Pro Cinephile"
     };
   },
 
