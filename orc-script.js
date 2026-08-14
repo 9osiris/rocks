@@ -3358,20 +3358,29 @@ async function initTvPage() {
 
     if (seasons.length && $("#season-select")) {
       $("#ep-block").style.display = "";
-      const epHead = $("#ep-block").querySelector(".ep-head") || document.createElement("div");
-      if (!epHead.classList.contains("ep-head")) {
+      let epHead = $("#ep-block").querySelector(".ep-head");
+      if (!epHead) {
+        epHead = document.createElement("div");
         epHead.className = "ep-head";
-        epHead.innerHTML = `<h2>Episodes</h2>`;
+        epHead.innerHTML = `<h2>Episodes</h2><input type="text" id="ep-search-input" placeholder="Filter episodes..." class="ep-search-input" />`;
         $("#ep-block").prepend(epHead);
+      } else if (!$("#ep-search-input")) {
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.id = "ep-search-input";
+        inp.placeholder = "Filter episodes...";
+        inp.className = "ep-search-input";
+        epHead.appendChild(inp);
       }
       const seasonSel = $("#season-select");
-      if (seasonSel && seasonSel.parentElement !== epHead) epHead.appendChild(seasonSel);
+      if (seasonSel && seasonSel.parentElement !== epHead) epHead.insertBefore(seasonSel, $("#ep-search-input"));
+      seasonSel.textContent = "";
       seasons.forEach(s => {
         const o = document.createElement("option");
         o.value = s.season_number;
         o.textContent = `Season ${s.season_number}`;
         if (s.season_number === season) o.selected = true;
-        $("#season-select").appendChild(o);
+        seasonSel.appendChild(o);
       });
       await loadEps(season);
       $("#season-select").addEventListener("change", () => {
