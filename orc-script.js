@@ -10,6 +10,9 @@ const BRAND     = "Osiris Watch";
 const ACCENT     = "ffffff";
 
 const PROVIDERS = [
+  { id: "cinesrc", name: "CineSrc (Recommended)",
+    movie: id => `https://cinesrc.st/embed/movie/${id}?color=%23${ACCENT}&autoplay=true`,
+    tv: (id, s, e) => `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&color=%23${ACCENT}&autoplay=true` },
   { id: "vidking", name: "VidKing",
     movie: id => `https://www.vidking.net/embed/movie/${id}?color=${ACCENT}&autoPlay=true`,
     tv: (id, s, e) => `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${ACCENT}&autoPlay=true&nextEpisode=true&episodeSelector=true` },
@@ -22,9 +25,6 @@ const PROVIDERS = [
   { id: "111movies", name: "111Movies",
     movie: id => `https://111movies.com/movie/${id}`,
     tv: (id, s, e) => `https://111movies.com/tv/${id}/${s}/${e}` },
-  { id: "cinesrc", name: "CineSrc",
-    movie: id => `https://cinesrc.st/embed/movie/${id}?color=%23${ACCENT}&autoplay=true`,
-    tv: (id, s, e) => `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&color=%23${ACCENT}&autoplay=true` },
 ];
 
 const PLAYER_HOSTS = [
@@ -1255,7 +1255,7 @@ function initSidebar(active) {
       </a>
       <nav class="topnav-links" aria-label="Primary">
         ${link(homeUrl(), "Home", active === "home")}
-        ${link("/search?type=movie", "Movies", active === "movies")}
+        ${link("/search", "Discover", active === "search" || active === "movies")}
         ${link("/search?type=tv", "Series", active === "tv")}
         ${link("/list", "My List", active === "list")}
         ${link("/settings", "Settings", active === "settings")}
