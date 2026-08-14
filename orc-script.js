@@ -360,7 +360,7 @@ function renderCastRow(cast) {
     d.type = "button";
     d.className = "cast-item";
     d.setAttribute("aria-label", `${a.name}${a.character ? `, as ${a.character}` : ""}`);
-    d.innerHTML = `${a.profile_path ? `<img src="${esc(IMG_W500 + a.profile_path)}" alt="${esc(item.title || item.name || '')}" loading="lazy" draggable="false"/>` : `<div class="cast-placeholder"></div>`}<div class="name" title="${esc(a.name)}">${esc(a.name)}</div><div class="role" title="${esc(a.character || "")}">${esc(a.character || "")}</div>`;
+    d.innerHTML = `${a.profile_path ? `<img src="${esc(IMG_W500 + a.profile_path)}" alt="${esc(a.name || '')}" loading="lazy" draggable="false"/>` : `<div class="cast-placeholder"></div>`}<div class="name" title="${esc(a.name)}">${esc(a.name)}</div><div class="role" title="${esc(a.character || "")}">${esc(a.character || "")}</div>`;
     d.addEventListener("click", () => openPersonModal(a.id));
     row.appendChild(d);
   });
@@ -412,7 +412,7 @@ async function openPersonModal(id) {
     const credits = (p.combined_credits?.cast || []).sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 12);
     box.innerHTML = `
       <div class="person-head">
-        ${p.profile_path ? `<img src="${esc(IMG_W500 + p.profile_path)}" alt="${esc(item.title || item.name || '')}"/>` : `<div class="person-ph"></div>`}
+        ${p.profile_path ? `<img src="${esc(IMG_W500 + p.profile_path)}" alt="${esc(p.name || '')}"/>` : `<div class="person-ph"></div>`}
         <div>
           <h2>${esc(p.name)}</h2>
           <p>${esc(p.known_for_department || "")}${p.place_of_birth ? ` · ${esc(p.place_of_birth)}` : ""}</p>
@@ -3083,10 +3083,9 @@ function renderProviders(container, type, id, s, e, onChange) {
   PROVIDERS.forEach((p, i) => {
     const btn = document.createElement("button");
     btn.className = `provider-tab${getProvider() === p.id ? " active" : ""}`;
-    const healthBadge = i === 0 
-      ? `<span class="provider-rec" aria-label="Recommended">★</span><span class="provider-status online">● HD</span>`
-      : `<span class="provider-status online">● HD</span>`;
-    btn.innerHTML = `${p.name} ${healthBadge}`;
+    btn.innerHTML = i === 0
+      ? `${p.name}<span class="provider-rec" aria-label="Recommended">★</span>`
+      : p.name;
     btn.addEventListener("click", () => {
       setProvider(p.id);
       $$(".provider-tab").forEach(b => b.classList.remove("active"));
@@ -3325,7 +3324,7 @@ async function initTvPage() {
           const dur = ep.runtime ? `${ep.runtime}m` : "";
           el.innerHTML = `
             <span class="ep-row-num">${ep.episode_number}</span>
-            <div class="ep-row-thumb">${ep.still_path ? `<img src="${esc(IMG_W500 + ep.still_path)}" alt="${esc(item.title || item.name || '')}" loading="lazy" draggable="false"/>` : ""}</div>
+            <div class="ep-row-thumb">${ep.still_path ? `<img src="${esc(IMG_W500 + ep.still_path)}" alt="${esc(ep.name || '')}" loading="lazy" draggable="false"/>` : ""}</div>
             <div class="ep-row-body">
               <div class="ep-row-title">${esc(ep.name || `Episode ${ep.episode_number}`)}</div>
               ${air ? `<div class="ep-row-date">${air}</div>` : ""}

@@ -2048,16 +2048,6 @@ body.theater-mode .player-wrap {
   position: relative;
 }
 
-.provider-status {
-  font-size: 0.68rem;
-  font-weight: 700;
-  margin-left: 6px;
-  opacity: 0.85;
-}
-.provider-status.online {
-  color: #10b981;
-}
-
 .account-field-label {
   display: block;
   font-size: 0.8rem;
