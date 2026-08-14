@@ -2001,21 +2001,29 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   .page-foot { margin-bottom: calc(78px + var(--safe-bottom)); }
   .back-top { bottom: calc(90px + var(--safe-bottom)); }
 
-  /* Floating liquid-glass bottom pill nav with auto-hide transition */
+  /* Redesigned Floating 5-Item Glass Pill Nav Bar */
   .mobile-pill-nav {
     position: fixed;
-    left: 50%; bottom: calc(16px + var(--safe-bottom));
+    left: 50%;
+    bottom: calc(16px + var(--safe-bottom, 0px));
     transform: translateX(-50%);
-    z-index: 460;
-    display: flex; align-items: center; gap: 4px;
-    padding: 8px 10px;
-    border-radius: var(--pill);
-    border: 1px solid var(--border-2);
-    background: var(--surface-blur);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6);
-    max-width: calc(100vw - 24px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 2px;
+    padding: 5px 8px;
+    height: 58px;
+    width: min(390px, calc(100vw - 20px));
+    border-radius: 9999px !important;
+    background: rgba(14, 14, 20, 0.82) !important;
+    backdrop-filter: blur(24px) saturate(1.6) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    box-shadow:
+      inset 0 0 2px 1px rgba(255, 255, 255, 0.14),
+      inset 0 0 10px 2px rgba(255, 255, 255, 0.04),
+      0 12px 36px rgba(0, 0, 0, 0.55) !important;
     transition: transform 0.35s var(--ease), opacity 0.35s var(--ease);
     animation: pillNavIn 0.45s var(--ease-out) both;
   }
@@ -2025,15 +2033,63 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     pointer-events: none;
   }
   .pill-nav-item {
-    display: flex; align-items: center; justify-content: center;
-    width: 46px; height: 46px; border-radius: var(--pill);
-    color: var(--text-2); text-decoration: none;
-    transition: color 0.2s, background 0.2s, transform 0.12s var(--ease);
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 48px;
+    border-radius: 9999px;
+    color: rgba(255, 255, 255, 0.52);
+    text-decoration: none;
+    transition: color 0.22s var(--ease), transform 0.12s var(--ease);
+    -webkit-tap-highlight-color: transparent;
   }
-  .pill-nav-item:active { transform: scale(0.90); }
-  .pill-nav-ico { display: flex; align-items: center; justify-content: center; }
-  .pill-nav-ico svg { width: 23px; height: 23px; stroke-width: 1.9; }
-  .pill-nav-item.active { color: var(--accent); background: var(--accent-soft); }
+  .pill-nav-item::before {
+    content: "";
+    position: absolute;
+    inset: 2px 2px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    opacity: 0;
+    transform: scale(0.88);
+    transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .pill-nav-item.active {
+    color: var(--accent) !important;
+  }
+  .pill-nav-item.active::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .pill-nav-ico {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pill-nav-ico svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+  }
+  .pill-nav-lbl {
+    position: relative;
+    z-index: 1;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+  .pill-nav-item:active {
+    transform: scale(0.92);
+  }
   @keyframes pillNavIn { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
 }
 @media (max-width: 380px) {
@@ -2632,53 +2688,101 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   flex-shrink: 0;
 }
 
-/* ===== Redesigned Mobile 2-Part Dock (Nav Pill + Standalone Profile Bubble) ===== */
+/* Mobile pill nav polish */
 @media (max-width: 768px) {
-  .mobile-pill-dock {
+  .mobile-pill-nav {
+    left: 50%;
+    bottom: calc(14px + var(--safe-bottom));
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    padding: 6px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border-2);
+    background: color-mix(in srgb, var(--bg-1) 88%, transparent);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    max-width: calc(100vw - 24px);
+    width: min(360px, calc(100vw - 24px));
+  }
+
+  .pill-nav-item {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    min-height: 44px;
+    border-radius: 999px;
+    color: var(--text-2);
+    transition: color 0.2s, background 0.2s, transform 0.12s;
+  }
+
+  .pill-nav-item:active {
+    transform: scale(0.92);
+  }
+
+  .pill-nav-ico {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+  }
+
+  .pill-nav-ico svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.9;
+  }
+
+  .pill-nav-item.active {
+    color: var(--accent);
+  }
+
+  .pill-nav-item.active .pill-nav-ico {
+    background: var(--accent-soft);
+  }
+}
+/* Mobile nav: no double oval, soft active pill */
+@media (max-width: 768px) {
+  .mobile-pill-nav {
     position: fixed;
     left: 50%;
-    bottom: calc(16px + var(--safe-bottom, 0px));
+    bottom: calc(14px + var(--safe-bottom));
     transform: translateX(-50%);
     z-index: 460;
     display: flex;
     align-items: center;
-    gap: 10px;
-    transition: transform 0.35s var(--ease), opacity 0.35s var(--ease);
-    animation: pillNavIn 0.45s var(--ease-out) both;
-  }
-
-  .mobile-pill-dock.nav-hidden {
-    transform: translate(-50%, 140%);
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* Main 3-item navigation glass pill */
-  .mobile-pill-nav {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 6px;
-    height: 52px;
-    border-radius: 999px !important;
-    background: rgba(14, 14, 20, 0.78) !important;
-    backdrop-filter: blur(24px) saturate(1.5) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.5) !important;
-    border: 1px solid rgba(255, 255, 255, 0.16) !important;
-    box-shadow: inset 0 0 2px 1px rgba(255, 255, 255, 0.12), 0 12px 36px rgba(0, 0, 0, 0.5) !important;
+    justify-content: space-between;
+    gap: 0;
+    padding: 5px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--border-2);
+    background: color-mix(in srgb, var(--bg-1) 90%, transparent);
+    backdrop-filter: blur(20px) saturate(1.35);
+    -webkit-backdrop-filter: blur(20px) saturate(1.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    max-width: calc(100vw - 24px);
+    width: min(360px, calc(100vw - 24px));
   }
 
   .pill-nav-item {
     position: relative;
+    flex: 1 1 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 56px;
     height: 44px;
+    min-height: 44px;
     border-radius: 999px;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--text-3);
     text-decoration: none;
-    transition: color 0.22s var(--ease), transform 0.12s var(--ease);
+    transition: color 0.28s cubic-bezier(0.22, 1, 0.36, 1);
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -2687,17 +2791,17 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     position: absolute;
     inset: 3px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--accent-soft);
     opacity: 0;
-    transform: scale(0.88);
-    transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
+    transform: scale(0.86);
+    transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
     pointer-events: none;
     z-index: 0;
   }
 
   .pill-nav-item.active {
-    color: var(--accent) !important;
+    color: var(--accent);
   }
 
   .pill-nav-item.active::before {
@@ -2711,69 +2815,24 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     display: flex;
     align-items: center;
     justify-content: center;
+    width: auto;
+    height: auto;
     background: none !important;
+    border-radius: 0;
   }
 
   .pill-nav-ico svg {
     width: 22px;
     height: 22px;
-    stroke-width: 2;
+    stroke-width: 1.85;
   }
 
   .pill-nav-item:active {
-    transform: scale(0.92);
+    transform: none;
   }
 
-  /* Standalone Profile Glass Bubble */
-  .mobile-profile-bubble {
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    min-height: 52px;
-    border-radius: 50% !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(14, 14, 20, 0.78) !important;
-    backdrop-filter: blur(24px) saturate(1.5) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.5) !important;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
-    box-shadow: inset 0 0 2px 1px rgba(255, 255, 255, 0.14), 0 12px 36px rgba(0, 0, 0, 0.5) !important;
-    color: rgba(255, 255, 255, 0.85);
-    cursor: pointer;
-    padding: 0;
-    overflow: hidden;
-    transition: transform 0.15s var(--ease), border-color 0.2s, background 0.2s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .mobile-profile-bubble:active {
-    transform: scale(0.90);
-  }
-
-  .mobile-profile-bubble.active {
-    border-color: var(--accent) !important;
-    color: var(--accent) !important;
-    box-shadow: inset 0 0 2px 1px rgba(255, 255, 255, 0.25), 0 0 16px color-mix(in srgb, var(--accent) 35%, transparent) !important;
-  }
-
-  .mobile-bubble-ico svg {
-    width: 22px;
-    height: 22px;
-    stroke-width: 2;
-  }
-
-  .mobile-bubble-avatar-img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .mobile-bubble-initial {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--accent);
+  .pill-nav-item:active .pill-nav-ico {
+    opacity: 0.7;
   }
 }
 

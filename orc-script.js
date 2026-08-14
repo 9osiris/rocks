@@ -877,7 +877,6 @@ async function initAuthUI() {
     btn.title = "Sign In / Create Account";
     btn.onclick = () => openAuthModal();
   }
-  updateMobileBubbleAvatar();
 }
 
 function openAuthModal() {
@@ -1175,79 +1174,50 @@ function initMobileUI(active) {
   }
 }
 
-async function updateMobileBubbleAvatar() {
-  const btn = $("#mobile-profile-bubble");
-  if (!btn) return;
-
-  const profile = await SupabaseSync.getProfile();
-  if (profile && profile.email) {
-    if (profile.avatar_url) {
-      btn.innerHTML = `<img src="${esc(profile.avatar_url)}" class="mobile-bubble-avatar-img" alt="Profile" />`;
-    } else {
-      const initial = (profile.username || profile.email).charAt(0).toUpperCase();
-      btn.innerHTML = `<span class="mobile-bubble-initial">${initial}</span>`;
-    }
-    btn.onclick = () => {
-      if (location.pathname.endsWith("/settings") || location.pathname.endsWith("/settings.html")) {
-        $("#settings-account-section")?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        location.href = "/settings#settings-account-section";
-      }
-    };
-  } else {
-    btn.innerHTML = `<span class="mobile-bubble-ico">${ICONS.user}</span>`;
-    btn.onclick = () => openAuthModal();
-  }
-}
-
 function buildMobilePillNav(active) {
-  const existing = $("#mobile-pill-dock");
+  const existing = $("#mobile-pill-nav");
   if (!isMobile()) { if (existing) existing.remove(); return; }
 
   const items = [
     { href: homeUrl(), label: "Home", icon: ICONS.home, key: "home" },
     { href: "/search", label: "Browse", icon: ICONS.tv, key: "search" },
+    { href: "/search?focus=1", label: "Search", icon: ICONS.search, key: "query" },
     { href: "/list", label: "My List", icon: ICONS.list, key: "list" },
+    { href: "/settings", label: "Profile", icon: ICONS.user, key: "settings" },
   ];
 
-  const dock = existing || document.createElement("div");
-  dock.id = "mobile-pill-dock";
-  dock.className = "mobile-pill-dock";
+  const nav = existing || document.createElement("nav");
+  nav.id = "mobile-pill-nav";
+  nav.className = "mobile-pill-nav";
+  nav.setAttribute("aria-label", "Primary");
 
-  dock.innerHTML = `
-    <nav class="mobile-pill-nav" aria-label="Primary">
-      ${items.map(it => `
-        <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
-          <span class="pill-nav-ico">${it.icon}</span>
-        </a>
-      `).join("")}
-    </nav>
-    <button type="button" class="mobile-profile-bubble${active === "settings" ? " active" : ""}" id="mobile-profile-bubble" aria-label="Account & Settings">
-      <span class="mobile-bubble-ico">${ICONS.user}</span>
-    </button>
-  `;
+  nav.innerHTML = items.map(it => `
+    <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
+      <span class="pill-nav-ico">${it.icon}</span>
+      <span class="pill-nav-lbl">${it.label}</span>
+    </a>
+  `).join("");
 
-  if (!existing) document.body.appendChild(dock);
+  if (!existing) document.body.appendChild(nav);
 
-  updateMobileBubbleAvatar();
   initMobilePillNavScroll();
   initScrollRestoration();
 }
 
 function initMobilePillNavScroll() {
-  const dock = $("#mobile-pill-dock");
-  if (!dock || dock._scrollBound) return;
-  dock._scrollBound = true;
+  const nav = $("#mobile-pill-nav");
+  if (!nav || nav._scrollBound) return;
+  nav._scrollBound = true;
 
   let lastY = window.scrollY;
   window.addEventListener("scroll", () => {
     const curY = window.scrollY;
     if (curY < 50) {
-      dock.classList.remove("nav-hidden");
+      nav.classList.remove("nav-hidden");
     } else if (curY - lastY > 15) {
-      dock.classList.add("nav-hidden");
+      nav.classList.add("nav-hidden");
     } else if (lastY - curY > 15) {
-      dock.classList.remove("nav-hidden");
+      nav.classList.remove("nav-hidden");
     }
     lastY = curY;
   }, { passive: true });
