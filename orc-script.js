@@ -2652,7 +2652,7 @@ async function renderRecommendedForYouRow() {
   } catch (_) {}
 }
 
-const DEVLOG_ID = "v2.6_aug2026";
+const DEVLOG_ID = "v2.7_aug2026";
 
 function renderDevLogAnnouncement() {
   if (safeGetItem("orc_devlog_dismissed") === DEVLOG_ID) return;
@@ -2664,15 +2664,15 @@ function renderDevLogAnnouncement() {
     <div class="devlog-header">
       <div class="devlog-header-left">
         <span>DEV LOG</span>
-        <span class="devlog-date">· AUGUST 12, 2026</span>
+        <span class="devlog-date">· AUGUST 14, 2026</span>
       </div>
       <button type="button" class="devlog-close" id="devlog-close" aria-label="Dismiss update">✕</button>
     </div>
-    <div class="devlog-title">Platform & Engine Updates</div>
+    <div class="devlog-title">Hero Engine & Performance Sync</div>
     <div class="devlog-body">
-      <p>Authentication now features a smooth slide-up drawer sheet with animated backdrop blur fade and interactive password reset.</p>
-      <p>Added account management in Settings for editing display usernames, uploading custom profile pictures, and managing cloud sync.</p>
-      <p>Removed white focus outlines across all search bars and input fields for a cleaner interface.</p>
+      <p>Synchronized hero backdrop carousel transitions with ambient color bleed extraction for seamless zero-lag switching.</p>
+      <p>Deep systemic engine optimizations across JS memory management, CSS preloading, and safe local storage fallback.</p>
+      <p>Upgraded Service Worker PWA cache handling and strengthened XSS DOM protections.</p>
     </div>
     <div class="devlog-foot">
       <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="devlog-discord-link">
