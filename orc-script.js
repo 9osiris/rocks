@@ -738,6 +738,77 @@ const SupabaseSync = {
     } catch (_) {}
   },
 
+  // Offline Sync Queue System
+  offlineQueueKey: "orc_offline_sync_queue",
+
+  enqueueOfflineMutation(action, payload) {
+    try {
+      const q = JSON.parse(safeGetItem(this.offlineQueueKey, "[]"));
+      q.push({ action, payload, timestamp: Date.now() });
+      safeSetItem(this.offlineQueueKey, JSON.stringify(q));
+    } catch (_) {}
+  },
+
+  async processOfflineQueue() {
+    if (!navigator.onLine) return;
+    try {
+      const raw = safeGetItem(this.offlineQueueKey, "[]");
+      const q = JSON.parse(raw);
+      if (!q.length) return;
+      safeSetItem(this.offlineQueueKey, "[]");
+      for (const item of q) {
+        if (item.action === "pushWatchlist") {
+          await this.pushWatchlistItem(item.payload.item, item.payload.isAdd);
+        } else if (item.action === "pushProgress") {
+          await this.pushProgressItem(item.payload);
+        }
+      }
+    } catch (_) {}
+  },
+
+  // Password Strength Entropy Calculator
+  checkPasswordStrength(pwd) {
+    if (!pwd) return { score: 0, label: "Empty", color: "#6b7280" };
+    let score = 0;
+    if (pwd.length >= 6) score += 1;
+    if (pwd.length >= 10) score += 1;
+    if (/[A-Z]/.test(pwd)) score += 1;
+    if (/[0-9]/.test(pwd)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+
+    if (score <= 1) return { score: 1, label: "Weak", color: "#ef4444" };
+    if (score <= 3) return { score: 2, label: "Medium", color: "#f59e0b" };
+    if (score === 4) return { score: 3, label: "Strong", color: "#10b981" };
+    return { score: 4, label: "Bulletproof", color: "#0d9488" };
+  },
+
+  // CSV Export for Watch History
+  exportHistoryCSV() {
+    const list = MyList.get();
+    const prog = Progress.get();
+    const rows = [["Title", "Type", "Season", "Episode", "Progress %", "Saved At"]];
+
+    Object.values(prog || {}).forEach(p => {
+      rows.push([
+        `"${(p.title || p.id || 'Untitled').replace(/"/g, '""')}"`,
+        p.mediaType || "movie",
+        p.season || 1,
+        p.episode || 1,
+        `${Math.round(p.progress || 0)}%`,
+        new Date(p.savedAt || Date.now()).toISOString()
+      ]);
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `OsirisWatch_History_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  },
+
   async deleteAccount() {
     const client = getSupabaseClient();
     if (!client) throw new Error("Supabase client is not initialized.");
@@ -3904,6 +3975,7 @@ async function renderAccountSettingsSection() {
             <label class="account-field-label">Change Password</label>
             <div style="display:flex;flex-direction:column;gap:8px">
               <input type="password" id="account-new-pwd" placeholder="New Password (min 6 chars)" class="ep-search-input" />
+              <div id="pwd-strength-indicator" style="font-size:0.75rem;font-weight:700;color:var(--text-2)"></div>
               <button type="button" class="btn-play" id="account-change-pwd-btn">Update Password</button>
             </div>
           </div>
@@ -3929,10 +4001,22 @@ async function renderAccountSettingsSection() {
           </div>
 
           <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:14px">
+            <label class="account-field-label">Export Watch History CSV</label>
+            <p style="font-size:0.82rem;color:var(--text-2);margin:0 0 8px">Download your watch progress history as a spreadsheet CSV file.</p>
+            <button type="button" class="btn-ghost" id="vault-export-csv-btn">📊 Download Watch History (CSV)</button>
+          </div>
+
+          <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:14px">
             <label class="account-field-label">Import Account Backup</label>
             <p style="font-size:0.82rem;color:var(--text-2);margin:0 0 8px">Restore your watchlist and progress from a saved JSON file.</p>
             <button type="button" class="btn-ghost" id="vault-import-btn">📤 Restore Data Vault</button>
             <input type="file" id="vault-file-input" accept=".json" style="display:none" />
+          </div>
+
+          <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:14px">
+            <label class="account-field-label" style="color:#ef4444">Danger Zone</label>
+            <p style="font-size:0.82rem;color:var(--text-2);margin:0 0 8px">Permanently delete your profile, saved titles, progress, and account data.</p>
+            <button type="button" class="btn-ghost" id="danger-delete-account-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.5)">🗑️ Delete Account</button>
           </div>
         </div>
       </div>
@@ -4026,6 +4110,15 @@ async function renderAccountSettingsSection() {
     renderAccountSettingsSection();
   });
 
+  container.querySelector("#account-new-pwd")?.addEventListener("input", e => {
+    const val = e.target.value;
+    const indicator = container.querySelector("#pwd-strength-indicator");
+    if (!indicator) return;
+    const res = SupabaseSync.checkPasswordStrength(val);
+    indicator.textContent = val ? `Strength: ${res.label}` : "";
+    indicator.style.color = res.color;
+  });
+
   container.querySelector("#account-change-pwd-btn")?.addEventListener("click", async () => {
     const pwd = container.querySelector("#account-new-pwd").value;
     if (!pwd || pwd.length < 6) {
@@ -4036,6 +4129,7 @@ async function renderAccountSettingsSection() {
       await SupabaseSync.changePassword(pwd);
       toast("Password changed successfully!");
       container.querySelector("#account-new-pwd").value = "";
+      if (container.querySelector("#pwd-strength-indicator")) container.querySelector("#pwd-strength-indicator").textContent = "";
     } catch (err) {
       toast(err.message || "Password update failed.");
     }
@@ -4055,6 +4149,11 @@ async function renderAccountSettingsSection() {
     toast("Data vault backup downloaded!");
   });
 
+  container.querySelector("#vault-export-csv-btn")?.addEventListener("click", () => {
+    SupabaseSync.exportHistoryCSV();
+    toast("Watch history CSV downloaded!");
+  });
+
   const vaultInput = container.querySelector("#vault-file-input");
   container.querySelector("#vault-import-btn")?.addEventListener("click", () => vaultInput?.click());
   vaultInput?.addEventListener("change", async e => {
@@ -4066,6 +4165,19 @@ async function renderAccountSettingsSection() {
       renderAccountSettingsSection();
     } catch (err) {
       toast(err.message || "Failed to import backup.");
+    }
+  });
+
+  container.querySelector("#danger-delete-account-btn")?.addEventListener("click", async () => {
+    if (confirm("Are you sure you want to permanently delete your account and wipe all cloud data? This action CANNOT be undone.")) {
+      try {
+        await SupabaseSync.deleteAccount();
+        toast("Account permanently deleted.");
+        renderAccountSettingsSection();
+        initAuthUI();
+      } catch (err) {
+        toast(err.message || "Failed to delete account.");
+      }
     }
   });
 
