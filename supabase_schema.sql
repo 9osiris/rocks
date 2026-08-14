@@ -195,6 +195,68 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function 4: Atomic Account Deletion Helper RPC
+CREATE OR REPLACE FUNCTION public.delete_user_account()
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_user_id UUID;
+BEGIN
+    v_user_id := auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated';
+    END IF;
+
+    DELETE FROM public.watchlists WHERE user_id = v_user_id;
+    DELETE FROM public.progress WHERE user_id = v_user_id;
+    DELETE FROM public.playlists WHERE user_id = v_user_id;
+    DELETE FROM public.watch_history WHERE user_id = v_user_id;
+    DELETE FROM public.profiles WHERE user_id = v_user_id;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================================
+-- DATABASE VIEWS
+-- ============================================================================
+
+-- View 1: User Dashboard Summary
+CREATE OR REPLACE VIEW public.user_dashboard_summary AS
+SELECT 
+    p.user_id,
+    p.username,
+    p.avatar_url,
+    p.bio,
+    p.tier,
+    p.created_at AS joined_at,
+    COALESCE(w.watchlist_count, 0) AS total_watchlist_items,
+    COALESCE(pr.completed_count, 0) AS total_completed_titles
+FROM public.profiles p
+LEFT JOIN (
+    SELECT user_id, COUNT(*) AS watchlist_count 
+    FROM public.watchlists 
+    GROUP BY user_id
+) w ON w.user_id = p.user_id
+LEFT JOIN (
+    SELECT user_id, COUNT(*) AS completed_count 
+    FROM public.progress 
+    WHERE progress_pct >= 85 
+    GROUP BY user_id
+) pr ON pr.user_id = p.user_id;
+
+-- View 2: Community Trending Picks
+CREATE OR REPLACE VIEW public.community_trending_picks AS
+SELECT 
+    media_id,
+    media_type,
+    title,
+    poster_path,
+    COUNT(*) AS total_saves
+FROM public.watchlists
+GROUP BY media_id, media_type, title, poster_path
+ORDER BY total_saves DESC
+LIMIT 30;
+
 -- ============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ============================================================================
@@ -231,3 +293,13 @@ CREATE POLICY "Playlist Items Manage" ON public.playlist_items FOR ALL USING (
 
 -- Watch History: User access only
 CREATE POLICY "Users Manage Own History" ON public.watch_history FOR ALL USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- REALTIME PUBSUB SETUP
+-- ============================================================================
+DO $$ BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.progress;
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.watchlists;
+EXCEPTION
+    WHEN OTHERS THEN null;
+END $$;

@@ -702,6 +702,7 @@ const SupabaseSync = {
             }
             this.pullFromCloud().then(() => {
               initAuthUI();
+              this.initRealtimeSubscription();
               if (location.pathname.endsWith("/settings") || location.pathname.endsWith("/settings.html")) {
                 renderAccountSettingsSection();
               }
@@ -716,6 +717,38 @@ const SupabaseSync = {
         });
       } catch (_) {}
     }
+  },
+
+  initRealtimeSubscription() {
+    const client = getSupabaseClient();
+    if (!client || !client.channel) return;
+    try {
+      this.getUser().then(user => {
+        if (!user) return;
+        client
+          .channel(`user-sync-${user.id}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'progress', filter: `user_id=eq.${user.id}` }, () => {
+            this.pullFromCloud();
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'watchlists', filter: `user_id=eq.${user.id}` }, () => {
+            this.pullFromCloud();
+          })
+          .subscribe();
+      });
+    } catch (_) {}
+  },
+
+  async deleteAccount() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error("Supabase client is not initialized.");
+    const user = await this.getUser();
+    if (!user) throw new Error("User is not signed in.");
+
+    try {
+      await client.rpc("delete_user_account");
+    } catch (_) {}
+
+    await this.signOut();
   },
 
   async getUser() {
