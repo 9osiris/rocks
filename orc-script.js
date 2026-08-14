@@ -3151,23 +3151,7 @@ function initSearchPage() {
 
   if (input) initInstantSearch(input);
 
-  const surpriseBtn = $("#surprise-me-btn");
-  if (surpriseBtn) {
-    surpriseBtn.addEventListener("click", async () => {
-      toast("Finding something awesome for you...");
-      try {
-        const trending = await tmdb("/trending/all/day");
-        const list = (trending.results || []).filter(x => x.poster_path);
-        if (list.length) {
-          const randomItem = list[Math.floor(Math.random() * list.length)];
-          const mediaType = randomItem.media_type || (randomItem.title ? "movie" : "tv");
-          location.href = `/watch?type=${mediaType}&id=${randomItem.id}`;
-        }
-      } catch (e) {
-        toast("Failed to pick a random title.");
-      }
-    });
-  }
+  initSurpriseMe();
 
   const mediaTypeSelect = $("#media-type-select");
   if (mediaTypeSelect) {
@@ -3359,6 +3343,155 @@ function initSearchPage() {
   }
   clear?.addEventListener("click", () => { input.value = ""; clear.style.display = "none"; doSearch(""); input.focus(); });
   renderRecent();
+}
+
+async function initSurpriseMe() {
+  const surpriseBtn = $("#surprise-me-btn");
+  if (!surpriseBtn) return;
+
+  let modal = $("#surprise-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.className = "modal-overlay";
+    modal.id = "surprise-modal";
+    modal.innerHTML = `
+      <div class="surprise-modal-box">
+        <button type="button" class="modal-close" id="surprise-modal-close" aria-label="Close">✕</button>
+        <div class="surprise-modal-header">
+          <span class="surprise-badge">🎲 Surprise Picker</span>
+        </div>
+        <div class="surprise-reel-stage">
+          <div class="surprise-reel-card">
+            <div class="surprise-poster-wrap" id="surprise-poster-wrap">
+              <img id="surprise-poster" src="" alt="Title Poster" style="display:none" />
+            </div>
+            <div class="surprise-info">
+              <div class="surprise-meta-pills" id="surprise-meta-pills"></div>
+              <h2 class="surprise-title" id="surprise-title">Spinning the Reel...</h2>
+              <p class="surprise-overview" id="surprise-overview">Finding a top-rated title for your watchlist...</p>
+            </div>
+          </div>
+        </div>
+        <div class="surprise-modal-actions">
+          <button type="button" class="btn-play" id="surprise-play-btn" style="display:none">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Watch Now
+          </button>
+          <button type="button" class="btn-ghost" id="surprise-respin-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            Spin Again
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector("#surprise-modal-close").addEventListener("click", () => closeModal(modal));
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(modal); });
+  }
+
+  let pool = [];
+  let selectedTitle = null;
+
+  async function fetchPool() {
+    if (pool.length > 5) return pool;
+    try {
+      const [p1, p2, p3] = await Promise.all([
+        tmdb("/trending/all/day?page=1"),
+        tmdb("/movie/popular?page=1"),
+        tmdb("/tv/popular?page=1")
+      ]);
+      const raw = [
+        ...(p1.results || []),
+        ...(p2.results || []).map(x => ({ ...x, media_type: "movie" })),
+        ...(p3.results || []).map(x => ({ ...x, media_type: "tv" }))
+      ];
+      pool = dedupeItems(raw.filter(x => x && x.id && x.poster_path));
+    } catch (_) {
+      pool = [];
+    }
+    return pool;
+  }
+
+  async function spinReel() {
+    const posterWrap = $("#surprise-poster-wrap");
+    const posterImg = $("#surprise-poster");
+    const titleEl = $("#surprise-title");
+    const overviewEl = $("#surprise-overview");
+    const pillsEl = $("#surprise-meta-pills");
+    const playBtn = $("#surprise-play-btn");
+    const respinBtn = $("#surprise-respin-btn");
+
+    if (playBtn) playBtn.style.display = "none";
+    if (respinBtn) respinBtn.disabled = true;
+    if (posterWrap) posterWrap.classList.add("spinning");
+
+    const items = await fetchPool();
+    if (!items.length) {
+      if (titleEl) titleEl.textContent = "Failed to load pool";
+      if (overviewEl) overviewEl.textContent = "Check your connection and try again.";
+      if (respinBtn) respinBtn.disabled = false;
+      return;
+    }
+
+    let ticks = 0;
+    const maxTicks = 18;
+    const interval = setInterval(() => {
+      ticks++;
+      const randomCandidate = items[Math.floor(Math.random() * items.length)];
+      if (posterImg && randomCandidate.poster_path) {
+        posterImg.style.display = "block";
+        posterImg.src = posterUrl(randomCandidate.poster_path);
+      }
+      if (titleEl) titleEl.textContent = randomCandidate.title || randomCandidate.name || "Untitled";
+
+      if (ticks >= maxTicks) {
+        clearInterval(interval);
+        selectedTitle = items[Math.floor(Math.random() * items.length)];
+        const kind = mediaType(selectedTitle, selectedTitle.media_type || "movie");
+        const titleName = selectedTitle.title || selectedTitle.name || "Untitled";
+        const y = year(selectedTitle.release_date || selectedTitle.first_air_date);
+        const rating = Number.isFinite(selectedTitle.vote_average) ? selectedTitle.vote_average.toFixed(1) : null;
+
+        if (posterWrap) posterWrap.classList.remove("spinning");
+        if (posterImg && selectedTitle.poster_path) {
+          posterImg.src = posterUrl(selectedTitle.poster_path);
+        }
+        if (titleEl) titleEl.textContent = titleName;
+        if (overviewEl) overviewEl.textContent = selectedTitle.overview || "No overview available for this title.";
+
+        if (pillsEl) {
+          pillsEl.innerHTML = `
+            ${rating ? `<span class="genre-pill" style="height:26px;padding:0 10px;font-size:0.75rem">★ ${rating}</span>` : ""}
+            ${y ? `<span class="genre-pill" style="height:26px;padding:0 10px;font-size:0.75rem">${y}</span>` : ""}
+            <span class="genre-pill" style="height:26px;padding:0 10px;font-size:0.75rem;text-transform:capitalize">${kind === "tv" ? "Series" : "Movie"}</span>
+          `;
+        }
+
+        if (playBtn) {
+          playBtn.style.display = "inline-flex";
+          playBtn.onclick = () => {
+            closeModal(modal);
+            const targetPath = kind === "tv" ? `/tv.html?id=${selectedTitle.id}` : `/movie.html?id=${selectedTitle.id}`;
+            const bg = selectedTitle.backdrop_path ? `${IMG_ORIG}${selectedTitle.backdrop_path}` : (posterUrl(selectedTitle.poster_path) || "");
+            navigateWithLoader(targetPath, bg, titleName);
+          };
+        }
+
+        if (respinBtn) respinBtn.disabled = false;
+      }
+    }, 90);
+  }
+
+  surpriseBtn.addEventListener("click", () => {
+    openModal(modal);
+    spinReel();
+  });
+
+  const respinBtn = modal.querySelector("#surprise-respin-btn");
+  if (respinBtn) {
+    respinBtn.addEventListener("click", () => spinReel());
+  }
 }
 
 async function aiSearch(q) {
