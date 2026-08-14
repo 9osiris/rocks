@@ -3083,9 +3083,10 @@ function renderProviders(container, type, id, s, e, onChange) {
   PROVIDERS.forEach((p, i) => {
     const btn = document.createElement("button");
     btn.className = `provider-tab${getProvider() === p.id ? " active" : ""}`;
-    btn.innerHTML = i === 0
-      ? `${p.name}<span class="provider-rec" aria-label="Recommended">★</span>`
-      : p.name;
+    const healthBadge = i === 0 
+      ? `<span class="provider-rec" aria-label="Recommended">★</span><span class="provider-status online">● HD</span>`
+      : `<span class="provider-status online">● HD</span>`;
+    btn.innerHTML = `${p.name} ${healthBadge}`;
     btn.addEventListener("click", () => {
       setProvider(p.id);
       $$(".provider-tab").forEach(b => b.classList.remove("active"));
