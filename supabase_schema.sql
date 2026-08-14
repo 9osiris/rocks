@@ -16,12 +16,6 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
-DO $$ BEGIN
-    CREATE TYPE user_tier_enum AS ENUM ('Standard Member', 'Pro Cinephile', 'VIP Contributor');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
 -- 3. PROFILES TABLE
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -30,7 +24,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     avatar_url TEXT,
     banner_url TEXT,
     bio TEXT DEFAULT '',
-    tier user_tier_enum DEFAULT 'Pro Cinephile',
     total_watch_time INT DEFAULT 0, -- in seconds
     movies_watched INT DEFAULT 0,
     series_watched INT DEFAULT 0,

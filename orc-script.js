@@ -1035,8 +1035,7 @@ const SupabaseSync = {
       username: dbProfile?.username || meta.username || user.email.split("@")[0],
       avatar_url: dbProfile?.avatar_url || meta.avatar_url || null,
       bio: dbProfile?.bio || meta.bio || "",
-      joined_at: meta.joined_at || user.created_at || new Date().toISOString(),
-      tier: dbProfile?.tier || meta.tier || "Pro Cinephile"
+      joined_at: meta.joined_at || user.created_at || new Date().toISOString()
     };
   },
 
@@ -3880,10 +3879,7 @@ async function renderAccountSettingsSection() {
         <input type="file" id="avatar-file-input" accept="image/*" style="display:none" />
 
         <div class="account-details">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <div class="account-username-display" id="account-username-title">${esc(profile.username)}</div>
-            <span class="account-tier-badge">${esc(profile.tier)}</span>
-          </div>
+          <div class="account-username-display" id="account-username-title">${esc(profile.username)}</div>
           <div class="account-email-display">${esc(profile.email)}</div>
           <div style="display:flex;align-items:center;gap:12px;margin-top:6px;flex-wrap:wrap">
             <div class="account-sync-badge">✓ Cloud Sync Active</div>
