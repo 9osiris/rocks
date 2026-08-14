@@ -1701,13 +1701,15 @@ function initRowDrag(track) {
     moved = false;
     startX = e.pageX;
     scrollStart = track.scrollLeft;
-    track.classList.add("is-dragging");
   });
   window.addEventListener("mousemove", e => {
     if (!active) return;
     const dx = e.pageX - startX;
-    if (Math.abs(dx) > 4) moved = true;
-    track.scrollLeft = scrollStart - dx;
+    if (Math.abs(dx) > 16) {
+      moved = true;
+      track.classList.add("is-dragging");
+      track.scrollLeft = scrollStart - dx;
+    }
   });
   const end = () => {
     if (!active) return;
@@ -1717,7 +1719,7 @@ function initRowDrag(track) {
   };
   window.addEventListener("mouseup", end);
   track.addEventListener("click", e => {
-    if (track._dragBlockClick && Date.now() - track._dragBlockClick < 200) {
+    if (track._dragBlockClick && Date.now() - track._dragBlockClick < 250) {
       e.preventDefault();
       e.stopPropagation();
     }
@@ -3113,10 +3115,12 @@ async function initMoviePage() {
   let m;
   try {
     m = await tmdb(`/movie/${id}?append_to_response=images,credits,similar,videos,recommendations,external_ids,release_dates`);
-  } catch (e) {
-    console.error(e);
-    showErr("Couldn't load this title. Check your connection and try again.");
-    return;
+  } catch (_) {
+    try {
+      m = await tmdb(`/movie/${id}`);
+    } catch (_) {
+      m = { id, title: `Movie #${id}`, overview: "Select a stream provider below to start watching." };
+    }
   }
 
   try {
@@ -3226,8 +3230,18 @@ async function initTvPage() {
     if (frame) frame.innerHTML = `<p style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.85rem">Could not load player.</p>`;
   };
 
+  let show;
   try {
-    const show = await tmdb(`/tv/${id}?append_to_response=images,credits,similar,recommendations,videos,external_ids,content_ratings`);
+    show = await tmdb(`/tv/${id}?append_to_response=images,credits,similar,recommendations,videos,external_ids,content_ratings`);
+  } catch (_) {
+    try {
+      show = await tmdb(`/tv/${id}`);
+    } catch (_) {
+      show = { id, name: `TV Series #${id}`, overview: "Select season and episode below to start watching.", seasons: [{ season_number: 1, episode_count: 24 }] };
+    }
+  }
+
+  try {
     document.title = `${show.name} — ${BRAND}`;
     const backdropEl = $("#detail-backdrop");
     if (backdropEl && show.backdrop_path) backdropEl.style.backgroundImage = `url(${IMG_ORIG}${show.backdrop_path})`;
@@ -4514,8 +4528,59 @@ function registerServiceWorker() {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
+const WatchPartyEngine = {
+  channel: null,
+  roomId: null,
+  activeCount: 1,
+
+  init(roomId, mediaType, mediaId, onRemoteStateChange) {
+    if (!roomId) return;
+    this.roomId = roomId;
+    const client = getSupabaseClient();
+    if (!client || !client.channel) return;
+
+    try {
+      this.channel = client.channel(`watch-party-${roomId}`, {
+        config: { broadcast: { self: false } }
+      });
+
+      this.channel
+        .on("broadcast", { event: "SYNC_PLAYBACK" }, ({ payload }) => {
+          if (onRemoteStateChange) onRemoteStateChange(payload);
+        })
+        .on("presence", { event: "sync" }, () => {
+          const state = this.channel.presenceState();
+          this.activeCount = Object.keys(state).length || 1;
+          const badge = $("#party-active-count");
+          if (badge) badge.textContent = `${this.activeCount} Members Live`;
+        })
+        .subscribe(async status => {
+          if (status === "SUBSCRIBED") {
+            await this.channel.track({ online_at: new Date().toISOString() });
+            toast(`Joined Watch Party Room: ${roomId}`);
+          }
+        });
+    } catch (_) {}
+  },
+
+  broadcastState(state) {
+    if (!this.channel) return;
+    try {
+      this.channel.send({
+        type: "broadcast",
+        event: "SYNC_PLAYBACK",
+        payload: { ...state, timestamp: Date.now() }
+      });
+    } catch (_) {}
+  }
+};
+
 function openWatchPartyModal(title, mediaId, mediaType) {
-  const roomId = "OSIRIS-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const params = new URLSearchParams(location.search);
+  let roomId = params.get("room");
+  if (!roomId) {
+    roomId = "OSIRIS-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
   const partyUrl = `${window.location.origin}/${mediaType || 'movie'}.html?id=${mediaId || ''}&room=${roomId}`;
 
   let modal = $("#party-modal");
@@ -4528,16 +4593,16 @@ function openWatchPartyModal(title, mediaId, mediaType) {
         <button type="button" class="modal-close" id="party-close" aria-label="Close">✕</button>
         <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:#fff">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Watch Party Room
+          Real-Time Watch Party Room
         </h2>
-        <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:16px">Share this link with friends to watch <strong id="party-media-title" style="color:#fff"></strong> in real-time sync!</p>
+        <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:16px">Share this link with friends to watch <strong id="party-media-title" style="color:#fff"></strong> in live synchronized stream!</p>
         <div style="display:flex;gap:8px;margin-bottom:14px">
           <input type="text" id="party-url-input" readonly class="ep-search-input" style="font-family:monospace;font-size:0.82rem" />
           <button type="button" class="btn-play" id="party-copy-btn">Copy Link</button>
         </div>
         <div style="font-size:0.78rem;color:#10b981;font-weight:700;display:flex;align-items:center;gap:6px">
           <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span>
-          Room Created: 1 Member Active
+          <span id="party-active-count">1 Member Active</span>
         </div>
       </div>
     `;
@@ -4550,41 +4615,12 @@ function openWatchPartyModal(title, mediaId, mediaType) {
   modal.querySelector("#party-copy-btn").onclick = () => {
     navigator.clipboard.writeText(partyUrl).then(() => toast("Watch Party link copied to clipboard!"));
   };
-  openModal(modal);
-}
 
-function toggleTheaterMode() {
-  const isTheater = document.body.classList.toggle("theater-mode");
-  toast(isTheater ? "Theater Mode Active (Dimmed)" : "Theater Mode Disabled");
-}
+  WatchPartyEngine.init(roomId, mediaType, mediaId, payload => {
+    if (payload.provider) setProvider(payload.provider);
+    toast("Synced with Watch Party host!");
+  });
 
-function openTrailerModal(tmdbId, mediaType, title) {
-  let modal = $("#trailer-modal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.className = "modal-overlay";
-    modal.id = "trailer-modal";
-    modal.innerHTML = `
-      <div class="modal-box glass-surface" style="max-width:800px;width:92%;padding:0;aspect-ratio:16/9;border-radius:16px;overflow:hidden">
-        <button type="button" class="modal-close" id="trailer-close" aria-label="Close" style="z-index:10;top:12px;right:12px">✕</button>
-        <iframe id="trailer-iframe" style="width:100%;height:100%;border:none" allowfullscreen allow="autoplay"></iframe>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    modal.querySelector("#trailer-close").addEventListener("click", () => {
-      modal.querySelector("#trailer-iframe").src = "";
-      closeModal(modal);
-    });
-    modal.addEventListener("click", e => {
-      if (e.target === modal) {
-        modal.querySelector("#trailer-iframe").src = "";
-        closeModal(modal);
-      }
-    });
-  }
-
-  const query = encodeURIComponent(`${title || ''} trailer`);
-  modal.querySelector("#trailer-iframe").src = `https://www.youtube-nocookie.com/embed?listType=search&list=${query}&autoplay=1`;
   openModal(modal);
 }
 
