@@ -1255,8 +1255,7 @@ function initSidebar(active) {
       </a>
       <nav class="topnav-links" aria-label="Primary">
         ${link(homeUrl(), "Home", active === "home")}
-        ${link("/search", "Discover", active === "search" || active === "movies")}
-        ${link("/search?type=tv", "Series", active === "tv")}
+        ${link("/search", "Discover", active === "search" || active === "movies" || active === "tv")}
         ${link("/list", "My List", active === "list")}
         ${link("/settings", "Settings", active === "settings")}
       </nav>
