@@ -2001,7 +2001,7 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   .page-foot { margin-bottom: calc(78px + var(--safe-bottom)); }
   .back-top { bottom: calc(90px + var(--safe-bottom)); }
 
-  /* Redesigned Floating 5-Item Glass Pill Nav Bar */
+  /* Clean Mobile Floating Glass Pill Nav Bar (Icons Only, Zero Selection Bubble) */
   .mobile-pill-nav {
     position: fixed;
     left: 50%;
@@ -2011,10 +2011,10 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     display: flex;
     align-items: center;
     justify-content: space-around;
-    gap: 2px;
-    padding: 5px 8px;
-    height: 58px;
-    width: min(390px, calc(100vw - 20px));
+    gap: 4px;
+    padding: 4px 10px;
+    height: 48px;
+    width: min(280px, calc(100vw - 32px));
     border-radius: 9999px !important;
     background: rgba(14, 14, 20, 0.82) !important;
     backdrop-filter: blur(24px) saturate(1.6) !important;
@@ -2036,59 +2036,35 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
     position: relative;
     flex: 1 1 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    height: 48px;
+    height: 40px;
     border-radius: 9999px;
-    color: rgba(255, 255, 255, 0.52);
+    color: rgba(255, 255, 255, 0.5);
     text-decoration: none;
-    transition: color 0.22s var(--ease), transform 0.12s var(--ease);
+    transition: color 0.2s var(--ease), transform 0.12s var(--ease);
     -webkit-tap-highlight-color: transparent;
-  }
-  .pill-nav-item::before {
-    content: "";
-    position: absolute;
-    inset: 2px 2px;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    opacity: 0;
-    transform: scale(0.88);
-    transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
-    pointer-events: none;
-    z-index: 0;
   }
   .pill-nav-item.active {
     color: var(--accent) !important;
   }
-  .pill-nav-item.active::before {
-    opacity: 1;
-    transform: scale(1);
-  }
   .pill-nav-ico {
-    position: relative;
-    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .pill-nav-ico svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     stroke-width: 2;
+    transition: stroke 0.2s, filter 0.2s;
   }
-  .pill-nav-lbl {
-    position: relative;
-    z-index: 1;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    line-height: 1;
+  .pill-nav-item.active .pill-nav-ico svg {
+    stroke: var(--accent);
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 60%, transparent));
   }
   .pill-nav-item:active {
-    transform: scale(0.92);
+    transform: scale(0.90);
   }
   @keyframes pillNavIn { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
 }

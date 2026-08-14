@@ -25,38 +25,71 @@
 
   <div class="app-shell">
     <main class="search-body">
-      <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:20px;letter-spacing:-.02em">Browse</h1>
+      <div class="discover-header-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-.02em;margin:0">Discover</h1>
+        <div style="display:flex;align-items:center;gap:10px">
+          <select id="media-type-select" class="list-sort-select" aria-label="Media Type">
+            <option value="all">All Types</option>
+            <option value="movie">Movies</option>
+            <option value="tv">TV Shows</option>
+          </select>
+          <button type="button" id="surprise-me-btn" class="glass-chip" style="gap:6px;cursor:pointer">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
+            Surprise Me
+          </button>
+        </div>
+      </div>
 
-      <div class="search-input-wrap">
+      <div class="search-input-wrap" style="margin-bottom:16px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="text" id="main-search-input" placeholder="Titles, actors, keywords…" autocomplete="off" aria-label="Search titles, actors, and keywords">
-        <button id="search-clear" style="display:none;background:none;border:none;color:var(--text-dim);padding:4px;cursor:pointer" aria-label="Clear">✕</button>
+        <input type="text" id="main-search-input" placeholder="Search titles, actors, keywords…" autocomplete="off" aria-label="Search titles, actors, and keywords">
+        <button type="button" id="search-clear" style="display:none;background:none;border:none;color:var(--text-dim);padding:4px;cursor:pointer" aria-label="Clear">✕</button>
       </div>
 
-      <div class="filter-row">
-        <button class="filter-chip on" data-filter="all">All</button>
-        <button class="filter-chip" data-filter="movie">Movies</button>
-        <button class="filter-chip" data-filter="tv">TV Shows</button>
-      </div>
-
-      <div class="discover-filters-bar" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-        <select id="filter-era" class="list-sort-select" aria-label="Filter by Era">
-          <option value="all">All Eras</option>
-          <option value="2020s">2020s (2020-Now)</option>
-          <option value="2010s">2010s (2010-2019)</option>
-          <option value="2000s">2000s (2000-2009)</option>
-          <option value="1990s">1990s (1990-1999)</option>
-          <option value="classic">Classics (Pre-1990)</option>
+      <div class="discover-filters-bar" style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
+        <select id="filter-genre" class="list-sort-select" aria-label="Filter by Genre">
+          <option value="all">All Genres</option>
+          <option value="28">Action</option>
+          <option value="12">Adventure</option>
+          <option value="16">Animation</option>
+          <option value="35">Comedy</option>
+          <option value="80">Crime</option>
+          <option value="99">Documentary</option>
+          <option value="18">Drama</option>
+          <option value="10751">Family</option>
+          <option value="14">Fantasy</option>
+          <option value="27">Horror</option>
+          <option value="10749">Romance</option>
+          <option value="878">Sci-Fi</option>
+          <option value="53">Thriller</option>
         </select>
-        <select id="filter-rating" class="list-sort-select" aria-label="Filter by Rating">
-          <option value="all">Any Rating</option>
-          <option value="7">★ 7.0+ Rated</option>
-          <option value="8">★ 8.0+ Top Rated</option>
+        <select id="filter-provider" class="list-sort-select" aria-label="Filter by Provider">
+          <option value="all">All Providers</option>
+          <option value="netflix">Netflix</option>
+          <option value="hbo">Max / HBO</option>
+          <option value="disney">Disney+</option>
+          <option value="apple">Apple TV+</option>
+          <option value="prime">Prime Video</option>
+          <option value="hulu">Hulu</option>
         </select>
         <select id="filter-sort" class="list-sort-select" aria-label="Sort Results">
           <option value="pop">Most Popular</option>
           <option value="rating">Highest Rated</option>
           <option value="newest">Newest First</option>
+        </select>
+        <select id="filter-era" class="list-sort-select" aria-label="Filter by Era">
+          <option value="all">From Year</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2020s">2020s</option>
+          <option value="2010s">2010s</option>
+          <option value="classic">Classics</option>
+        </select>
+        <select id="filter-rating" class="list-sort-select" aria-label="Filter by Rating">
+          <option value="all">All Ratings</option>
+          <option value="8">★ 8.0+ Top Rated</option>
+          <option value="7">★ 7.0+ Rated</option>
         </select>
       </div>
 

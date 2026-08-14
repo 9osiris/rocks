@@ -1180,10 +1180,9 @@ function buildMobilePillNav(active) {
 
   const items = [
     { href: homeUrl(), label: "Home", icon: ICONS.home, key: "home" },
-    { href: "/search", label: "Browse", icon: ICONS.tv, key: "search" },
-    { href: "/search?focus=1", label: "Search", icon: ICONS.search, key: "query" },
+    { href: "/search", label: "Discover", icon: ICONS.tv, key: "search" },
     { href: "/list", label: "My List", icon: ICONS.list, key: "list" },
-    { href: "/settings", label: "Profile", icon: ICONS.user, key: "settings" },
+    { href: "/settings", label: "Settings", icon: ICONS.settings, key: "settings" },
   ];
 
   const nav = existing || document.createElement("nav");
@@ -1194,7 +1193,6 @@ function buildMobilePillNav(active) {
   nav.innerHTML = items.map(it => `
     <a href="${it.href}" class="pill-nav-item${active === it.key ? " active" : ""}" aria-label="${it.label}"${active === it.key ? ' aria-current="page"' : ""}>
       <span class="pill-nav-ico">${it.icon}</span>
-      <span class="pill-nav-lbl">${it.label}</span>
     </a>
   `).join("");
 
@@ -3150,6 +3148,33 @@ function initSearchPage() {
   let timer, lastQ = "";
 
   if (input) initInstantSearch(input);
+
+  const surpriseBtn = $("#surprise-me-btn");
+  if (surpriseBtn) {
+    surpriseBtn.addEventListener("click", async () => {
+      toast("Finding something awesome for you...");
+      try {
+        const trending = await tmdb("/trending/all/day");
+        const list = (trending.results || []).filter(x => x.poster_path);
+        if (list.length) {
+          const randomItem = list[Math.floor(Math.random() * list.length)];
+          const mediaType = randomItem.media_type || (randomItem.title ? "movie" : "tv");
+          location.href = `/watch?type=${mediaType}&id=${randomItem.id}`;
+        }
+      } catch (e) {
+        toast("Failed to pick a random title.");
+      }
+    });
+  }
+
+  const mediaTypeSelect = $("#media-type-select");
+  if (mediaTypeSelect) {
+    if (filter === "movie" || filter === "tv") mediaTypeSelect.value = filter;
+    mediaTypeSelect.addEventListener("change", () => {
+      current = mediaTypeSelect.value;
+      doSearch(lastQ || input?.value.trim() || "");
+    });
+  }
 
   function setBusy(busy) {
     if (!status) return;
