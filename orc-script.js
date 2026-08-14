@@ -100,6 +100,15 @@ function safeSetItem(key, val) {
   }
 }
 
+function safeRemoveItem(key) {
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function getDB() {
   if (_dbPromise) return _dbPromise;
   _dbPromise = new Promise((resolve) => {
@@ -312,7 +321,7 @@ function genreTags(genres, type) {
 function renderWatchProviders(container, providers, country = "US") {
   if (!container) return;
   const reg = providers?.results?.[country];
-  if (!reg) { container.innerHTML = ""; container.style.display = "none"; return; }
+  if (!reg) { container.textContent = ""; container.style.display = "none"; return; }
   const seen = new Set();
   const items = [...(reg.flatrate || []), ...(reg.rent || []), ...(reg.buy || [])].filter(p => {
     if (seen.has(p.provider_id)) return false;
@@ -330,7 +339,7 @@ const PINNED_SIDEBAR_PAGES = new Set(["settings", "dmca", "search"]);
 function renderKeywords(container, keywords, type) {
   if (!container) return;
   const list = keywords?.keywords || keywords?.results || [];
-  if (!list.length) { container.innerHTML = ""; container.style.display = "none"; return; }
+  if (!list.length) { container.textContent = ""; container.style.display = "none"; return; }
   container.style.display = "";
   container.innerHTML = `
     <div class="detail-extra-block">
@@ -345,13 +354,13 @@ function renderCastRow(cast) {
   const row = $("#cast-row");
   if (!section || !row || !cast.length) return;
   section.style.display = "";
-  row.innerHTML = "";
+  row.textContent = "";
   cast.forEach(a => {
     const d = document.createElement("button");
     d.type = "button";
     d.className = "cast-item";
     d.setAttribute("aria-label", `${a.name}${a.character ? `, as ${a.character}` : ""}`);
-    d.innerHTML = `${a.profile_path ? `<img src="${esc(IMG_W500 + a.profile_path)}" alt="" loading="lazy" draggable="false"/>` : `<div class="cast-placeholder"></div>`}<div class="name" title="${esc(a.name)}">${esc(a.name)}</div><div class="role" title="${esc(a.character || "")}">${esc(a.character || "")}</div>`;
+    d.innerHTML = `${a.profile_path ? `<img src="${esc(IMG_W500 + a.profile_path)}" alt="${esc(item.title || item.name || '')}" loading="lazy" draggable="false"/>` : `<div class="cast-placeholder"></div>`}<div class="name" title="${esc(a.name)}">${esc(a.name)}</div><div class="role" title="${esc(a.character || "")}">${esc(a.character || "")}</div>`;
     d.addEventListener("click", () => openPersonModal(a.id));
     row.appendChild(d);
   });
@@ -361,7 +370,7 @@ function renderCardRow(sectionSel, rowSel, items, type) {
   const row = $(rowSel);
   if (!section || !row || !items.length) return;
   section.style.display = "";
-  row.innerHTML = "";
+  row.textContent = "";
   items.forEach(it => row.appendChild(buildCard(it, type)));
 }
 function ensureRecommendSection() {
@@ -403,7 +412,7 @@ async function openPersonModal(id) {
     const credits = (p.combined_credits?.cast || []).sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 12);
     box.innerHTML = `
       <div class="person-head">
-        ${p.profile_path ? `<img src="${esc(IMG_W500 + p.profile_path)}" alt=""/>` : `<div class="person-ph"></div>`}
+        ${p.profile_path ? `<img src="${esc(IMG_W500 + p.profile_path)}" alt="${esc(item.title || item.name || '')}"/>` : `<div class="person-ph"></div>`}
         <div>
           <h2>${esc(p.name)}</h2>
           <p>${esc(p.known_for_department || "")}${p.place_of_birth ? ` · ${esc(p.place_of_birth)}` : ""}</p>
@@ -449,7 +458,7 @@ function homeUrl() {
   return "/";
 }
 
-function getProvider() { return localStorage.getItem("orc_provider") || PROVIDERS[0].id; }
+function getProvider() { return safeGetItem("orc_provider") || PROVIDERS[0].id; }
 function setProvider(id) { safeSetItem("orc_provider", id); }
 
 const SETTINGS = {
@@ -460,12 +469,12 @@ const SETTINGS = {
   prefLangKey: "orc_pref_lang",
   layoutKey: "orc_grid_layout",
   themeKey: "orc_theme",
-  get(k, def = "") { return localStorage.getItem(k) ?? def; },
+  get(k, def = "") { return safeGetItem(k) ?? def; },
   set(k, v) {
     if (!safeSetItem(k, v)) toast("Couldn't save setting. Storage may be full.");
   },
   toggle(k) {
-    const on = localStorage.getItem(k) === "1";
+    const on = safeGetItem(k) === "1";
     if (!safeSetItem(k, on ? "0" : "1")) toast("Couldn't save setting. Storage may be full.");
     return !on;
   },
@@ -1053,7 +1062,7 @@ function closeModal(sel = ".modal-overlay") {
 
 const MyList = {
   key: "orc_mylist",
-  get() { try { return JSON.parse(localStorage.getItem(this.key) || "[]"); } catch { return []; } },
+  get() { try { return JSON.parse(safeGetItem(this.key) || "[]"); } catch { return []; } },
   has(id, t) { return this.get().some(i => i.id === id && i.type === t); },
   save(list) { safeSetItem(this.key, JSON.stringify(list)); idbSet(this.key, list); },
   toggle(item) {
@@ -1076,7 +1085,7 @@ const MyList = {
 const RecentSearches = {
   key: "orc_recent",
   max: 5,
-  get() { try { return JSON.parse(localStorage.getItem(this.key) || "[]"); } catch { return []; } },
+  get() { try { return JSON.parse(safeGetItem(this.key) || "[]"); } catch { return []; } },
   add(q) {
     q = (q || "").trim();
     if (q.length < 2) return;
@@ -1087,7 +1096,7 @@ const RecentSearches = {
 
 const Progress = {
   key: "orc_progress",
-  get() { try { return JSON.parse(localStorage.getItem(this.key) || "{}"); } catch { return {}; } },
+  get() { try { return JSON.parse(safeGetItem(this.key) || "{}"); } catch { return {}; } },
   getAll() {
     return Object.values(this.get()).sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
   },
@@ -1482,7 +1491,7 @@ function buildCard(item, type = "movie", opts = {}) {
   card.innerHTML = `
     ${opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
     ${!opts.rank && Number.isFinite(item.vote_average) && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
-    ${img ? `<img src="${esc(img)}" alt="" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img-poster">${ICONS.film}<span>${esc(title)}</span></div>`}
+    ${img ? `<img src="${esc(img)}" alt="${esc(item.title || item.name || '')}" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img-poster">${ICONS.film}<span>${esc(title)}</span></div>`}
     ${prog ? `<div class="progress-bar"><span style="width:${Math.min(prog, 100)}%"></span></div>` : ""}
     <div class="card-quick">
       <button type="button" class="card-icon-btn save-btn${saved ? " saved" : ""}" aria-label="Save">${saved ? ICONS.check : ICONS.plus}</button>
@@ -1673,7 +1682,7 @@ function buildRow(title, items, type = "movie", opts = {}) {
   skeletons(6).forEach(s => track.appendChild(s));
 
   const loadCards = () => {
-    track.innerHTML = "";
+    track.textContent = "";
     list.forEach((item, i) => {
       const cardOpts = { ...(opts.cardOpts || {}) };
       if (opts.ranks) cardOpts.rank = i + 1;
@@ -1725,14 +1734,14 @@ function attachPeriodDropdown(wrap, opts) {
       menu.querySelectorAll("button").forEach(b => b.classList.remove("active"));
       opt.classList.add("active");
       btn.textContent = `${opt.textContent} ▾`;
-      track.innerHTML = "";
+      track.textContent = "";
       skeletons(10).forEach(s => track.appendChild(s));
       try {
         const data = await tmdb(opt.dataset.path);
-        track.innerHTML = "";
+        track.textContent = "";
         (data.results || []).slice(0, 20).forEach((it, i) => track.appendChild(buildCard(it, "movie", { rank: i + 1 })));
       } catch {
-        track.innerHTML = "";
+        track.textContent = "";
       }
     });
   });
@@ -1952,24 +1961,156 @@ let heroImgSlot = 0;
 let heroFading = false;
 let heroDetailCache = {};
 
+const heroAmbientColorCache = {};
+
+function extractHeroAmbientColors(imgUrl) {
+  if (!imgUrl) return Promise.resolve(null);
+  if (heroAmbientColorCache[imgUrl]) return Promise.resolve(heroAmbientColorCache[imgUrl]);
+
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const w = 960;
+        const h = 540;
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+
+        function sampleRegion(startX, endX) {
+          // Extract just the bottom 30 pixels of the region
+          const regionH = 30;
+          const data = ctx.getImageData(startX, h - regionH, endX - startX, regionH).data;
+          let bestColor = null;
+          let maxVibrance = -1;
+          let sumR = 0, sumG = 0, sumB = 0, count = 0;
+          let satSum = 0;
+
+          for (let i = 0; i < data.length; i += 16) {
+            const r = data[i], g = data[i+1], b = data[i+2];
+            const maxC = Math.max(r, g, b);
+            const minC = Math.min(r, g, b);
+            const lum = (maxC + minC) / 2;
+            const sat = maxC === 0 ? 0 : (maxC - minC) / maxC;
+
+            if (lum > 15 && lum < 240) {
+              sumR += r; sumG += g; sumB += b; count++;
+              satSum += sat;
+              const vibrance = sat * 4.0 + (1 - Math.abs(lum - 128) / 128);
+              if (vibrance > maxVibrance && sat > 0.1) {
+                maxVibrance = vibrance;
+                bestColor = [r, g, b];
+              }
+            }
+          }
+
+          if (count === 0) return null;
+          const avgSat = satSum / count;
+          if (avgSat < 0.1 && maxVibrance < 0.4) return null;
+
+          const avgR = sumR / count, avgG = sumG / count, avgB = sumB / count;
+          let r = bestColor ? Math.round(bestColor[0] * 0.85 + avgR * 0.15) : Math.round(avgR);
+          let g = bestColor ? Math.round(bestColor[1] * 0.85 + avgG * 0.15) : Math.round(avgG);
+          let b = bestColor ? Math.round(bestColor[2] * 0.85 + avgB * 0.15) : Math.round(avgB);
+
+          const avg = (r + g + b) / 3;
+          r = Math.min(255, Math.max(0, Math.round(r + (r - avg) * 0.8)));
+          g = Math.min(255, Math.max(0, Math.round(g + (g - avg) * 0.8)));
+          b = Math.min(255, Math.max(0, Math.round(b + (b - avg) * 0.8)));
+
+          return [r, g, b];
+        }
+
+        const step = Math.floor(w / 3);
+        const left = sampleRegion(0, step);
+        const center = sampleRegion(step, step * 2);
+        const right = sampleRegion(step * 2, w);
+
+        const fallback = [40, 50, 80];
+        const result = {
+          left: left || center || right || fallback,
+          center: center || left || right || fallback,
+          right: right || center || left || fallback
+        };
+
+        heroAmbientColorCache[imgUrl] = result;
+        resolve(result);
+      } catch (_) {
+        const fallback = [40, 50, 80];
+        resolve({ left: fallback, center: fallback, right: fallback });
+      }
+    };
+    img.onerror = () => {
+      const fallback = [40, 50, 80];
+      resolve({ left: fallback, center: fallback, right: fallback });
+    };
+    img.src = imgUrl + (imgUrl.includes("?") ? "&" : "?") + "cors=1";
+  });
+}
+
+let _bleedSlot = 0;
+
+function buildBleedGradient(left, center, right) {
+  const lStr = `${left[0]},${left[1]},${left[2]}`;
+  const cStr = `${center[0]},${center[1]},${center[2]}`;
+  const rStr = `${right[0]},${right[1]},${right[2]}`;
+  return `
+    radial-gradient(ellipse 65% 90% at 10% 0%, rgba(${lStr},0.45) 0%, transparent 68%),
+    radial-gradient(ellipse 65% 90% at 90% 0%, rgba(${rStr},0.45) 0%, transparent 68%),
+    radial-gradient(ellipse 85% 75% at 50% 0%, rgba(${cStr},0.35) 0%, transparent 80%)
+  `;
+}
+
+function applyHeroColorBleed(url) {
+  return new Promise(resolve => {
+    const elA = $("#hero-color-bleed-a");
+    const elB = $("#hero-color-bleed-b");
+    if (!elA || !elB || !url) { resolve(); return; }
+    extractHeroAmbientColors(url).then(colors => {
+      const next = _bleedSlot % 2 === 0 ? elB : elA;
+      const cur  = _bleedSlot % 2 === 0 ? elA : elB;
+
+      if (!colors) {
+        colors = { left: [40,50,80], center: [40,50,80], right: [40,50,80] };
+      }
+
+      next.style.background = buildBleedGradient(colors.left, colors.center, colors.right);
+      void next.offsetWidth; // Force reflow
+      next.style.opacity = "1";
+      cur.style.opacity  = "0";
+      _bleedSlot++;
+      resolve();
+    });
+  });
+}
+
 function swapHeroBackdrop(url) {
   return new Promise(resolve => {
     const a = $("#hero-backdrop-a");
     const b = $("#hero-backdrop-b");
     if (!url || !a || !b) { resolve(); return; }
+
+    const colorPromise = applyHeroColorBleed(url);
     const next = heroImgSlot % 2 === 0 ? b : a;
     const cur = heroImgSlot % 2 === 0 ? a : b;
-    const finish = () => {
+
+    const imgPromise = new Promise(imgResolve => {
+      if (next.src === url && next.classList.contains("is-active")) { imgResolve(); return; }
+      next.onload = imgResolve;
+      next.onerror = imgResolve;
+      next.src = url;
+      if (next.complete) imgResolve();
+    });
+
+    Promise.all([imgPromise, colorPromise]).then(() => {
       cur.classList.remove("is-active");
       next.classList.add("is-active");
       heroImgSlot++;
       resolve();
-    };
-    if (next.src === url && next.classList.contains("is-active")) { resolve(); return; }
-    next.onload = finish;
-    next.onerror = finish;
-    next.src = url;
-    if (next.complete) finish();
+    });
   });
 }
 
@@ -1978,7 +2119,7 @@ function pickHeroItems(results) {
   results.forEach((res, i) => {
     if (res.status !== "fulfilled") return;
     (res.value.results || []).forEach(item => {
-      if (!item.poster_path || item.media_type === "person") return;
+      if (!item.backdrop_path || item.media_type === "person") return;
       if (item.media_type && item.media_type !== "movie" && item.media_type !== "tv") return;
       pool.push(item);
     });
@@ -2005,7 +2146,7 @@ function startHeroTimer() {
 function buildHeroDots() {
   const dots = $("#hero-dots");
   if (!dots || heroSlides.length < 2) {
-    if (dots) dots.innerHTML = "";
+    if (dots) dots.textContent = "";
     return;
   }
   dots.innerHTML = heroSlides.map((_, i) =>
@@ -2218,11 +2359,11 @@ function initGenreStrip() {
       const titleEl = row.querySelector(".row-title");
       if (titleEl) titleEl.textContent = g.name;
       const track = row.querySelector(".row-track");
-      track.innerHTML = ""; skeletons(10).forEach(s => track.appendChild(s));
+      track.textContent = ""; skeletons(10).forEach(s => track.appendChild(s));
       row.scrollIntoView({ behavior: "auto", block: "nearest" });
       try {
         const data = await tmdb(`/discover/movie?with_genres=${g.id}&sort_by=popularity.desc`);
-        track.innerHTML = "";
+        track.textContent = "";
         (data.results || []).slice(0, 20).forEach(it => track.appendChild(buildCard(it, "movie")));
         initRowDrag(track);
         initRowKeyboard(track);
@@ -2254,7 +2395,7 @@ function buildSeasonSpotlight(shows) {
     card.setAttribute("role", "link");
     card.setAttribute("aria-label", s.name || s.title || "");
     card.innerHTML = `
-      ${img ? `<img src="${esc(img)}" alt="" loading="lazy" draggable="false" decoding="async"/>` : `<div class="no-img">\u2014</div>`}
+      ${img ? `<img src="${esc(img)}" alt="${esc(item.title || item.name || '')}" loading="lazy" draggable="false" decoding="async"/>` : `<div class="no-img">\u2014</div>`}
       <div class="spotlight-shade"></div>
       ${sn ? `<span class="spotlight-badge">${ICONS.clapper} Season ${sn}</span>` : ""}
       <div class="spotlight-foot">
@@ -2333,7 +2474,7 @@ function initInstantSearch(inputEl) {
           const link = `/${type}?id=${item.id}`;
           return `
             <a href="${link}" class="instant-search-item">
-              <img src="${esc(img)}" class="instant-search-poster" alt="" />
+              <img src="${esc(img)}" class="instant-search-poster" alt="${esc(item.title || item.name || '')}" />
               <div>
                 <div class="instant-search-title">${esc(title)}</div>
                 <div class="instant-search-sub">${type === "tv" ? "TV Series" : "Movie"}${y ? " · " + y : ""}</div>
@@ -2514,7 +2655,7 @@ async function renderRecommendedForYouRow() {
 const DEVLOG_ID = "v2.6_aug2026";
 
 function renderDevLogAnnouncement() {
-  if (localStorage.getItem("orc_devlog_dismissed") === DEVLOG_ID) return;
+  if (safeGetItem("orc_devlog_dismissed") === DEVLOG_ID) return;
 
   const card = document.createElement("div");
   card.className = "devlog-card";
@@ -2590,7 +2731,7 @@ async function initHomePage() {
   });
 
   const results = await Promise.allSettled(cats.map(c => tmdb(c.path)));
-  el.innerHTML = "";
+  el.textContent = "";
 
   const progress = Progress.getAll();
   if (progress.length) {
@@ -2661,7 +2802,7 @@ async function initHomePage() {
 function renderProviders(container, type, id, s, e, onChange) {
   if (!container) return;
   container.className = "provider-tabs";
-  container.innerHTML = "";
+  container.textContent = "";
   PROVIDERS.forEach((p, i) => {
     const btn = document.createElement("button");
     btn.className = `provider-tab${getProvider() === p.id ? " active" : ""}`;
@@ -2882,7 +3023,7 @@ async function initTvPage() {
       $("#ep-grid").innerHTML = `<div class="spinner" style="margin:20px auto"></div>`;
       try {
         const sd = await tmdb(`/tv/${id}/season/${sn}`);
-        $("#ep-grid").innerHTML = "";
+        $("#ep-grid").textContent = "";
         const eps = sd.episodes || [];
         if (eps.length && !eps.some(ep => ep.episode_number === episode)) episode = eps[0].episode_number;
         eps.forEach(ep => {
@@ -2894,7 +3035,7 @@ async function initTvPage() {
           const dur = ep.runtime ? `${ep.runtime}m` : "";
           el.innerHTML = `
             <span class="ep-row-num">${ep.episode_number}</span>
-            <div class="ep-row-thumb">${ep.still_path ? `<img src="${esc(IMG_W500 + ep.still_path)}" alt="" loading="lazy" draggable="false"/>` : ""}</div>
+            <div class="ep-row-thumb">${ep.still_path ? `<img src="${esc(IMG_W500 + ep.still_path)}" alt="${esc(item.title || item.name || '')}" loading="lazy" draggable="false"/>` : ""}</div>
             <div class="ep-row-body">
               <div class="ep-row-title">${esc(ep.name || `Episode ${ep.episode_number}`)}</div>
               ${air ? `<div class="ep-row-date">${air}</div>` : ""}
@@ -3058,7 +3199,7 @@ function initSearchPage() {
     }
     if (recentBox) recentBox.hidden = true;
     status.textContent = "Loading…";
-    grid.innerHTML = ""; skeletons(12).forEach(s => grid.appendChild(s));
+    grid.textContent = ""; skeletons(12).forEach(s => grid.appendChild(s));
 
     try {
       let items = [];
@@ -3114,7 +3255,7 @@ function initSearchPage() {
         items.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
       }
 
-      grid.innerHTML = "";
+      grid.textContent = "";
       if (!items.length) {
         grid.innerHTML = `<div class="no-results"><h3>Nothing matched</h3><p>Try adjusting your search query or filters.</p></div>`;
         if (!genreId) status.textContent = "";
@@ -3173,7 +3314,7 @@ async function aiSearch(q) {
   }
   RecentSearches.add(q);
   status.innerHTML = `<span class="search-pending"><span class="spin-dot"></span> Asking AI…</span>`;
-  grid.innerHTML = ""; skeletons(8).forEach(s => grid.appendChild(s));
+  grid.textContent = ""; skeletons(8).forEach(s => grid.appendChild(s));
   try {
     const res = await fetch("/api/ai-search", {
       method: "POST",
@@ -3215,7 +3356,7 @@ async function aiSearch(q) {
       seen.add(k);
       return true;
     });
-    grid.innerHTML = "";
+    grid.textContent = "";
     if (data.intro) {
       const banner = document.createElement("div");
       banner.className = "ai-intro";
@@ -3348,7 +3489,7 @@ function initSettingsPage() {
 
   const providerBox = $("#settings-providers");
   if (providerBox) {
-    providerBox.innerHTML = "";
+    providerBox.textContent = "";
     PROVIDERS.forEach((p, i) => {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -3368,7 +3509,7 @@ function initSettingsPage() {
 
   const accentBox = $("#settings-accents");
   if (accentBox) {
-    accentBox.innerHTML = "";
+    accentBox.textContent = "";
     const cur = SETTINGS.get(SETTINGS.accentKey, ACCENT);
     ACCENT_COLORS.forEach(c => {
       const btn = document.createElement("button");
@@ -3380,7 +3521,7 @@ function initSettingsPage() {
       btn.addEventListener("click", () => {
         SETTINGS.set(SETTINGS.accentKey, c.id);
         applyGlobalSettings();
-        $$(".accent-swatch").forEach(b => { b.classList.remove("active"); b.innerHTML = ""; });
+        $$(".accent-swatch").forEach(b => { b.classList.remove("active"); b.textContent = ""; });
         btn.classList.add("active");
         btn.innerHTML = ICONS.check;
         toast(`Accent set to ${c.label}`);
@@ -3440,11 +3581,11 @@ function initSettingsPage() {
   }
 
   $("#clear-progress")?.addEventListener("click", () => {
-    localStorage.removeItem(Progress.key);
+    safeRemoveItem(Progress.key);
     toast("Continue watching cleared");
   });
   $("#clear-list")?.addEventListener("click", () => {
-    localStorage.removeItem(MyList.key);
+    safeRemoveItem(MyList.key);
     toast("My List cleared");
   });
   $("#reset-splash")?.addEventListener("click", () => {
@@ -3468,7 +3609,7 @@ async function initListPage() {
   const rawList = MyList.get();
   if (!rawList.length) { emptyState(); return; }
 
-  grid.innerHTML = ""; skeletons(Math.min(rawList.length, 12)).forEach(s => grid.appendChild(s));
+  grid.textContent = ""; skeletons(Math.min(rawList.length, 12)).forEach(s => grid.appendChild(s));
 
   const settled = await Promise.allSettled(rawList.map(i =>
     tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
@@ -3506,7 +3647,7 @@ async function initListPage() {
     }
 
     if (status) status.textContent = `${items.length} ${items.length === 1 ? "title" : "titles"}`;
-    grid.innerHTML = "";
+    grid.textContent = "";
     if (!items.length) {
       grid.innerHTML = `<div class="no-results"><h3>No titles match filter</h3><p>Try switching filters.</p></div>`;
       return;

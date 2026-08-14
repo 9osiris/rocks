@@ -1,4 +1,4 @@
-const CACHE_NAME = "orc-static-v15";
+const CACHE_NAME = "orc-static-v16";
 const STATIC_ASSETS = [
   "/",
   "/index.html",

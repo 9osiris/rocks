@@ -19,6 +19,7 @@
   <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
   <link rel="dns-prefetch" href="https://image.tmdb.org">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" href="orc-styles.css" as="style">
   <link rel="stylesheet" href="orc-styles.css">
 </head>
 <body>
@@ -58,16 +59,16 @@
           <p class="hero-desc" id="hero-desc"></p>
           <div class="hero-meta" id="hero-meta"></div>
           <div class="hero-actions">
-            <button class="btn-play hero-play-btn" id="hero-play-btn" aria-label="Play">
+            <button type="button" class="btn-play hero-play-btn" id="hero-play-btn" aria-label="Play">
               <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 18 12 6 20 6 4"/></svg>
               <span>Play</span>
             </button>
             <div class="hero-dual-pill lg-surface">
-              <button class="dual-pill-btn" id="hero-info-btn" title="View details" aria-label="Details">
+              <button type="button" class="dual-pill-btn" id="hero-info-btn" title="View details" aria-label="Details">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
               </button>
               <span class="dual-pill-divider"></span>
-              <button class="dual-pill-btn" id="hero-list-btn" title="Add to My List" aria-label="Add to My List">
+              <button type="button" class="dual-pill-btn" id="hero-list-btn" title="Add to My List" aria-label="Add to My List">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
               </button>
             </div>
@@ -75,6 +76,11 @@
         </div>
         <div class="hero-dots" id="hero-dots"></div>
       </section>
+
+      <div class="hero-color-bleed-wrap">
+        <div class="hero-color-bleed" id="hero-color-bleed-a"></div>
+        <div class="hero-color-bleed" id="hero-color-bleed-b"></div>
+      </div>
 
       <div class="genre-strip" id="genre-strip"></div>
 
