@@ -1041,24 +1041,24 @@ select:focus {
 }
 .hero-content {
   position: relative; z-index: 2;
-  padding: 0 var(--gutter) clamp(56px, 9vh, 110px);
-  max-width: 620px;
+  padding: 0 var(--gutter) clamp(52px, 8vh, 96px);
+  max-width: 640px;
   color: #fff;
   animation: heroFade 0.9s var(--ease-out) 0.1s both;
   transition: opacity 0.45s ease;
 }
 @keyframes heroFade { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
 .hero-type {
-  font-size: 0.7rem; font-weight: 800;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 12px;
+  font-size: 0.72rem; font-weight: 800;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
 }
 .hero-title {
-  font-size: clamp(2.1rem, 5vw, 3.6rem);
-  font-weight: 800; line-height: 1.04;
+  font-size: clamp(2.2rem, 5.2vw, 3.6rem);
+  font-weight: 800; line-height: 1.05;
   letter-spacing: -0.03em; margin-bottom: 16px;
   padding-bottom: 0.06em;
-  /* Glossy chrome title treatment */
   color: #fff;
   background: linear-gradient(180deg, #ffffff 0%, #f4f5f8 40%, #c2c7d2 50%, #f4f5f8 60%, #ffffff 100%);
   -webkit-background-clip: text; background-clip: text;
@@ -1066,20 +1066,20 @@ select:focus {
   filter: drop-shadow(0 1px 0 rgba(255,255,255,0.35)) drop-shadow(0 4px 16px rgba(0,0,0,0.6));
 }
 .hero-desc {
-  font-size: 0.95rem; line-height: 1.6;
-  color: rgba(255,255,255,0.84); margin-bottom: 14px;
+  font-size: 0.92rem; line-height: 1.58;
+  color: rgba(255,255,255,0.85); margin-bottom: 16px;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
   max-width: 560px;
 }
 .hero-title-logo {
-  max-width: min(85vw, 420px);
+  max-width: min(82vw, 420px);
   max-height: 130px;
   width: auto;
   height: auto;
   object-fit: contain;
   object-position: left bottom;
   margin-bottom: 16px;
-  filter: drop-shadow(0 4px 22px rgba(0,0,0,0.75));
+  filter: drop-shadow(0 6px 26px rgba(0,0,0,0.8));
 }
 .detail-title-logo {
   max-width: min(85vw, 450px);
@@ -1094,19 +1094,21 @@ select:focus {
 .hero-badge-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 13px;
+  gap: 5px;
+  padding: 4px 12px;
   border-radius: var(--pill);
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(12px) saturate(1.4);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  font-size: 0.76rem;
   font-weight: 700;
   color: #ffffff;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .hero-badge-pill.score-pill {
-  color: var(--star);
+  color: #f5c518;
   background: rgba(245, 197, 24, 0.16);
   border-color: rgba(245, 197, 24, 0.32);
 }
@@ -1130,23 +1132,23 @@ select:focus {
 }
 .glass-circle-btn svg { width: 18px; height: 18px; }
 .hero-meta {
-  display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center;
-  font-size: 0.82rem; color: rgba(255,255,255,0.9); margin-bottom: 24px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  font-size: 0.82rem; color: rgba(255,255,255,0.9); margin-bottom: 22px;
 }
 .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .hero-dots {
-  position: absolute; bottom: 26px; left: 50%;
-  transform: translateX(-50%); z-index: 3;
+  position: absolute; bottom: 36px; right: var(--gutter); left: auto;
+  transform: none; z-index: 3;
   display: flex; align-items: center; gap: 8px;
 }
 .hero-dot {
-  position: relative; height: 6px; width: 6px;
+  position: relative; height: 5px; width: 6px;
   border-radius: var(--pill);
   background: rgba(255,255,255,0.28);
   overflow: hidden;
   transition: width 0.35s var(--ease-out), background 0.25s;
 }
-.hero-dot.active { width: 28px; background: rgba(255,255,255,0.35); }
+.hero-dot.active { width: 32px; background: rgba(255,255,255,0.35); }
 .hero-dot-fill {
   position: absolute; inset: 0;
   background: #fff; transform-origin: left center; transform: scaleX(0); border-radius: inherit;
@@ -2510,6 +2512,45 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
 }
 
 @media (max-width: 768px) {
+  .hero {
+    height: 76vh;
+    height: 76svh;
+    min-height: 480px;
+    max-height: 640px;
+  }
+  .hero-content {
+    padding: 0 var(--gutter) 44px;
+    max-width: 100%;
+  }
+  .hero-title-logo {
+    max-width: min(78vw, 300px);
+    max-height: 90px;
+    margin-bottom: 12px;
+  }
+  .hero-title {
+    font-size: clamp(1.8rem, 6.8vw, 2.5rem);
+    margin-bottom: 12px;
+  }
+  .hero-desc {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    margin-bottom: 14px;
+    -webkit-line-clamp: 2;
+  }
+  .hero-meta {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    margin-bottom: 18px !important;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .hero-meta::-webkit-scrollbar { display: none; }
+  .hero-badge-pill {
+    padding: 4px 10px !important;
+    font-size: 0.74rem !important;
+  }
   .hero-actions {
     display: flex !important;
     align-items: center !important;
@@ -2519,13 +2560,25 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   }
   .hero-play-btn {
     flex: 1 1 auto !important;
-    height: 42px !important;
-    min-height: 42px !important;
+    height: 44px !important;
+    min-height: 44px !important;
   }
   .hero-dual-pill {
     flex: 0 0 auto !important;
-    height: 42px !important;
-    min-height: 42px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+  .hero-dots {
+    bottom: 14px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+  .hero-dot {
+    height: 4px !important;
+  }
+  .hero-dot.active {
+    width: 24px !important;
   }
 }
 

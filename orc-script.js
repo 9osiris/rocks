@@ -2254,11 +2254,11 @@ async function loadHero(item) {
     const svgClock = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
     const svgTv = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M8 22h8M12 19v3"/></svg>`;
 
-    if (rating) metaParts.push(`<span class="hero-badge-pill score-pill">${svgStar}${rating}/10</span>`);
+    if (rating) metaParts.push(`<span class="hero-badge-pill score-pill">${svgStar}${rating}</span>`);
     if (y) metaParts.push(`<span class="hero-badge-pill">${svgCalendar}${y}</span>`);
     if (d.runtime) metaParts.push(`<span class="hero-badge-pill">${svgClock}${formatRuntime(d.runtime)}</span>`);
     else if (d.number_of_seasons) metaParts.push(`<span class="hero-badge-pill">${svgTv}${d.number_of_seasons} Season${d.number_of_seasons > 1 ? "s" : ""}</span>`);
-    if (d.genres?.length) metaParts.push(`<span class="hero-badge-pill">${esc(d.genres.slice(0, 2).map(g => g.name).join(" · "))}</span>`);
+    if (d.genres?.length) metaParts.push(`<span class="hero-badge-pill">${esc(d.genres[0].name)}</span>`);
     if ($("#hero-meta")) $("#hero-meta").innerHTML = metaParts.join("");
 
     const videos = d.videos?.results || [];
