@@ -1259,6 +1259,8 @@ select:focus {
   overscroll-behavior-x: contain;
   -webkit-mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 40px), transparent 100%);
   mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 40px), transparent 100%);
+  will-change: scroll-position;
+  transform: translateZ(0);
 }
 
 /* Skeleton Poster Loader */
@@ -1311,8 +1313,8 @@ select:focus {
   flex: 0 0 auto; width: 152px; position: relative; cursor: pointer;
   border-radius: 12px; overflow: hidden;
   background: var(--bg-1);
-  transition: transform 0.45s var(--ease-out), box-shadow 0.45s var(--ease-out), opacity 0.3s;
-  contain: layout style; will-change: transform;
+  transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out), opacity 0.3s;
+  contain: layout style paint; will-change: transform; transform: translateZ(0);
 }
 .media-card.is-watched { opacity: 0.42; filter: saturate(0.65); }
 .media-card:hover, .media-card.is-hovered {

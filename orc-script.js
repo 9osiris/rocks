@@ -304,7 +304,11 @@ function tmdb(path, retries = 1) {
   return req;
 }
 
-function posterUrl(p) { return p ? `${IMG_W500}${p}` : null; }
+const IMG_W342  = "https://image.tmdb.org/t/p/w342";
+function posterUrl(p, size = "w342") {
+  if (!p) return null;
+  return size === "w500" ? `${IMG_W500}${p}` : `${IMG_W342}${p}`;
+}
 function year(d) { return d ? d.slice(0, 4) : ""; }
 function formatRuntime(m) {
   if (!m) return "";
@@ -3002,59 +3006,113 @@ async function initHomePage() {
 
   const el = $("#categories");
   if (!el) return;
+  el.textContent = "";
+
+  const progress = Progress.getAll();
+  if (progress.length) {
+    const cwRow = document.createElement("div");
+    cwRow.className = "row-wrapper continue-watching-wrapper visible";
+    cwRow.innerHTML = `<div class="row-header"><h2 class="row-title">Continue Watching</h2></div><div class="row-track-container"><button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><div class="row-track"></div><button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
+    const cwTrack = cwRow.querySelector(".row-track");
+    cwTrack.append(...skeletons(6));
+    el.appendChild(cwRow);
+
+    (async () => {
+      try {
+        const cw = await Promise.allSettled(progress.slice(0, 12).map(p =>
+          tmdb(p.type === "tv" ? `/tv/${p.id}` : `/movie/${p.id}`).then(d => ({ ...d, _type: p.type, _progress: p.progress }))
+        ));
+        const items = cw.filter(r => r.status === "fulfilled").map(r => r.value);
+        if (items.length) {
+          cwTrack.textContent = "";
+          items.forEach(it => cwTrack.appendChild(buildCard(it, it._type || "movie", { progressValue: it._progress, eager: true })));
+          initRowDrag(cwTrack);
+          initRowKeyboard(cwTrack);
+        } else {
+          cwRow.remove();
+        }
+      } catch (_) { cwRow.remove(); }
+    })();
+  }
+
+  const list = MyList.get();
+  if (list.length) {
+    const mlRow = document.createElement("div");
+    mlRow.className = "row-wrapper my-list-wrapper visible";
+    mlRow.innerHTML = `<div class="row-header"><h2 class="row-title">My List</h2></div><div class="row-track-container"><button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><div class="row-track"></div><button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
+    const mlTrack = mlRow.querySelector(".row-track");
+    mlTrack.append(...skeletons(6));
+    el.appendChild(mlRow);
+
+    (async () => {
+      try {
+        const ml = await Promise.allSettled(list.slice(0, 20).map(i =>
+          tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
+        ));
+        const items = ml.filter(r => r.status === "fulfilled").map(r => r.value);
+        if (items.length) {
+          mlTrack.textContent = "";
+          items.forEach(it => mlTrack.appendChild(buildCard(it, it._type || "movie", { eager: true })));
+          initRowDrag(mlTrack);
+          initRowKeyboard(mlTrack);
+        } else {
+          mlRow.remove();
+        }
+      } catch (_) { mlRow.remove(); }
+    })();
+  }
+
   const cats = [
-    { title: "New This Week", path: "/movie/now_playing", type: "movie" },
-    { title: "Trending Now", path: "/trending/all/week", type: "movie", id: "trending", ranks: true },
-    { title: "Top Rated", path: "/movie/top_rated", type: "movie", seeAll: "/search?type=movie" },
+    { title: "Trending Now", path: "/trending/all/week", type: "movie", id: "trending", ranks: true, eager: true },
+    { title: "New This Week", path: "/movie/now_playing", type: "movie", eager: true },
+    { title: "Top Rated Movies", path: "/movie/top_rated", type: "movie", seeAll: "/search?type=movie" },
     { title: "Coming Soon", path: "/movie/upcoming", type: "movie" },
     { title: "Popular Movies", path: "/movie/popular", type: "movie", seeAll: "/search?type=movie" },
-    { title: "Popular TV", path: "/tv/popular", type: "tv", seeAll: "/search?type=tv" },
+    { title: "Popular TV Shows", path: "/tv/popular", type: "tv", seeAll: "/search?type=tv" },
     { title: "On The Air", path: "/tv/on_the_air", type: "tv" },
     { title: "Airing Today", path: "/tv/airing_today", type: "tv" },
     { title: "Top Rated TV", path: "/tv/top_rated", type: "tv" },
     { title: "Trending TV", path: "/trending/tv/week", type: "tv" },
   ];
 
-  cats.forEach(c => {
+  const catRowEls = cats.map(c => {
     const w = document.createElement("div");
-    w.className = "row-wrapper";
-    w.innerHTML = `<div class="row-header"><h2 class="row-title">${esc(c.title)}</h2></div><div class="row-track-container"><div class="row-track"></div></div>`;
-    w.querySelector(".row-track").append(...skeletons(10));
+    w.className = "row-wrapper visible";
+    w.innerHTML = `<div class="row-header"><h2 class="row-title">${esc(c.title)}</h2></div><div class="row-track-container"><button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><div class="row-track"></div><button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
+    const track = w.querySelector(".row-track");
+    track.append(...skeletons(8));
+    const scroll = 360;
+    w.querySelector(".row-arrow.left")?.addEventListener("click", () => track.scrollBy({ left: -scroll, behavior: "smooth" }));
+    w.querySelector(".row-arrow.right")?.addEventListener("click", () => track.scrollBy({ left: scroll, behavior: "smooth" }));
     el.appendChild(w);
+    return { c, w, track };
   });
 
-  const results = await Promise.allSettled(cats.map(c => tmdb(c.path)));
-  el.textContent = "";
+  cats.forEach(async (c, i) => {
+    try {
+      const data = await tmdb(c.path);
+      const items = dedupeItems(data.results || []);
+      const target = catRowEls[i];
+      if (target && items.length) {
+        target.track.textContent = "";
+        items.forEach((it, idx) => {
+          target.track.appendChild(buildCard(it, c.type, {
+            rank: c.ranks ? idx + 1 : null,
+            eager: c.eager || idx < 4
+          }));
+        });
+        initRowDrag(target.track);
+        initRowKeyboard(target.track);
 
-  const progress = Progress.getAll();
-  if (progress.length) {
-    const cw = await Promise.allSettled(progress.slice(0, 12).map(p =>
-      tmdb(p.type === "tv" ? `/tv/${p.id}` : `/movie/${p.id}`).then(d => ({ ...d, _type: p.type, _progress: p.progress }))
-    ));
-    const items = cw.filter(r => r.status === "fulfilled").map(r => r.value);
-    if (items.length) el.appendChild(buildRow("Continue Watching", items, "movie"));
-  }
-
-  const list = MyList.get();
-  if (list.length) {
-    const ml = await Promise.allSettled(list.slice(0, 20).map(i =>
-      tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
-    ));
-    const items = ml.filter(r => r.status === "fulfilled").map(r => r.value);
-    if (items.length) {
-      el.appendChild(buildRow("My List", items, "movie", { id: "my-list" }));
+        if (c.id === "trending" && items.length) {
+          initHeroCarousel(items.slice(0, 6));
+        }
+      } else if (target) {
+        target.w.remove();
+      }
+    } catch (_) {
+      if (catRowEls[i]) catRowEls[i].w.remove();
     }
-  }
-
-  const heroPool = pickHeroItems(results);
-  if (heroPool.length) initHeroCarousel(heroPool);
-
-  results.forEach((res, i) => {
-    if (res.status !== "fulfilled") return;
-    const items = dedupeItems(res.value.results || []);
-    const c = cats[i];
-    const row = buildRow(c.title, items, c.type, { id: c.id, ranks: c.ranks, seeAll: c.seeAll, periodKey: c.id === "trending" });
-    if (row) el.appendChild(row);
   });
 
   const gRow = document.createElement("div");
