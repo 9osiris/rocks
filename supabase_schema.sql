@@ -1,22 +1,12 @@
--- ============================================================================
--- OSIRIS WATCH — COMPLETE SUPABASE INTERNAL DATABASE SCHEMA & BACKEND ARCHITECTURE (v3.0)
--- Includes 32 Enterprise Engineering Features: Reviews, Social Follows, Episode Progress,
--- Activity Logs, Realtime PubSub, RLS Security Policies, RPC Functions & Views
--- Run this script in the Supabase SQL Editor (https://app.supabase.com)
--- ============================================================================
-
--- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. ENUM TYPES
 DO $$ BEGIN
     CREATE TYPE media_type_enum AS ENUM ('movie', 'tv');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
--- 3. PROFILES TABLE
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -34,7 +24,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. WATCHLISTS TABLE
 CREATE TABLE IF NOT EXISTS public.watchlists (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
