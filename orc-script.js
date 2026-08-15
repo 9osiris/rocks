@@ -1430,7 +1430,7 @@ function detectPage() {
   if ($("#categories") || $("#hero-title") || $("#splash-screen")) return "home";
 
   const seg = (location.pathname.split("/").pop() || "").replace(/\.html$/i, "").toLowerCase();
-  const bySeg = { movie: "movie", tv: "tv", search: "search", list: "list", settings: "settings", dmca: "dmca", index: "home", osiriscinema: "home" };
+  const bySeg = { movie: "movie", tv: "tv", search: "search", list: "list", settings: "settings", dmca: "dmca", index: "home", osiriscinema: "home", wfc: "wfc" };
   if (bySeg[seg]) return bySeg[seg];
 
   const p = location.pathname.replace(/\/$/, "") || "/";
