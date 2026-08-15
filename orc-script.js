@@ -7,7 +7,7 @@ const IMG_W45   = "https://image.tmdb.org/t/p/w45";
 const IMG_ORIG  = "https://image.tmdb.org/t/p/original";
 const IMG_W780  = "https://image.tmdb.org/t/p/w780";
 const BRAND     = "Osiris Watch";
-const ACCENT     = "ffffff";
+const ACCENT     = "3b82f6";
 
 const PROVIDERS = [
   { id: "cinesrc", name: "CineSrc (Recommended)",
@@ -521,9 +521,13 @@ function applyGlobalSettings() {
   let hex = SETTINGS.get(SETTINGS.accentKey, ACCENT) || ACCENT;
   hex = String(hex).replace("#", "");
   if (!/^[0-9a-fA-F]{6}$/.test(hex)) hex = ACCENT;
+  const r = parseInt(hex.slice(0, 2), 16) || 59;
+  const g = parseInt(hex.slice(2, 4), 16) || 130;
+  const b = parseInt(hex.slice(4, 6), 16) || 246;
   document.documentElement.style.setProperty("--accent", `#${hex}`);
+  document.documentElement.style.setProperty("--accent-rgb", `${r}, ${g}, ${b}`);
   document.documentElement.style.setProperty("--accent-dim", `color-mix(in srgb, #${hex} 78%, #000)`);
-  document.documentElement.style.setProperty("--accent-soft", `rgba(${parseInt(hex.slice(0, 2), 16)}, ${parseInt(hex.slice(2, 4), 16)}, ${parseInt(hex.slice(4, 6), 16)}, 0.14)`);
+  document.documentElement.style.setProperty("--accent-soft", `rgba(${r}, ${g}, ${b}, 0.14)`);
 
   const themePref = SETTINGS.get(SETTINGS.themeKey, "dark") === "light" ? "light" : "dark";
   const rootEl = document.documentElement;

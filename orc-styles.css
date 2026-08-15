@@ -208,61 +208,76 @@ body:not(:has(.hero)):not(.detail-page) .topnav::after { opacity: 1; }
 }
 .topnav-word i { font-style: normal; font-weight: 800; color: var(--accent); }
 
-/* ===== Reusable Ambient Top Header Glow (Non-Home Pages) ===== */
+/* ===== Dynamic Ambient Top Header Glow (Non-Home Pages) ===== */
 .ambient-header-glow {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 280px;
+  height: 320px;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+  opacity: 0.88;
 }
 
 .ambient-header-glow::before {
   content: "";
   position: absolute;
-  top: -80px;
+  top: -110px;
   left: 10%;
-  width: 80vw;
-  height: 280px;
-  background: radial-gradient(ellipse 65% 75% at 50% 20%, rgba(139, 92, 246, 0.22) 0%, rgba(99, 102, 241, 0.12) 55%, transparent 100%);
-  filter: blur(40px);
+  width: 70vw;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, rgba(var(--accent-rgb, 59, 130, 246), 0.32) 0%, rgba(var(--accent-rgb, 59, 130, 246), 0.14) 50%, transparent 80%);
+  filter: blur(48px);
+  -webkit-filter: blur(48px);
   will-change: transform;
   transform: translateZ(0);
-  animation: ambientGlowDrift 22s ease-in-out infinite alternate;
+  animation: ambientGlowDrift1 14s ease-in-out infinite alternate;
 }
 
 .ambient-header-glow::after {
   content: "";
   position: absolute;
-  top: -60px;
-  right: 5%;
-  width: 50vw;
-  height: 240px;
-  background: radial-gradient(ellipse 60% 70% at 50% 20%, rgba(168, 85, 247, 0.16) 0%, rgba(79, 70, 229, 0.08) 60%, transparent 100%);
-  filter: blur(45px);
+  top: -90px;
+  right: 8%;
+  width: 55vw;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, rgba(var(--accent-rgb, 59, 130, 246), 0.24) 0%, rgba(var(--accent-rgb, 59, 130, 246), 0.09) 55%, transparent 80%);
+  filter: blur(52px);
+  -webkit-filter: blur(52px);
   will-change: transform;
   transform: translateZ(0);
-  animation: ambientGlowDrift 28s ease-in-out infinite alternate-reverse;
+  animation: ambientGlowDrift2 18s ease-in-out infinite alternate;
 }
 
-@keyframes ambientGlowDrift {
+@keyframes ambientGlowDrift1 {
   0% {
-    transform: translate3d(-4%, 0, 0) scale(1);
+    transform: translate3d(-12%, 0, 0) scale(1);
   }
   50% {
-    transform: translate3d(4%, -10px, 0) scale(1.06);
+    transform: translate3d(14%, 20px, 0) scale(1.18);
   }
   100% {
-    transform: translate3d(-2%, 4px, 0) scale(0.98);
+    transform: translate3d(-8%, -12px, 0) scale(0.94);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@keyframes ambientGlowDrift2 {
+  0% {
+    transform: translate3d(10%, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-16%, 28px, 0) scale(1.22);
+  }
+  100% {
+    transform: translate3d(6%, -14px, 0) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce), html.reduce-motion .ambient-header-glow {
   .ambient-header-glow::before,
   .ambient-header-glow::after {
     animation: none !important;
