@@ -2929,7 +2929,7 @@ async function renderRecommendedForYouRow() {
   } catch (_) {}
 }
 
-const DEVLOG_ID = "v2.7_aug2026";
+const DEVLOG_ID = "v2.8_aug2026";
 
 function renderDevLogAnnouncement() {
   if (safeGetItem("orc_devlog_dismissed") === DEVLOG_ID) return;
@@ -2941,15 +2941,15 @@ function renderDevLogAnnouncement() {
     <div class="devlog-header">
       <div class="devlog-header-left">
         <span>DEV LOG</span>
-        <span class="devlog-date">· AUGUST 14, 2026</span>
+        <span class="devlog-date">· AUGUST 15, 2026</span>
       </div>
       <button type="button" class="devlog-close" id="devlog-close" aria-label="Dismiss update">✕</button>
     </div>
-    <div class="devlog-title">Hero Engine & Performance Sync</div>
+    <div class="devlog-title">Realtime Engine & Architecture Sync</div>
     <div class="devlog-body">
-      <p>Synchronized hero backdrop carousel transitions with ambient color bleed extraction for seamless zero-lag switching.</p>
-      <p>Deep systemic engine optimizations across JS memory management, CSS preloading, and safe local storage fallback.</p>
-      <p>Upgraded Service Worker PWA cache handling and strengthened XSS DOM protections.</p>
+      <p>Integrated Supabase Realtime Channels for live Watch Party playback synchronization and active member presence.</p>
+      <p>Upgraded Account Hub with custom geometric SVG vector presets, password entropy meter, and offline sync queue.</p>
+      <p>Optimized TV show detail rendering, horizontal carousel drag gesture thresholds, and instant episode quick-filtering.</p>
     </div>
     <div class="devlog-foot">
       <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="devlog-discord-link">
