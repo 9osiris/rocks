@@ -1239,6 +1239,17 @@ select:focus {
 .row-period-menu button:hover, .row-period-menu button.active { background: var(--accent-soft); color: var(--text); }
 
 .row-track-container { position: relative; isolation: isolate; }
+.row-track-container::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 56px;
+  background: linear-gradient(to right, rgba(11, 11, 13, 0), var(--bg-0, #0b0b0d) 94%);
+  pointer-events: none;
+  z-index: 4;
+  border-radius: 0 16px 16px 0;
+  transition: opacity 0.3s var(--ease);
+}
 .row-track {
   display: flex; gap: 12px;
   overflow-x: auto; scroll-behavior: smooth;
@@ -1246,6 +1257,27 @@ select:focus {
   margin-top: -16px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 40px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 40px), transparent 100%);
+}
+
+/* Skeleton Poster Loader */
+.skeleton-card {
+  flex: 0 0 auto;
+  width: 152px;
+  aspect-ratio: 2/3;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite linear;
+}
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.grid-backdrop-mode .skeleton-card {
+  width: clamp(230px, 20vw, 290px);
+  aspect-ratio: 16/9;
 }
 .row-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
