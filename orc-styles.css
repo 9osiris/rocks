@@ -1315,6 +1315,11 @@ select:focus {
   font-size: 0.62rem; font-weight: 700; padding: 3px 6px; border-radius: 6px;
   background: rgba(0,0,0,0.72); color: var(--star); backdrop-filter: blur(6px);
 }
+.media-card .progress-badge {
+  position: absolute; top: 7px; left: 7px; z-index: 2;
+  font-size: 0.62rem; font-weight: 800; padding: 3px 6px; border-radius: 6px;
+  background: var(--accent); color: var(--on-accent); box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
 .media-card .progress-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.2); }
 .media-card .progress-bar span { display: block; height: 100%; background: var(--accent); }
 .media-card .card-quick {

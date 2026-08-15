@@ -1767,8 +1767,9 @@ function buildCard(item, type = "movie", opts = {}) {
   card.setAttribute("aria-label", title);
   card.innerHTML = `
     ${opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
-    ${!opts.rank && Number.isFinite(item.vote_average) && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
-    ${img ? `<img src="${esc(img)}" alt="${esc(item.title || item.name || '')}" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img-poster">${ICONS.film}<span>${esc(title)}</span></div>`}
+    ${prog && prog > 2 ? `<span class="progress-badge">${Math.round(prog)}%</span>` : ""}
+    ${!opts.rank && (!prog || prog <= 2) && Number.isFinite(item.vote_average) && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
+    ${img ? `<img src="${esc(img)}" alt="${esc(title)}" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img-poster">${ICONS.film}<span>${esc(title)}</span></div>`}
     ${prog ? `<div class="progress-bar"><span style="width:${Math.min(prog, 100)}%"></span></div>` : ""}
     <div class="card-quick">
       <button type="button" class="card-icon-btn save-btn${saved ? " saved" : ""}" aria-label="Save">${saved ? ICONS.check : ICONS.plus}</button>
