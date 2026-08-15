@@ -1532,7 +1532,24 @@ function initScrollRestoration() {
   }
 }
 
+function initAmbientHeaderGlow(active) {
+  if (active === "home" || document.body.classList.contains("home-page") || $("#hero-title")) {
+    const el = $("#ambient-header-glow");
+    if (el) el.remove();
+    return;
+  }
+  let glow = $("#ambient-header-glow");
+  if (!glow) {
+    glow = document.createElement("div");
+    glow.id = "ambient-header-glow";
+    glow.className = "ambient-header-glow";
+    glow.setAttribute("aria-hidden", "true");
+    document.body.prepend(glow);
+  }
+}
+
 function initSidebar(active) {
+  initAmbientHeaderGlow(active);
   const el = $("#topnav") || $("#sidebar");
   if (!el) return;
 
