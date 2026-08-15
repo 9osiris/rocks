@@ -2017,6 +2017,31 @@ button.cast-item { border: none; background: none; color: inherit; cursor: point
   border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
+.account-edit-grid {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.account-edit-grid input {
+  flex: 1;
+  min-width: 0;
+}
+.account-edit-grid button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 580px) {
+  .account-edit-grid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .account-edit-grid button {
+    width: 100%;
+  }
+}
+
 .shortcut-key {
   display: inline-block;
   padding: 3px 8px;
@@ -2283,12 +2308,12 @@ body.theater-mode .player-wrap {
   .ep-row-dur { display: none; }
   .ep-row-thumb { width: 92px; }
 
-  .search-page .search-body { padding: 26px var(--gutter) 40px; }
+  .search-page .search-body { padding: calc(var(--nav-h) + var(--safe-top) + 20px) var(--gutter) 40px; }
   .search-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
   .card-popup { display: none !important; }
 
-  .settings-body, .legal-body { padding: 28px var(--gutter) 20px; }
-  .settings-title, .legal-body h1 { font-size: 1.5rem; }
+  .settings-body, .legal-body, .list-body { padding: calc(var(--nav-h) + var(--safe-top) + 20px) var(--gutter) 20px; }
+  .settings-title, .legal-body h1, .search-body > h1, .list-body > h1 { font-size: 1.5rem; margin-top: 0; }
 
   .modal-overlay { padding: 0; align-items: flex-end; }
   .modal-box { width: 100%; border-radius: var(--radius-lg) var(--radius-lg) 0 0; aspect-ratio: auto; height: min(56vw, 340px); }
