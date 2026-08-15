@@ -1,16 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <!-- Background Dark Obsidian Gradient -->
+    <!-- Dark Obsidian Background Gradient -->
     <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#141722"/>
-      <stop offset="100%" stop-color="#090a0e"/>
-    </linearGradient>
-
-    <!-- Metallic Blue Border Gradient -->
-    <linearGradient id="border-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.8"/>
-      <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.1"/>
+      <stop offset="0%" stop-color="#141724"/>
+      <stop offset="50%" stop-color="#0b0d14"/>
+      <stop offset="100%" stop-color="#06070a"/>
     </linearGradient>
 
     <!-- Primary Metallic Blue Accent Gradient -->
@@ -20,31 +14,39 @@
       <stop offset="100%" stop-color="#1d4ed8"/>
     </linearGradient>
 
+    <!-- Center Ambient Radial Glow -->
+    <radialGradient id="center-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.32"/>
+      <stop offset="60%" stop-color="#3b82f6" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+
     <!-- Specular Glass Highlight -->
-    <linearGradient id="shine-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+    <linearGradient id="glass-shine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25"/>
+      <stop offset="30%" stop-color="#ffffff" stop-opacity="0.08"/>
       <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
 
-    <!-- Outer Ambient Glow Filter -->
-    <filter id="blue-glow" x="-20%" y="-20%" width="140%" height="140%">
+    <!-- Soft Glow Filter for Play Symbol -->
+    <filter id="soft-glow" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="16" result="blur"/>
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
   </defs>
 
   <!-- Dark Obsidian Squircle Container -->
-  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bg-grad)" stroke="url(#border-grad)" stroke-width="6"/>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bg-grad)"/>
 
-  <!-- Inner Glass Sheen -->
-  <path d="M 40 136 C 40 83 83 40 136 40 L 376 40 C 429 40 472 83 472 136 C 472 83 429 40 376 40 L 136 40 C 83 40 40 83 40 136 Z" fill="url(#shine-grad)" opacity="0.4"/>
+  <!-- Inner Glass Sheen Overlay -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#glass-shine)"/>
 
-  <!-- Orbital Ring (Osiris "O") -->
-  <circle cx="256" cy="256" r="148" fill="none" stroke="url(#accent-grad)" stroke-width="28" stroke-linecap="round" filter="url(#blue-glow)"/>
+  <!-- Center Ambient Radial Glow -->
+  <circle cx="256" cy="256" r="160" fill="url(#center-glow)"/>
 
-  <!-- Core Metallic Play Symbol (Watch "►") -->
-  <path d="M 216 172 C 216 162.5 226.5 156.5 234.8 161.5 L 338.8 225.5 C 347.1 230.5 347.1 243.5 338.8 248.5 L 234.8 312.5 C 226.5 317.5 216 311.5 216 302 Z" fill="url(#accent-grad)"/>
+  <!-- Optically Centered Bold Play Symbol (Watch "►") -->
+  <path d="M 198 162 C 198 150.5 210.8 143.2 220.8 149.2 L 354.8 243.2 C 364.4 248.8 364.4 263.2 354.8 268.8 L 220.8 362.8 C 210.8 368.8 198 361.5 198 350 Z" fill="url(#accent-grad)" filter="url(#soft-glow)"/>
 
-  <!-- Play Symbol Specular Glare -->
-  <path d="M 224 176 L 320 236 L 224 236 Z" fill="url(#shine-grad)" opacity="0.25"/>
+  <!-- Play Symbol Top Specular Highlight -->
+  <path d="M 206 166 L 332 256 L 206 256 Z" fill="url(#glass-shine)" opacity="0.4"/>
 </svg>
