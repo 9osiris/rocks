@@ -2945,7 +2945,7 @@ async function renderRecommendedForYouRow() {
   } catch (_) {}
 }
 
-const DEVLOG_ID = "v2.8_aug2026";
+const DEVLOG_ID = "v2.9_aug2026";
 
 function renderDevLogAnnouncement() {
   if (safeGetItem("orc_devlog_dismissed") === DEVLOG_ID) return;
@@ -2961,11 +2961,11 @@ function renderDevLogAnnouncement() {
       </div>
       <button type="button" class="devlog-close" id="devlog-close" aria-label="Dismiss update">✕</button>
     </div>
-    <div class="devlog-title">Realtime Engine & Architecture Sync</div>
+    <div class="devlog-title">Content Safety & Mobile Interface Polish</div>
     <div class="devlog-body">
-      <p>Integrated Supabase Realtime Channels for live Watch Party playback synchronization and active member presence.</p>
-      <p>Upgraded Account Hub with custom geometric SVG vector presets, password entropy meter, and offline sync queue.</p>
-      <p>Optimized TV show detail rendering, horizontal carousel drag gesture thresholds, and instant episode quick-filtering.</p>
+      <p>Enforced automatic adult (18+) content filtering across all search results, recommendations, and browse rows.</p>
+      <p>Added Content Safety toggle setting in user preferences (enabled by default).</p>
+      <p>Fixed mobile viewport layout overlap on sub-pages (Settings, Search, My List, DMCA) and enhanced form field responsiveness.</p>
       <p style="margin-top:10px;font-weight:700;color:#ef4444;font-size:0.82rem">fuck you mari and jazzy stop watching porn on my website</p>
     </div>
     <div class="devlog-foot">
