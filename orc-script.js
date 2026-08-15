@@ -2966,9 +2966,6 @@ function renderDevLogAnnouncement() {
       <p>Enforced automatic adult (18+) content filtering across all search results, recommendations, and browse rows.</p>
       <p>Added Content Safety toggle setting in user preferences (enabled by default).</p>
       <p>Fixed mobile viewport layout overlap on sub-pages (Settings, Search, My List, DMCA) and enhanced form field responsiveness.</p>
-      <p style="margin-top:10px;font-weight:700;color:#ef4444;font-size:0.82rem">fuck you mari and jazzy stop watching porn on my website</p>
-      <p style="margin-top:6px;font-weight:700;color:#10b981;font-size:0.82rem">shout out mel/MM happy birthday to her, join the discord server and wish her a happy birthday and ill send you crypto</p>
-      <p style="margin-top:6px;font-weight:700;color:#3b82f6;font-size:0.82rem">Jazzy: mel sucks joost pp</p>
     </div>
     <div class="devlog-foot">
       <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="devlog-discord-link">
