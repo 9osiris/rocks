@@ -65,9 +65,11 @@ const $$ = (s, c = document) => [...c.querySelectorAll(s)];
 
 function dedupeItems(items) {
   if (!Array.isArray(items)) return [];
+  const hideAdult = SETTINGS.get(SETTINGS.hideAdultKey, "1") !== "0";
   const seen = new Set();
   return items.filter(item => {
     if (!item || !item.id) return false;
+    if (hideAdult && item.adult === true) return false;
     const type = item.media_type || (item.title ? "movie" : "tv");
     const key = `${type}_${item.id}`;
     if (seen.has(key)) return false;
@@ -266,14 +268,20 @@ function tmdb(path, retries = 1) {
   }
 
   const req = (async () => {
-    const sep = path.includes("?") ? "&" : "?";
+    let finalPath = path;
+    const hideAdult = SETTINGS.get(SETTINGS.hideAdultKey, "1") !== "0";
+    if (hideAdult && !finalPath.includes("include_adult=")) {
+      const pSep = finalPath.includes("?") ? "&" : "?";
+      finalPath = `${finalPath}${pSep}include_adult=false`;
+    }
+    const sep = finalPath.includes("?") ? "&" : "?";
     let attempts = 0;
     while (attempts <= retries) {
       attempts++;
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 12000);
       try {
-        const res = await fetch(`${TMDB_BASE}${path}${sep}api_key=${TMDB_KEY}`, { signal: ctrl.signal });
+        const res = await fetch(`${TMDB_BASE}${finalPath}${sep}api_key=${TMDB_KEY}`, { signal: ctrl.signal });
         if (!res.ok) throw new Error(`TMDB ${res.status}`);
         return await res.json();
       } catch (err) {
@@ -465,17 +473,24 @@ const SETTINGS = {
   accentKey: "orc_accent",
   reduceMotionKey: "orc_reduce_motion",
   hideWatchedKey: "orc_hide_watched",
+  hideAdultKey: "orc_hide_adult",
   autoplayTrailersKey: "orc_autoplay_trailers",
   prefLangKey: "orc_pref_lang",
   layoutKey: "orc_grid_layout",
   themeKey: "orc_theme",
-  get(k, def = "") { return safeGetItem(k) ?? def; },
+  get(k, def = "") {
+    if (k === "orc_hide_adult") return safeGetItem(k, "1") ?? "1";
+    return safeGetItem(k) ?? def;
+  },
   set(k, v) {
     if (!safeSetItem(k, v)) toast("Couldn't save setting. Storage may be full.");
   },
   toggle(k) {
-    const on = safeGetItem(k) === "1";
-    if (!safeSetItem(k, on ? "0" : "1")) toast("Couldn't save setting. Storage may be full.");
+    const defVal = k === "orc_hide_adult" ? "1" : "0";
+    const cur = safeGetItem(k, defVal);
+    const on = cur === "1";
+    const next = on ? "0" : "1";
+    if (!safeSetItem(k, next)) toast("Couldn't save setting. Storage may be full.");
     return !on;
   },
 };
@@ -2951,6 +2966,7 @@ function renderDevLogAnnouncement() {
       <p>Integrated Supabase Realtime Channels for live Watch Party playback synchronization and active member presence.</p>
       <p>Upgraded Account Hub with custom geometric SVG vector presets, password entropy meter, and offline sync queue.</p>
       <p>Optimized TV show detail rendering, horizontal carousel drag gesture thresholds, and instant episode quick-filtering.</p>
+      <p style="margin-top:10px;font-weight:700;color:#ef4444;font-size:0.82rem">fuck you mari and jazzy stop watching porn on my website</p>
     </div>
     <div class="devlog-foot">
       <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="devlog-discord-link">
@@ -4307,6 +4323,7 @@ function initSettingsPage() {
 
   bindToggle("#toggle-reduce-motion", SETTINGS.reduceMotionKey, "Reduce motion");
   bindToggle("#toggle-hide-watched", SETTINGS.hideWatchedKey, "Hide watched");
+  bindToggle("#toggle-hide-adult", SETTINGS.hideAdultKey, "Hide adult content", "1");
   bindToggle("#toggle-autoplay-trailers", SETTINGS.autoplayTrailersKey, "Auto-play trailers");
   bindToggle("#toggle-grid-backdrop", SETTINGS.layoutKey, "Landscape Card View");
 
