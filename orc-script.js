@@ -1007,6 +1007,9 @@ const SupabaseSync = {
   },
 
   async pullFromCloud() {
+    if (sessionStorage.getItem('orc_sync_lock')) return;
+    sessionStorage.setItem('orc_sync_lock', '1');
+    try {
     const user = await this.getUser();
     if (!user) return;
     const client = getSupabaseClient();
@@ -1068,6 +1071,7 @@ const SupabaseSync = {
         if (meta.orc_folders) safeSetItem(Folders.key, JSON.stringify(meta.orc_folders));
       }
     } catch (err) { console.warn('Caught error:', err); }
+    } finally { sessionStorage.removeItem('orc_sync_lock'); }
   },
 
   async pushUserMetadata() {
@@ -2001,10 +2005,11 @@ function buildCard(item, type = "movie", opts = {}) {
   const watched = prog && prog >= 95;
   const y = year(item.release_date || item.first_air_date);
 
-  const card = document.createElement("div");
+  const card = document.createElement("a");
   card.className = `media-card${watched && SETTINGS.get(SETTINGS.hideWatchedKey) === "1" ? " is-watched" : ""}`;
   card.tabIndex = 0;
   card.setAttribute("role", "link");
+  card.href = href;
   card.setAttribute("aria-label", title);
   card.innerHTML = `
     ${opts.rank && opts.top10Today ? `<span class="top10-today-card-badge"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>${opts.rank}</span>` : opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
@@ -2021,6 +2026,8 @@ function buildCard(item, type = "movie", opts = {}) {
     </div>`;
 
     card.addEventListener("click", e => {
+    if (e.ctrlKey || e.metaKey || e.button === 1 || e.shiftKey) return; // Allow middle-click and ctrl-click
+    e.preventDefault();
     if (e.target.closest(".save-btn")) return;
     const bg = item.backdrop_path ? `${IMG_ORIG}${item.backdrop_path}` : (posterUrl(item.poster_path) || "");
     navigateWithLoader(href, bg, title);
@@ -2967,7 +2974,7 @@ function buildSeasonSpotlight(shows) {
   list.forEach(s => {
     const img = s.backdrop_path ? `${IMG_W780}${s.backdrop_path}` : posterUrl(s.poster_path);
     const sn = s._season || s.number_of_seasons;
-    const card = document.createElement("div");
+    const card = document.createElement("a");
     card.className = "spotlight-card";
     card.tabIndex = 0;
     card.setAttribute("role", "link");
@@ -3264,7 +3271,7 @@ const DEVLOG_ID = "v2.9_aug2026";
 function renderDevLogAnnouncement() {
   if (safeGetItem("orc_devlog_dismissed") === DEVLOG_ID) return;
 
-  const card = document.createElement("div");
+  const card = document.createElement("a");
   card.className = "devlog-card";
   card.id = "devlog-card";
   card.innerHTML = `
@@ -3738,7 +3745,7 @@ async function initTvPage() {
     const cert = (show.content_ratings?.results || []).find(r => r.iso_3166_1 === "US")?.rating;
     const creators = (show.created_by || []).map(c => c.name).join(", ");
     const prog = Progress.getItem(show.id, "tv");
-    const seasons = (show.seasons || []).filter(s => s.season_number > 0);
+    const seasons = (show.seasons || []).filter(s => s.season_number >= 0);
     const seasonNums = seasons.map(s => s.season_number);
     if (seasonNums.length && !seasonNums.includes(season)) season = seasonNums[0];
     if (!Number.isFinite(episode) || episode < 1) episode = 1;
