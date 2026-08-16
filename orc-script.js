@@ -158,7 +158,17 @@ function safeGetItem(key, fallback = null) {
 
 function safeSetItem(key, val) {
   try {
-    localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val));
+    try {
+      localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        console.warn('Storage quota exceeded. Clearing old items.');
+        localStorage.removeItem('orc_tmdb_cache'); // Try to free up space
+        localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val));
+      } else {
+        throw e;
+      }
+    }
     return true;
   } catch (err) { console.warn('Caught error:', err);
     return false;
@@ -395,7 +405,11 @@ function posterUrl(p, size = "w342") {
   if (!p) return null;
   return size === "w500" ? `${IMG_W500}${p}` : `${IMG_W342}${p}`;
 }
-function year(d) { return d ? d.slice(0, 4) : ""; }
+function year(d) { 
+  if (!d || typeof d !== "string" || d === "NaN") return "";
+  const y = new Date(d).getFullYear();
+  return isNaN(y) ? d.slice(0, 4) : y.toString();
+}
 function formatRuntime(m) {
   if (!m) return "";
   const h = Math.floor(m / 60), r = m % 60;
@@ -412,6 +426,7 @@ function pickTrailer(videos) {
   return list.find(v => v.type === "Trailer" && v.site === "YouTube") || list.find(v => v.site === "YouTube");
 }
 function genreTags(genres, type) {
+  if (!genres || !Array.isArray(genres)) return "";
   return (genres || []).map(g =>
     `<a href="/search?type=${type}&genre=${g.id}" class="tag tag-link">${esc(g.name)}</a>`
   ).join("");
@@ -3748,7 +3763,7 @@ async function initTvPage() {
         ${show.vote_average ? `<span class="score">★ ${show.vote_average.toFixed(1)}</span>` : ""}
         ${show.vote_count ? `<span>${fmtVotes(show.vote_count)}</span>` : ""}
         <span>${year(show.first_air_date)}</span>
-        ${show.number_of_seasons ? `<span>${show.number_of_seasons} Seasons</span>` : ""}
+        ${show.number_of_seasons ? `<span>${show.number_of_seasons} Season${show.number_of_seasons === 1 ? '' : 's'}</span>` : ""}
         ${show.number_of_episodes ? `<span>${show.number_of_episodes} Eps</span>` : ""}
         ${cert ? `<span class="cert">${esc(cert)}</span>` : ""}
         ${genreTags(show.genres, "tv")}
