@@ -1801,12 +1801,12 @@ function buildCard(item, type = "movie", opts = {}) {
   const y = year(item.release_date || item.first_air_date);
 
   const card = document.createElement("div");
-  card.className = `media-card${watched && SETTINGS.get(SETTINGS.hideWatchedKey) === "1" ? " is-watched" : ""}${opts.top10 ? " top10-card" : ""}`;
+  card.className = `media-card${watched && SETTINGS.get(SETTINGS.hideWatchedKey) === "1" ? " is-watched" : ""}`;
   card.tabIndex = 0;
   card.setAttribute("role", "link");
   card.setAttribute("aria-label", title);
   card.innerHTML = `
-    ${opts.rank && opts.top10 ? `<span class="rank rank-top10" aria-hidden="true">${opts.rank}</span>` : opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
+    ${opts.rank && opts.top10Today ? `<span class="top10-today-card-badge"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>${opts.rank}</span>` : opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
     ${prog && prog > 2 ? `<span class="progress-badge">${Math.round(prog)}%</span>` : ""}
     ${!opts.rank && (!prog || prog <= 2) && Number.isFinite(item.vote_average) && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
     ${img ? `<img src="${esc(img)}" alt="${esc(title)}" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img-poster">${ICONS.film}<span>${esc(title)}</span></div>`}
@@ -3083,10 +3083,46 @@ async function initHomePage() {
     })();
   }
 
+  // Channels & Apps Row (Image 3 reference)
+  const CHANNELS_DATA = [
+    { name: "NETFLIX", id: 8, type: "movie", label: "NETFLIX" },
+    { name: "prime video", id: 9, type: "movie", label: "prime video", sub: "smile" },
+    { name: "Disney+", id: 337, type: "movie", label: "Disney+" },
+    { name: "hulu", id: 15, type: "tv", label: "hulu" },
+    { name: "HBO Max", id: 1899, type: "tv", label: "HBOMax" },
+    { name: "Apple TV+", id: 350, type: "movie", label: "tv+" },
+  ];
+
+  const chanRow = document.createElement("div");
+  chanRow.className = "row-wrapper visible channels-wrapper";
+  chanRow.innerHTML = `
+    <div class="row-header">
+      <h2 class="row-title">Channels & Apps</h2>
+    </div>
+    <div class="row-track-container">
+      <div class="row-track channels-track">
+        ${CHANNELS_DATA.map(ch => `
+          <button type="button" class="channel-card" data-provider-id="${ch.id}" data-provider-type="${ch.type}" aria-label="${esc(ch.name)}">
+            <span class="channel-logo channel-logo-${ch.name.toLowerCase().replace(/[^a-z0-9]/g, '')}">${esc(ch.label)}</span>
+          </button>
+        `).join("")}
+      </div>
+    </div>`;
+  chanRow.querySelectorAll(".channel-card").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const pid = btn.dataset.providerId;
+      const ptype = btn.dataset.providerType;
+      location.href = `/search?type=${ptype}&provider=${pid}`;
+    });
+  });
+  el.appendChild(chanRow);
+
   const cats = [
-    { title: "Trending Now", path: "/trending/all/week", type: "movie", id: "trending", ranks: true, eager: true },
-    { title: "Top 10 Today", path: "/trending/movie/day", type: "movie", top10: true, eager: true },
-    { title: "New This Week", path: "/movie/now_playing", type: "movie", eager: true },
+    { title: "Top 10 Today", path: "/trending/all/day", type: "movie", top10Today: true, eager: true },
+    { title: "Top 10 Movies", path: "/trending/movie/week", type: "movie", top10Side: true, eager: true },
+    { title: "Top 10 TV Shows", path: "/trending/tv/week", type: "tv", top10Side: true, eager: true },
+    { title: "Trending Now", path: "/trending/all/week", type: "movie", id: "trending", eager: true },
+    { title: "New This Week", path: "/movie/now_playing", type: "movie" },
     { title: "Top Rated Movies", path: "/movie/top_rated", type: "movie", seeAll: "/search?type=movie" },
     { title: "Coming Soon", path: "/movie/upcoming", type: "movie" },
     { title: "Popular Movies", path: "/movie/popular", type: "movie", seeAll: "/search?type=movie" },
@@ -3094,16 +3130,15 @@ async function initHomePage() {
     { title: "On The Air", path: "/tv/on_the_air", type: "tv" },
     { title: "Airing Today", path: "/tv/airing_today", type: "tv" },
     { title: "Top Rated TV", path: "/tv/top_rated", type: "tv" },
-    { title: "Trending TV", path: "/trending/tv/week", type: "tv" },
   ];
 
   const catRowEls = cats.map(c => {
     const w = document.createElement("div");
-    w.className = `row-wrapper visible${c.top10 ? " top10-row" : ""}`;
-    const badge = c.top10
-      ? `<span class="row-title-badge top10-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg> #1 Today</span>`
+    w.className = `row-wrapper visible${c.top10Today ? " top10-today-row" : ""}${c.top10Side ? " top10-side-row" : ""}`;
+    const badge = c.top10Today
+      ? `<span class="row-title-badge top10-today-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg> #1 TODAY</span>`
       : "";
-    w.innerHTML = `<div class="row-header"><h2 class="row-title">${esc(c.title)}${badge}</h2></div><div class="row-track-container"><button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><div class="row-track${c.top10 ? " top10-track" : ""}"></div><button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
+    w.innerHTML = `<div class="row-header"><h2 class="row-title">${esc(c.title)}${badge}</h2></div><div class="row-track-container"><button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><div class="row-track${c.top10Side ? " top10-side-track" : ""}"></div><button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
     const track = w.querySelector(".row-track");
     track.append(...skeletons(8));
     const scroll = 360;
@@ -3119,14 +3154,22 @@ async function initHomePage() {
       const items = dedupeItems(data.results || []);
       const target = catRowEls[i];
       if (target && items.length) {
-        const sliced = c.top10 ? items.slice(0, 10) : items;
+        const sliced = (c.top10Today || c.top10Side) ? items.slice(0, 10) : items;
         target.track.textContent = "";
         sliced.forEach((it, idx) => {
-          target.track.appendChild(buildCard(it, c.type, {
-            rank: (c.ranks || c.top10) ? idx + 1 : null,
-            top10: c.top10 || false,
-            eager: c.eager || idx < 4
-          }));
+          if (c.top10Side) {
+            const itemWrap = document.createElement("div");
+            itemWrap.className = "top10-item-wrap";
+            itemWrap.innerHTML = `<span class="top10-side-num" aria-hidden="true">${idx + 1}</span>`;
+            itemWrap.appendChild(buildCard(it, c.type, { eager: idx < 4 }));
+            target.track.appendChild(itemWrap);
+          } else {
+            target.track.appendChild(buildCard(it, c.type, {
+              rank: c.top10Today ? idx + 1 : null,
+              top10Today: c.top10Today || false,
+              eager: idx < 4
+            }));
+          }
         });
         initRowDrag(target.track);
         initRowKeyboard(target.track);
