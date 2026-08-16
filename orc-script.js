@@ -411,6 +411,10 @@ function year(d) {
   const y = new Date(d).getFullYear();
   return isNaN(y) ? d.slice(0, 4) : y.toString();
 }
+function formatVotes(count) {
+  if (!count) return "";
+  return count >= 1000 ? (count / 1000).toFixed(1) + "k votes" : count + " votes";
+}
 function formatRuntime(m) {
   if (!m) return "";
   const h = Math.floor(m / 60), r = m % 60;
@@ -623,7 +627,17 @@ function getAccentHex() {
   return /^[0-9a-fA-F]{6}$/.test(hex) ? hex : ACCENT;
 }
 
+function injectMetaTags() {
+  if (!document.querySelector('meta[name="referrer"]')) {
+    const meta = document.createElement("meta");
+    meta.name = "referrer";
+    meta.content = "strict-origin-when-cross-origin";
+    document.head.appendChild(meta);
+  }
+  safeSetItem("orc_version", "2.5.0");
+}
 function checkStorageQuota() {
+  injectMetaTags();
   if (navigator.storage && navigator.storage.estimate) {
     navigator.storage.estimate().then(est => {
       if (est.quota && est.usage && (est.usage / est.quota > 0.85)) {
@@ -2038,6 +2052,12 @@ function buildCard(item, type = "movie", opts = {}) {
     </div>`;
 
     card.addEventListener("click", e => {
+    const saveBtn = e.target.closest(".save-btn");
+    if (saveBtn) {
+      if (saveBtn._clicked) return;
+      saveBtn._clicked = true;
+      setTimeout(() => saveBtn._clicked = false, 500);
+    }
     if (e.ctrlKey || e.metaKey || e.button === 1 || e.shiftKey) return; // Allow middle-click and ctrl-click
     e.preventDefault();
     if (e.target.closest(".save-btn")) return;
