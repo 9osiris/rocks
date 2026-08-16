@@ -58,10 +58,103 @@ const ICONS = {
   spark: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`,
   info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>`,
   user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`,
+  play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
 };
 
 const $ = (s, c = document) => c.querySelector(s);
 const $$ = (s, c = document) => [...c.querySelectorAll(s)];
+
+function initNotificationDropdown() {
+  const bellBtn = $("#topnav-bell-btn");
+  if (!bellBtn || bellBtn._bound) return;
+  bellBtn._bound = true;
+
+  let popover = $("#notif-popover");
+  if (!popover) {
+    popover = document.createElement("div");
+    popover.id = "notif-popover";
+    popover.className = "notif-popover glass-surface";
+    popover.setAttribute("aria-hidden", "true");
+    popover.innerHTML = `
+      <div class="notif-popover-header">
+        <h3 class="notif-popover-title">New Episodes</h3>
+        <p class="notif-popover-sub">From your watchlist this week</p>
+      </div>
+      <div class="notif-popover-divider"></div>
+      <div class="notif-popover-body" id="notif-popover-body">
+        <div class="notif-empty-state">No new episodes this week</div>
+      </div>
+    `;
+    document.body.appendChild(popover);
+  }
+
+  const togglePopover = (show) => {
+    const isVisible = show ?? !popover.classList.contains("is-open");
+    popover.classList.toggle("is-open", isVisible);
+    popover.setAttribute("aria-hidden", isVisible ? "false" : "true");
+    bellBtn.setAttribute("aria-expanded", isVisible ? "true" : "false");
+    bellBtn.classList.toggle("active", isVisible);
+
+    if (isVisible) {
+      const rect = bellBtn.getBoundingClientRect();
+      popover.style.top = `${rect.bottom + 10}px`;
+      popover.style.right = `${Math.max(16, window.innerWidth - rect.right - 8)}px`;
+    }
+  };
+
+  bellBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    togglePopover();
+  });
+
+  document.addEventListener("click", e => {
+    if (popover.classList.contains("is-open") && !popover.contains(e.target) && !bellBtn.contains(e.target)) {
+      togglePopover(false);
+    }
+  });
+
+  window.addEventListener("scroll", () => {
+    if (popover.classList.contains("is-open")) togglePopover(false);
+  }, { passive: true });
+}
+
+function initSidebar(active) {
+  initAmbientHeaderGlow(active);
+  const el = $("#topnav") || $("#sidebar");
+  if (!el) return;
+
+  const link = (href, label, act) =>
+    `<a href="${href}" class="topnav-link${act ? " active" : ""}">${label}</a>`;
+
+  el.className = "topnav";
+  el.id = "topnav";
+  el.innerHTML = `
+    <div class="topnav-inner">
+      <a href="${homeUrl()}" class="topnav-logo" aria-label="Osiris Watch home">
+        <span class="nav-logo-icon" style="color:#${ACCENT};display:inline-flex;align-items:center;margin-right:6px">
+          ${ICONS.play}
+        </span>
+        <span class="topnav-word">Osiris<i>Watch</i></span>
+      </a>
+      <nav class="topnav-links" aria-label="Primary">
+        ${link(homeUrl(), "Home", active === "home")}
+        ${link("/search", "Discover", active === "search" || active === "movies" || active === "tv")}
+        ${link("/list", "My List", active === "list")}
+        ${link("/settings", "Settings", active === "settings")}
+      </nav>
+      <div class="topnav-actions">
+        <a href="/search" class="topnav-icon${active === "search" ? " active" : ""}" aria-label="Search">${ICONS.search}</a>
+        <button type="button" class="topnav-icon topnav-bell-btn" id="topnav-bell-btn" aria-label="Notifications" aria-expanded="false">${ICONS.bell}</button>
+        <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="topnav-icon" aria-label="Discord">${ICONS.discord}</a>
+        <button type="button" class="topnav-icon topnav-account-btn" id="topnav-account-btn" aria-label="Account">${ICONS.user}</button>
+        <button type="button" class="topnav-burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      </div>
+    </div>`;
+
+  initAuthUI();
+  initNotificationDropdown();
+}
 
 function dedupeItems(items) {
   if (!Array.isArray(items)) return [];
@@ -3083,14 +3176,18 @@ async function initHomePage() {
     })();
   }
 
-  // Channels & Apps Row (Image 3 reference)
+  // Channels & Apps Row (10 real provider logos)
   const CHANNELS_DATA = [
-    { name: "NETFLIX", id: 8, type: "movie", label: "NETFLIX" },
-    { name: "prime video", id: 9, type: "movie", label: "prime video", sub: "smile" },
-    { name: "Disney+", id: 337, type: "movie", label: "Disney+" },
-    { name: "hulu", id: 15, type: "tv", label: "hulu" },
-    { name: "HBO Max", id: 1899, type: "tv", label: "HBOMax" },
-    { name: "Apple TV+", id: 350, type: "movie", label: "tv+" },
+    { name: "Netflix", id: 8, type: "movie", img: "netflix.png" },
+    { name: "Prime Video", id: 9, type: "movie", img: "primevideo.png" },
+    { name: "Disney+", id: 337, type: "movie", img: "disney.png" },
+    { name: "Hulu", id: 15, type: "tv", img: "hulu.png" },
+    { name: "HBO Max", id: 1899, type: "tv", img: "hbomax.png" },
+    { name: "Apple TV+", id: 350, type: "movie", img: "appletv.png" },
+    { name: "Paramount+", id: 531, type: "tv", img: "paramount.png" },
+    { name: "Peacock", id: 386, type: "tv", img: "peacock.png" },
+    { name: "Crunchyroll", id: 283, type: "tv", img: "crunchyroll.png" },
+    { name: "AMC+", id: 528, type: "tv", img: "amc.png" }
   ];
 
   const chanRow = document.createElement("div");
@@ -3100,14 +3197,21 @@ async function initHomePage() {
       <h2 class="row-title">Channels & Apps</h2>
     </div>
     <div class="row-track-container">
+      <button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button>
       <div class="row-track channels-track">
         ${CHANNELS_DATA.map(ch => `
           <button type="button" class="channel-card" data-provider-id="${ch.id}" data-provider-type="${ch.type}" aria-label="${esc(ch.name)}">
-            <span class="channel-logo channel-logo-${ch.name.toLowerCase().replace(/[^a-z0-9]/g, '')}">${esc(ch.label)}</span>
+            <img src="/providers/${ch.img}" alt="${esc(ch.name)}" loading="lazy" class="channel-card-img" />
           </button>
         `).join("")}
       </div>
+      <button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
     </div>`;
+
+  const ctrack = chanRow.querySelector(".channels-track");
+  const cscroll = 420;
+  chanRow.querySelector(".row-arrow.left")?.addEventListener("click", () => ctrack.scrollBy({ left: -cscroll, behavior: "smooth" }));
+  chanRow.querySelector(".row-arrow.right")?.addEventListener("click", () => ctrack.scrollBy({ left: cscroll, behavior: "smooth" }));
   chanRow.querySelectorAll(".channel-card").forEach(btn => {
     btn.addEventListener("click", () => {
       const pid = btn.dataset.providerId;
@@ -3115,6 +3219,8 @@ async function initHomePage() {
       location.href = `/search?type=${ptype}&provider=${pid}`;
     });
   });
+  initRowDrag(ctrack);
+  initRowKeyboard(ctrack);
   el.appendChild(chanRow);
 
   const cats = [
