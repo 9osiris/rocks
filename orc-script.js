@@ -1,6 +1,12 @@
 "use strict";
 
-const TMDB_KEY  = "5622cafbfe8f8cfe358a29c53e19bba0";
+const APP_CONFIG = {
+  TMDB_API_KEY: "5622cafbfe8f8cfe358a29c53e19bba0",
+  SUPABASE_URL: "https://ewuiiwaqjsyilinkdobm.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3dWlpd2FxanN5aWxpbmtkb2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODAxMTcsImV4cCI6MjEwMjE1NjExN30.S2ogyCUHzaQuXV5jCyT-u3zIX2wzt1m23qFvMeEL05I"
+};
+
+const TMDB_KEY  = APP_CONFIG.TMDB_API_KEY;
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMG_W500  = "https://image.tmdb.org/t/p/w500";
 const IMG_W45   = "https://image.tmdb.org/t/p/w45";
@@ -145,7 +151,7 @@ function safeGetItem(key, fallback = null) {
   try {
     const val = localStorage.getItem(key);
     return val !== null ? val : fallback;
-  } catch (_) {
+  } catch (err) { console.warn('Caught error:', err);
     return fallback;
   }
 }
@@ -154,7 +160,7 @@ function safeSetItem(key, val) {
   try {
     localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val));
     return true;
-  } catch (_) {
+  } catch (err) { console.warn('Caught error:', err);
     return false;
   }
 }
@@ -163,7 +169,7 @@ function safeRemoveItem(key) {
   try {
     localStorage.removeItem(key);
     return true;
-  } catch (_) {
+  } catch (err) { console.warn('Caught error:', err);
     return false;
   }
 }
@@ -194,7 +200,7 @@ async function idbGet(key) {
       req.onsuccess = () => resolve(req.result ?? safeGetItem(key, null));
       req.onerror = () => resolve(safeGetItem(key, null));
     });
-  } catch (_) { return safeGetItem(key, null); }
+  } catch (err) { console.warn('Caught error:', err); return safeGetItem(key, null); }
 }
 
 async function idbSet(key, val) {
@@ -209,12 +215,12 @@ async function idbSet(key, val) {
       req.onsuccess = () => resolve(true);
       req.onerror = () => resolve(false);
     });
-  } catch (_) { return false; }
+  } catch (err) { console.warn('Caught error:', err); return false; }
 }
 
 // ===== Supabase Client Initialization =====
-const SUPABASE_URL = "https://ewuiiwaqjsyilinkdobm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3dWlpd2FxanN5aWxpbmtkb2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODAxMTcsImV4cCI6MjEwMjE1NjExN30.S2ogyCUHzaQuXV5jCyT-u3zIX2wzt1m23qFvMeEL05I";
+const SUPABASE_URL = APP_CONFIG.SUPABASE_URL;
+const SUPABASE_ANON_KEY = APP_CONFIG.SUPABASE_ANON_KEY;
 
 let supabaseClient = null;
 function getSupabaseClient() {
@@ -222,7 +228,7 @@ function getSupabaseClient() {
     try {
       if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       return supabaseClient;
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   }
   return null;
 }
@@ -803,7 +809,7 @@ const SupabaseSync = {
             }
           }
         });
-      } catch (_) {}
+      } catch (err) { console.warn('Caught error:', err); }
     }
   },
 
@@ -823,7 +829,7 @@ const SupabaseSync = {
           })
           .subscribe();
       });
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   },
 
   // Offline Sync Queue System
@@ -834,7 +840,7 @@ const SupabaseSync = {
       const q = JSON.parse(safeGetItem(this.offlineQueueKey, "[]"));
       q.push({ action, payload, timestamp: Date.now() });
       safeSetItem(this.offlineQueueKey, JSON.stringify(q));
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   },
 
   async processOfflineQueue() {
@@ -853,7 +859,7 @@ const SupabaseSync = {
           await this.pushUserMetadata();
         }
       }
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   },
 
   // Password Strength Entropy Calculator
@@ -907,7 +913,7 @@ const SupabaseSync = {
 
     try {
       await client.rpc("delete_user_account");
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
 
     await this.signOut();
   },
@@ -918,7 +924,7 @@ const SupabaseSync = {
     try {
       const { data: { session } } = await client.auth.getSession();
       return session?.user || null;
-    } catch (_) { return null; }
+    } catch (err) { console.warn('Caught error:', err); return null; }
   },
 
   async signUp(email, password, username) {
@@ -954,7 +960,7 @@ const SupabaseSync = {
   async signOut() {
     const client = getSupabaseClient();
     if (!client) return;
-    try { await client.auth.signOut(); } catch (_) {}
+    try { await client.auth.signOut(); } catch (err) { console.warn('Caught error:', err); }
     safeRemoveItem("orc_local_meta");
     safeRemoveItem(MyList.key);
     safeRemoveItem(Progress.key);
@@ -987,7 +993,7 @@ const SupabaseSync = {
         });
         MyList.save(Array.from(mergedMap.values()));
       }
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
 
     try {
       const { data: progData } = await client
@@ -1010,7 +1016,7 @@ const SupabaseSync = {
         });
         Progress.saveAll(localProg);
       }
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
 
     try {
       const metaStr = safeGetItem("orc_local_meta");
@@ -1023,7 +1029,7 @@ const SupabaseSync = {
         if (meta.orc_recent) safeSetItem(RecentSearches.key, JSON.stringify(meta.orc_recent));
         if (meta.orc_folders) safeSetItem(Folders.key, JSON.stringify(meta.orc_folders));
       }
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   },
 
   async pushUserMetadata() {
@@ -1049,7 +1055,7 @@ const SupabaseSync = {
       const newMeta = { ...currentMeta, ...updates };
       await client.auth.updateUser({ data: newMeta });
       safeSetItem("orc_local_meta", JSON.stringify(newMeta));
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   },
 
   async pushWatchlistItem(item, isAdd) {
@@ -1074,7 +1080,7 @@ const SupabaseSync = {
           media_type: item.type
         });
       }
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   },
 
   async pushProgressItem(p) {
@@ -1095,7 +1101,7 @@ const SupabaseSync = {
         progress_pct: p.progress || 0,
         updated_at: new Date().toISOString()
       }, { onConflict: "user_id,media_id,media_type" });
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   },
 
   async resetPassword(email) {
@@ -1139,7 +1145,7 @@ const SupabaseSync = {
         bio: newMeta.bio || "",
         updated_at: new Date().toISOString()
       }, { onConflict: "user_id" });
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
 
     return data;
   },
@@ -1154,13 +1160,13 @@ const SupabaseSync = {
       try {
         const { data } = await client.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
         if (data) dbProfile = data;
-      } catch (_) {}
+      } catch (err) { console.warn('Caught error:', err); }
     }
 
     const local = safeGetItem("orc_local_meta", null);
     let meta = user.user_metadata || {};
     if (local) {
-      try { meta = { ...meta, ...JSON.parse(local) }; } catch (_) {}
+      try { meta = { ...meta, ...JSON.parse(local) }; } catch (err) { console.warn('Caught error:', err); }
     }
 
     return {
@@ -1561,7 +1567,7 @@ window.addEventListener("message", e => {
     if (dur > 0 && watched >= 10 && d.progress > 1 && d.progress < 98) {
       Progress.save(d.id, d.mediaType || "movie", d);
     }
-  } catch (_) {}
+  } catch (err) { console.warn('Caught error:', err); }
 });
 
 let PAGE = "home";
@@ -1663,7 +1669,7 @@ function initScrollRestoration() {
   const pageKey = `orc_scroll_${location.pathname}${location.search}`;
 
   window.addEventListener("beforeunload", () => {
-    try { sessionStorage.setItem(pageKey, String(window.scrollY)); } catch (_) {}
+    try { sessionStorage.setItem(pageKey, String(window.scrollY)); } catch (err) { console.warn('Caught error:', err); }
   });
 
   const savedY = sessionStorage.getItem(pageKey);
@@ -1823,7 +1829,7 @@ async function sharePageLink(title) {
     try {
       await navigator.share({ title: title || document.title, url });
       return;
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   }
   try {
     await navigator.clipboard.writeText(url);
@@ -2559,7 +2565,7 @@ function extractHeroAmbientColors(imgUrl) {
 
         heroAmbientColorCache[imgUrl] = result;
         resolve(result);
-      } catch (_) {
+      } catch (err) { console.warn('Caught error:', err);
         const fallback = [40, 50, 80];
         resolve({ left: fallback, center: fallback, right: fallback });
       }
@@ -2708,7 +2714,7 @@ async function setHeroSlide(i, animate = false) {
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       $(".hero")?.classList.remove("hero-fading");
     }
-  } catch (_) {
+  } catch (err) { console.warn('Caught error:', err);
     $(".hero")?.classList.remove("hero-fading");
   } finally {
     if (animate) heroFading = false;
@@ -2789,7 +2795,7 @@ async function loadHero(item) {
       if (!$("#splash-screen") || sessionStorage.getItem("orc_splash")) play();
       else setTimeout(play, 2700);
     }
-  } catch (_) {
+  } catch (err) { console.warn('Caught error:', err);
     if ($("#hero-title")) $("#hero-title").textContent = title;
   }
 
@@ -2888,7 +2894,7 @@ function initGenreStrip() {
         (data.results || []).slice(0, 20).forEach(it => track.appendChild(buildCard(it, "movie")));
         initRowDrag(track);
         initRowKeyboard(track);
-      } catch (_) {}
+      } catch (err) { console.warn('Caught error:', err); }
     });
     strip.appendChild(btn);
   });
@@ -3003,7 +3009,7 @@ function initInstantSearch(inputEl) {
             </a>
           `;
         }).join("");
-      } catch (_) { closeDropdown(); }
+      } catch (err) { console.warn('Caught error:', err); closeDropdown(); }
     }, 200);
   });
 
@@ -3070,7 +3076,7 @@ async function renderContinueWatchingRow() {
       if (!d) continue;
       const card = buildCard(d, type, { progressValue: it.progress });
       track.appendChild(card);
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   }
 
   if (track.children.length > 0) {
@@ -3170,7 +3176,7 @@ async function renderRecommendedForYouRow() {
     const scroll = 360;
     wrap.querySelector(".row-arrow.left")?.addEventListener("click", () => track.scrollBy({ left: -scroll, behavior: "smooth" }));
     wrap.querySelector(".row-arrow.right")?.addEventListener("click", () => track.scrollBy({ left: scroll, behavior: "smooth" }));
-  } catch (_) {}
+  } catch (err) { console.warn('Caught error:', err); }
 }
 
 const DEVLOG_ID = "v2.9_aug2026";
@@ -3255,7 +3261,7 @@ async function initHomePage() {
         } else {
           cwRow.remove();
         }
-      } catch (_) { cwRow.remove(); }
+      } catch (err) { console.warn('Caught error:', err); cwRow.remove(); }
     })();
   }
 
@@ -3282,7 +3288,7 @@ async function initHomePage() {
         } else {
           mlRow.remove();
         }
-      } catch (_) { mlRow.remove(); }
+      } catch (err) { console.warn('Caught error:', err); mlRow.remove(); }
     })();
   }
 
@@ -3392,7 +3398,7 @@ async function initHomePage() {
       } else if (target) {
         target.w.remove();
       }
-    } catch (_) {
+    } catch (err) { console.warn('Caught error:', err);
       if (catRowEls[i]) catRowEls[i].w.remove();
     }
   });
@@ -3438,7 +3444,7 @@ async function initHomePage() {
         } else {
           pw.remove();
         }
-      } catch (_) { pw.remove(); }
+      } catch (err) { console.warn('Caught error:', err); pw.remove(); }
     });
   });
 
@@ -3449,7 +3455,7 @@ async function initHomePage() {
   try {
     const gd = await tmdb(`/discover/movie?with_genres=${GENRES[0].id}&sort_by=popularity.desc`);
     dedupeItems(gd.results || []).slice(0, 20).forEach(it => gRow.querySelector(".row-track").appendChild(buildCard(it, "movie")));
-  } catch (_) {}
+  } catch (err) { console.warn('Caught error:', err); }
   el.prepend(gRow);
 
   observeRows();
@@ -3467,7 +3473,7 @@ async function initHomePage() {
         .slice(0, 10);
       const spot = buildSeasonSpotlight(shows);
       if (spot) el.prepend(spot);
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   })();
 
   const hash = location.hash.replace("#", "");
@@ -3516,10 +3522,10 @@ async function initMoviePage() {
   let m;
   try {
     m = await tmdb(`/movie/${id}?append_to_response=images,credits,similar,videos,recommendations,external_ids,release_dates`);
-  } catch (_) {
+  } catch (err) { console.warn('Caught error:', err);
     try {
       m = await tmdb(`/movie/${id}`);
-    } catch (_) {
+    } catch (err) { console.warn('Caught error:', err);
       m = { id, title: `Movie #${id}`, overview: "Select a stream provider below to start watching." };
     }
   }
@@ -3634,10 +3640,10 @@ async function initTvPage() {
   let show;
   try {
     show = await tmdb(`/tv/${id}?append_to_response=images,credits,similar,recommendations,videos,external_ids,content_ratings`);
-  } catch (_) {
+  } catch (err) { console.warn('Caught error:', err);
     try {
       show = await tmdb(`/tv/${id}`);
-    } catch (_) {
+    } catch (err) { console.warn('Caught error:', err);
       show = { id, name: `TV Series #${id}`, overview: "Select season and episode below to start watching.", seasons: [{ season_number: 1, episode_count: 24 }] };
     }
   }
@@ -3750,7 +3756,7 @@ async function initTvPage() {
             r.style.display = (!q || titleText.includes(q) || numText.includes(q)) ? "" : "none";
           });
         });
-      } catch (_) {
+      } catch (err) { console.warn('Caught error:', err);
         $("#ep-grid").innerHTML = `<p style="color:var(--text-muted);padding:20px;text-align:center">Episodes unavailable.</p>`;
       }
     }
@@ -4107,7 +4113,7 @@ async function initSurpriseMe() {
         ...(p3.results || []).map(x => ({ ...x, media_type: "tv" }))
       ];
       pool = dedupeItems(raw.filter(x => x && x.id && x.poster_path));
-    } catch (_) {
+    } catch (err) { console.warn('Caught error:', err);
       pool = [];
     }
     return pool;
@@ -4216,7 +4222,7 @@ async function aiSearch(q) {
     });
     if (!res.ok) {
       let msg = "AI Search is unavailable right now.";
-      try { const e = await res.json(); if (e && e.error) msg = e.error; } catch (_) {}
+      try { const e = await res.json(); if (e && e.error) msg = e.error; } catch (err) { console.warn('Caught error:', err); }
       grid.innerHTML = `<div class="no-results"><h3>Couldn’t reach AI</h3><p>${esc(msg)}</p></div>`;
       status.textContent = "";
       return;
@@ -4239,7 +4245,7 @@ async function aiSearch(q) {
           if (exact) return { item: exact, type: rec.type };
         }
         return hits[0] ? { item: hits[0], type: rec.type } : null;
-      } catch (_) { return null; }
+      } catch (err) { console.warn('Caught error:', err); return null; }
     }));
     const seen = new Set();
     const cards = resolved.filter(c => {
@@ -4265,7 +4271,7 @@ async function aiSearch(q) {
       cards.forEach(c => grid.appendChild(buildCard(c.item, c.type)));
     }
     status.textContent = `${cards.length} AI picks`;
-  } catch (_) {
+  } catch (err) { console.warn('Caught error:', err);
     grid.innerHTML = `<div class="no-results"><p>AI Search failed. Check your connection.</p></div>`;
     status.textContent = "";
   }
@@ -5029,7 +5035,7 @@ document.addEventListener("click", e => {
     if (dest.href === location.href) return;
     if (dest.pathname === location.pathname && dest.search === location.search) return;
     NProgress.start();
-  } catch (_) {}
+  } catch (err) { console.warn('Caught error:', err); }
 });
 window.addEventListener("pageshow", () => NProgress.done());
 
@@ -5102,7 +5108,7 @@ const WatchPartyEngine = {
             toast(`Joined Watch Party Room: ${roomId}`);
           }
         });
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   },
 
   broadcastState(state) {
@@ -5113,7 +5119,7 @@ const WatchPartyEngine = {
         event: "SYNC_PLAYBACK",
         payload: { ...state, timestamp: Date.now() }
       });
-    } catch (_) {}
+    } catch (err) { console.warn('Caught error:', err); }
   }
 };
 
