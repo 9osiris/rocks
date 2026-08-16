@@ -4836,9 +4836,6 @@ async function initListPage() {
     }
   };
 
-  let currentType = "all";
-  let currentSort = "recent";
-
   const renderListGrid = (prependedEl = null) => {
     if (currentTab === "folders") return;
     
