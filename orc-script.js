@@ -3649,7 +3649,7 @@ async function initMoviePage() {
       </div>`;
 
     LiquidGlass.glassify(header);
-    $("#detail-play")?.addEventListener("click", () => scrollToSelector("#player-frame"));
+    $("#detail-play")?.addEventListener("click", (e) => { if (e.shiftKey) return; e.preventDefault(); scrollToSelector("#player-frame"); });
     if (trailer) $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
     $("#detail-share")?.addEventListener("click", () => sharePageLink(m.title));
     $("#detail-save")?.addEventListener("click", () => {
@@ -3778,7 +3778,7 @@ async function initTvPage() {
       </div>`;
 
     LiquidGlass.glassify(header);
-    $("#detail-play")?.addEventListener("click", () => scrollToSelector("#player-frame"));
+    $("#detail-play")?.addEventListener("click", (e) => { if (e.shiftKey) return; e.preventDefault(); scrollToSelector("#player-frame"); });
     if (trailer) $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
     $("#detail-share")?.addEventListener("click", () => sharePageLink(show.name));
     $("#detail-save")?.addEventListener("click", () => {
