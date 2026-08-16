@@ -1291,6 +1291,71 @@ select:focus {
 }
 .row-see-all { font-size: 0.82rem; font-weight: 600; color: var(--text-2); transition: color 0.2s; flex-shrink: 0; }
 .row-see-all:hover { color: var(--accent); }
+
+/* Row title inline badge (Top 10, New, etc.) */
+.row-title-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: var(--pill);
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  vertical-align: middle;
+}
+.top10-badge {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb, 59,130,246), 0.18), rgba(var(--accent-rgb, 59,130,246), 0.08));
+  border-color: rgba(var(--accent-rgb, 59,130,246), 0.4);
+  color: var(--accent);
+}
+
+/* Provider icon badge in row title */
+.provider-icon-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 6px;
+  background: var(--bg-2); border: 1px solid var(--border-2);
+  font-size: 0.7rem; font-weight: 900; color: var(--text);
+  flex-shrink: 0;
+}
+
+/* ===== Top 10 Today cinematic rank number ===== */
+/* The card itself needs left-margin to accommodate the hanging number */
+.top10-track { padding-left: calc(var(--gutter) + 28px) !important; }
+.top10-card { position: relative; margin-left: 28px; }
+
+/* Cinematic large rank number hanging off left card edge */
+.media-card .rank-top10 {
+  /* Reset the small badge default */
+  position: absolute;
+  top: auto; left: auto;
+  bottom: -2px;
+  /* Hang outside the card's left boundary */
+  left: -44px;
+  z-index: 10;
+  /* Typography: giant italic serif number */
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 5.2rem;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  width: auto; height: auto;
+  /* Make it feel 3D: stroke technique via text-shadow stack */
+  color: transparent;
+  -webkit-text-stroke: 2.5px var(--text-2);
+  text-shadow:
+    3px 3px 0 rgba(0,0,0,0.6),
+    6px 6px 0 rgba(0,0,0,0.25);
+  background: none;
+  border-radius: 0;
+  /* Subtle accent tint on hover */
+  transition: -webkit-text-stroke-color 0.25s, color 0.25s;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -0.06em;
+}
+.top10-card:hover .rank-top10 {
+  -webkit-text-stroke-color: var(--accent);
+}
+/* Reduce size for numbers >= 10 */
+.top10-card .rank-top10:where(:last-child) { font-size: 4.2rem; }
 .row-period-wrap { position: relative; display: inline-flex; }
 .row-period-btn {
   font-size: 0.82rem; font-weight: 600; color: var(--accent);
