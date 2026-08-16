@@ -119,42 +119,6 @@ function initNotificationDropdown() {
   }, { passive: true });
 }
 
-function initSidebar(active) {
-  initAmbientHeaderGlow(active);
-  const el = $("#topnav") || $("#sidebar");
-  if (!el) return;
-
-  const link = (href, label, act) =>
-    `<a href="${href}" class="topnav-link${act ? " active" : ""}">${label}</a>`;
-
-  el.className = "topnav";
-  el.id = "topnav";
-  el.innerHTML = `
-    <div class="topnav-inner">
-      <a href="${homeUrl()}" class="topnav-logo" aria-label="Osiris Watch home">
-        <span class="nav-logo-icon" style="color:#${ACCENT};display:inline-flex;align-items:center;margin-right:6px">
-          ${ICONS.play}
-        </span>
-        <span class="topnav-word">Osiris<i>Watch</i></span>
-      </a>
-      <nav class="topnav-links" aria-label="Primary">
-        ${link(homeUrl(), "Home", active === "home")}
-        ${link("/search", "Discover", active === "search" || active === "movies" || active === "tv")}
-        ${link("/list", "My List", active === "list")}
-        ${link("/settings", "Settings", active === "settings")}
-      </nav>
-      <div class="topnav-actions">
-        <a href="/search" class="topnav-icon${active === "search" ? " active" : ""}" aria-label="Search">${ICONS.search}</a>
-        <button type="button" class="topnav-icon topnav-bell-btn" id="topnav-bell-btn" aria-label="Notifications" aria-expanded="false">${ICONS.bell}</button>
-        <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="topnav-icon" aria-label="Discord">${ICONS.discord}</a>
-        <button type="button" class="topnav-icon topnav-account-btn" id="topnav-account-btn" aria-label="Account">${ICONS.user}</button>
-        <button type="button" class="topnav-burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      </div>
-    </div>`;
-
-  initAuthUI();
-  initNotificationDropdown();
-}
 
 function dedupeItems(items) {
   if (!Array.isArray(items)) return [];
@@ -580,6 +544,10 @@ const SETTINGS = {
     return safeGetItem(k) ?? def;
   },
   set(k, v) {
+    safeSetItem(k, v);
+    if (k === "orc_accent" || k === "orc_theme" || k === "orc_grid_layout") {
+      SupabaseSync.pushUserMetadata();
+    }
     if (!safeSetItem(k, v)) toast("Couldn't save setting. Storage may be full.");
   },
   toggle(k) {
@@ -808,6 +776,10 @@ const SupabaseSync = {
   init() {
     if (this.initializedListener) return;
     this.initializedListener = true;
+    
+    window.addEventListener("online", () => this.processOfflineQueue());
+    setInterval(() => this.processOfflineQueue(), 60000);
+
     const client = getSupabaseClient();
     if (client && client.auth) {
       try {
@@ -877,6 +849,8 @@ const SupabaseSync = {
           await this.pushWatchlistItem(item.payload.item, item.payload.isAdd);
         } else if (item.action === "pushProgress") {
           await this.pushProgressItem(item.payload);
+        } else if (item.action === "pushMetadata") {
+          await this.pushUserMetadata();
         }
       }
     } catch (_) {}
@@ -982,6 +956,10 @@ const SupabaseSync = {
     if (!client) return;
     try { await client.auth.signOut(); } catch (_) {}
     safeRemoveItem("orc_local_meta");
+    safeRemoveItem(MyList.key);
+    safeRemoveItem(Progress.key);
+    safeRemoveItem(RecentSearches.key);
+    idbSet(MyList.key, []);
   },
 
   async pullFromCloud() {
@@ -1032,6 +1010,45 @@ const SupabaseSync = {
         });
         Progress.saveAll(localProg);
       }
+    } catch (_) {}
+
+    try {
+      const metaStr = safeGetItem("orc_local_meta");
+      if (metaStr) {
+        const meta = JSON.parse(metaStr);
+        if (meta.orc_settings) {
+          Object.entries(meta.orc_settings).forEach(([k, v]) => safeSetItem(k, v));
+          applyGlobalSettings();
+        }
+        if (meta.orc_recent) safeSetItem(RecentSearches.key, JSON.stringify(meta.orc_recent));
+        if (meta.orc_folders) safeSetItem(Folders.key, JSON.stringify(meta.orc_folders));
+      }
+    } catch (_) {}
+  },
+
+  async pushUserMetadata() {
+    const user = await this.getUser();
+    if (!user) {
+       this.enqueueOfflineMutation("pushMetadata", {});
+       return;
+    }
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    try {
+      const currentMeta = user.user_metadata || {};
+      const updates = {
+        orc_settings: {
+          orc_accent: safeGetItem("orc_accent"),
+          orc_theme: safeGetItem("orc_theme"),
+          orc_grid_layout: safeGetItem("orc_grid_layout"),
+        },
+        orc_recent: RecentSearches.get(),
+        orc_folders: Folders.get()
+      };
+      const newMeta = { ...currentMeta, ...updates };
+      await client.auth.updateUser({ data: newMeta });
+      safeSetItem("orc_local_meta", JSON.stringify(newMeta));
     } catch (_) {}
   },
 
@@ -1481,7 +1498,36 @@ const RecentSearches = {
     if (q.length < 2) return;
     const next = [q, ...this.get().filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, this.max);
     safeSetItem(this.key, JSON.stringify(next));
+    SupabaseSync.pushUserMetadata();
   },
+};
+
+const Folders = {
+  key: "orc_folders",
+  get() { try { return JSON.parse(safeGetItem(this.key) || "[]"); } catch { return []; } },
+  save(list) { safeSetItem(this.key, JSON.stringify(list)); SupabaseSync.pushUserMetadata(); },
+  addFolder(name) {
+    const list = this.get();
+    list.push({ id: "f_" + Date.now(), name, items: [] });
+    this.save(list);
+  },
+  removeFolder(id) {
+    this.save(this.get().filter(f => f.id !== id));
+  },
+  toggleItem(folderId, item) {
+    const list = this.get();
+    const folder = list.find(f => f.id === folderId);
+    if (!folder) return;
+    const i = folder.items.findIndex(x => x.id === item.id && x.type === item.type);
+    if (i >= 0) folder.items.splice(i, 1);
+    else folder.items.unshift(item);
+    this.save(list);
+  },
+  hasItem(folderId, id, type) {
+    const folder = this.get().find(f => f.id === folderId);
+    if (!folder) return false;
+    return folder.items.some(x => x.id === id && x.type === type);
+  }
 };
 
 const Progress = {
@@ -1658,6 +1704,9 @@ function initSidebar(active) {
   el.innerHTML = `
     <div class="topnav-inner">
       <a href="${homeUrl()}" class="topnav-logo" aria-label="Osiris Watch home">
+        <span class="nav-logo-icon" style="color:#${ACCENT};display:inline-flex;align-items:center;margin-right:6px">
+          ${ICONS.play}
+        </span>
         <span class="topnav-word">Osiris<i>Watch</i></span>
       </a>
       <nav class="topnav-links" aria-label="Primary">
@@ -1668,6 +1717,7 @@ function initSidebar(active) {
       </nav>
       <div class="topnav-actions">
         <a href="/search" class="topnav-icon${active === "search" ? " active" : ""}" aria-label="Search">${ICONS.search}</a>
+        <button type="button" class="topnav-icon topnav-bell-btn" id="topnav-bell-btn" aria-label="Notifications" aria-expanded="false">${ICONS.bell}</button>
         <a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" class="topnav-icon" aria-label="Discord">${ICONS.discord}</a>
         <button type="button" class="topnav-icon topnav-account-btn" id="topnav-account-btn" aria-label="Account">${ICONS.user}</button>
         <button type="button" class="topnav-burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
@@ -1675,6 +1725,7 @@ function initSidebar(active) {
     </div>`;
 
   initAuthUI();
+  initNotificationDropdown();
 
   const burger = el.querySelector(".topnav-burger");
   burger?.addEventListener("click", e => {
@@ -1938,11 +1989,10 @@ function buildCard(item, type = "movie", opts = {}) {
   
   card.querySelector(".save-btn").addEventListener("click", e => {
     e.stopPropagation();
-    const added = MyList.toggle({ id, type: kind, title, poster: item.poster_path });
-    const btn = e.currentTarget;
-    btn.classList.toggle("saved", added);
-    btn.innerHTML = added ? ICONS.check : ICONS.plus;
-    toast(added ? "Added to My List" : "Removed from list");
+    openSaveModal({ id, type: kind, title, poster: item.poster_path }, nowSaved => {
+      e.currentTarget.classList.toggle("saved", nowSaved);
+      e.currentTarget.innerHTML = nowSaved ? ICONS.check : ICONS.plus;
+    });
   });
 
   let timer;
@@ -1983,6 +2033,65 @@ function closePopup() {
     document.removeEventListener("scroll", popupScrollHandler, true);
     popupScrollHandler = null;
   }
+}
+
+function openSaveModal(item, onToggle) {
+  let modal = $("#save-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "save-modal";
+    modal.className = "modal-overlay";
+    document.body.appendChild(modal);
+    modal.addEventListener("click", e => {
+      if (e.target === modal || e.target.closest(".modal-close-btn")) {
+        modal.style.display = "none";
+      }
+    });
+  }
+
+  const savedInWL = MyList.has(item.id, item.type);
+  const folders = Folders.get();
+  
+  modal.innerHTML = `
+    <div class="modal-content" role="dialog" aria-modal="true" style="max-width:320px;padding:24px;border-radius:16px;background:var(--bg-2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 style="font-size:1.2rem;margin:0">Save to...</h2>
+        <button type="button" class="modal-close-btn" style="background:none;border:none;color:var(--text-2);cursor:pointer;padding:4px"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto">
+        <button class="save-opt-btn ${savedInWL ? 'active' : ''}" data-target="watchlist" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:none;background:${savedInWL ? 'var(--accent)' : 'var(--bg-3)'};color:${savedInWL ? '#000' : 'var(--text)'};cursor:pointer;font-weight:600;font-size:1rem;transition:background 0.2s">
+          <div style="width:20px;height:20px">${ICONS.list}</div> Watchlist ${savedInWL ? '<div style="margin-left:auto;width:20px;height:20px">'+ICONS.check+'</div>' : ''}
+        </button>
+        ${folders.length > 0 ? `<div style="height:1px;background:var(--bg-3);margin:8px 0"></div>` : ''}
+        ${folders.map(f => {
+          const inF = Folders.hasItem(f.id, item.id, item.type);
+          return `<button class="save-opt-btn ${inF ? 'active' : ''}" data-folder-id="${f.id}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:none;background:${inF ? 'var(--accent)' : 'var(--bg-3)'};color:${inF ? '#000' : 'var(--text)'};cursor:pointer;font-weight:600;font-size:1rem;transition:background 0.2s">
+            <div style="width:20px;height:20px">${ICONS.list}</div> ${esc(f.name)} ${inF ? '<div style="margin-left:auto;width:20px;height:20px">'+ICONS.check+'</div>' : ''}
+          </button>`;
+        }).join("")}
+      </div>
+    </div>
+  `;
+  
+  modal.querySelectorAll(".save-opt-btn").forEach(b => {
+    b.addEventListener("click", () => {
+      let added = false;
+      if (b.dataset.target === "watchlist") {
+        added = MyList.toggle(item);
+      } else {
+        Folders.toggleItem(b.dataset.folderId, item);
+        added = Folders.hasItem(b.dataset.folderId, item.id, item.type);
+      }
+      
+      const nowSaved = MyList.has(item.id, item.type) || Folders.get().some(f => Folders.hasItem(f.id, item.id, item.type));
+      if (onToggle) onToggle(nowSaved, added);
+      
+      modal.style.display = "none";
+      toast(added ? "Added" : "Removed");
+    });
+  });
+
+  modal.style.display = "flex";
 }
 
 const OVERVIEW_PREVIEW = 95;
@@ -2061,10 +2170,11 @@ function showPopup(card, item, type) {
 
   pop.querySelector(".pp-play").addEventListener("click", () => { closePopup(); location.href = href; });
   pop.querySelector(".pp-save").addEventListener("click", () => {
-    const added = MyList.toggle({ id, type: kind, title, poster: item.poster_path });
-    const btn = pop.querySelector(".pp-save");
-    btn.classList.toggle("saved", added);
-    btn.textContent = added ? "Saved" : "Save";
+    openSaveModal({ id, type: kind, title, poster: item.poster_path }, nowSaved => {
+      const btn = pop.querySelector(".pp-save");
+      btn.classList.toggle("saved", nowSaved);
+      btn.textContent = nowSaved ? "Saved" : "Save";
+    });
   });
   pop.addEventListener("mouseenter", () => clearTimeout(pop._closeTimer));
   pop.addEventListener("mouseleave", () => { pop._closeTimer = setTimeout(closePopup, 280); });
@@ -2725,9 +2835,9 @@ function bindHeroActions() {
   $("#hero-list-btn")?.addEventListener("click", () => {
     if (!heroData) return;
     const kind = mediaType(heroData);
-    const saved = MyList.toggle(heroData.id, kind);
-    updateHeroListState();
-    toast(saved ? "Added to My List" : "Removed from My List");
+    openSaveModal({ id: heroData.id, type: kind, title: heroData.title || heroData.name, poster: heroData.poster_path }, () => {
+      updateHeroListState();
+    });
   });
 }
 
@@ -3227,23 +3337,19 @@ async function initHomePage() {
     { title: "Top 10 Today", path: "/trending/all/day", type: "movie", top10Today: true, eager: true },
     { title: "Top 10 Movies", path: "/trending/movie/week", type: "movie", top10Side: true, eager: true },
     { title: "Top 10 TV Shows", path: "/trending/tv/week", type: "tv", top10Side: true, eager: true },
-    { title: "Trending Now", path: "/trending/all/week", type: "movie", id: "trending", eager: true },
-    { title: "New This Week", path: "/movie/now_playing", type: "movie" },
-    { title: "Top Rated Movies", path: "/movie/top_rated", type: "movie", seeAll: "/search?type=movie" },
-    { title: "Coming Soon", path: "/movie/upcoming", type: "movie" },
-    { title: "Popular Movies", path: "/movie/popular", type: "movie", seeAll: "/search?type=movie" },
-    { title: "Popular TV Shows", path: "/tv/popular", type: "tv", seeAll: "/search?type=tv" },
-    { title: "On The Air", path: "/tv/on_the_air", type: "tv" },
-    { title: "Airing Today", path: "/tv/airing_today", type: "tv" },
-    { title: "Top Rated TV", path: "/tv/top_rated", type: "tv" },
+    { title: "Trending Movies", path: "/trending/movie/day", type: "movie" },
+    { title: "Trending Series", path: "/trending/tv/day", type: "tv" },
+    { title: "Upcoming Episodes", path: "/tv/on_the_air", type: "tv" },
+    { title: "New Seasons Airing Now", path: "/tv/airing_today", type: "tv" },
+    { title: "Recommended for You", path: "/trending/all/week", type: "movie", id: "trending" },
+    { title: "Award Winners", path: "/movie/top_rated", type: "movie" },
+    { title: "Best by Decade", path: "/discover/movie?sort_by=vote_average.desc&primary_release_date.gte=1990-01-01&primary_release_date.lte=1999-12-31", type: "movie" },
   ];
 
   const catRowEls = cats.map(c => {
     const w = document.createElement("div");
     w.className = `row-wrapper visible${c.top10Today ? " top10-today-row" : ""}${c.top10Side ? " top10-side-row" : ""}`;
-    const badge = c.top10Today
-      ? `<span class="row-title-badge top10-today-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg> #1 TODAY</span>`
-      : "";
+    const badge = "";
     w.innerHTML = `<div class="row-header"><h2 class="row-title">${esc(c.title)}${badge}</h2></div><div class="row-track-container"><button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><div class="row-track${c.top10Side ? " top10-side-track" : ""}"></div><button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
     const track = w.querySelector(".row-track");
     track.append(...skeletons(8));
@@ -3306,10 +3412,7 @@ async function initHomePage() {
     pw.className = "row-wrapper provider-row";
     pw.innerHTML = `
       <div class="row-header">
-        <h2 class="row-title">
-          <span class="provider-icon-badge" aria-hidden="true">${esc(sp.icon)}</span>
-          ${esc(sp.title)}
-        </h2>
+        <h2 class="row-title">${esc(sp.title)}</h2>
       </div>
       <div class="row-track-container">
         <button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button>
@@ -3464,10 +3567,10 @@ async function initMoviePage() {
     if (trailer) $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
     $("#detail-share")?.addEventListener("click", () => sharePageLink(m.title));
     $("#detail-save")?.addEventListener("click", () => {
-      const a = MyList.toggle({ id: m.id, type: "movie", title: m.title, poster: m.poster_path });
-      const btn = $("#detail-save");
-      if (btn) btn.textContent = a ? "✓ Saved" : "+ My List";
-      toast(a ? "Added to My List" : "Removed");
+      openSaveModal({ id: m.id, type: "movie", title: m.title, poster: m.poster_path }, nowSaved => {
+        const btn = $("#detail-save");
+        if (btn) btn.textContent = nowSaved ? "✓ Saved" : "+ My List";
+      });
     });
 
     const load = url => loadPlayerFrame(frame, url);
@@ -3593,9 +3696,9 @@ async function initTvPage() {
     if (trailer) $("#detail-trailer")?.addEventListener("click", () => openTrailer(trailer.key));
     $("#detail-share")?.addEventListener("click", () => sharePageLink(show.name));
     $("#detail-save")?.addEventListener("click", () => {
-      const a = MyList.toggle({ id: show.id, type: "tv", title: show.name, poster: show.poster_path });
-      $("#detail-save").textContent = a ? "✓ Saved" : "+ My List";
-      toast(a ? "Added to My List" : "Removed");
+      openSaveModal({ id: show.id, type: "tv", title: show.name, poster: show.poster_path }, nowSaved => {
+        $("#detail-save").textContent = nowSaved ? "✓ Saved" : "+ My List";
+      });
     });
 
     const update = () => {
@@ -3730,6 +3833,7 @@ function initSearchPage() {
   const params = new URLSearchParams(location.search);
   const filter = params.get("type") || "all";
   const genreId = params.get("genre");
+  const providerId = params.get("provider");
   initSidebar(filter === "movie" ? "movies" : filter === "tv" ? "tv" : "search");
 
   const input = $("#main-search-input");
@@ -3826,6 +3930,7 @@ function initSearchPage() {
       } else {
         const g = genreId || $("#filter-genre")?.value || "";
         const gParam = (g && g !== "all") ? `&with_genres=${g}` : "";
+        const pParam = providerId ? `&with_watch_providers=${providerId}&watch_region=US` : "";
         const sortVal = $("#filter-sort")?.value || "pop";
         let sortParam = "popularity.desc";
         if (sortVal === "rating") sortParam = "vote_average.desc";
@@ -3833,8 +3938,8 @@ function initSearchPage() {
 
         if (current === "all") {
           const [movData, tvData] = await Promise.all([
-            tmdb(`/discover/movie?sort_by=${sortParam}&vote_count.gte=30${gParam}&page=${searchPage}`).catch(() => ({ results: [] })),
-            tmdb(`/discover/tv?sort_by=${sortParam}&vote_count.gte=30${gParam}&page=${searchPage}`).catch(() => ({ results: [] }))
+            tmdb(`/discover/movie?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`).catch(() => ({ results: [] })),
+            tmdb(`/discover/tv?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`).catch(() => ({ results: [] }))
           ]);
           const movs = (movData.results || []).map(m => ({ ...m, media_type: "movie" }));
           const tvs = (tvData.results || []).map(t => ({ ...t, media_type: "tv" }));
@@ -3842,7 +3947,7 @@ function initSearchPage() {
           if ((movData.page >= (movData.total_pages || 1)) && (tvData.page >= (tvData.total_pages || 1))) hasMorePages = false;
         } else {
           const media = current === "tv" ? "tv" : "movie";
-          const data = await tmdb(`/discover/${media}?sort_by=${sortParam}&vote_count.gte=30${gParam}&page=${searchPage}`);
+          const data = await tmdb(`/discover/${media}?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`);
           items = (data.results || []).map(i => ({ ...i, media_type: media }));
           if (data.page >= (data.total_pages || 1)) hasMorePages = false;
         }
@@ -4633,46 +4738,113 @@ function initSettingsPage() {
 
 async function initListPage() {
   initSidebar("list");
-  document.title = "My List — Osiris Watch";
+  document.title = "My Lists - Osiris Watch";
   const grid = $("#list-grid");
   const status = $("#list-status");
+  const wlCount = $("#watchlist-count");
   if (!grid) return;
 
-  const emptyState = () => {
-    grid.innerHTML = `<div class="no-results list-empty"><div class="list-empty-ico">${ICONS.list}</div><h3>Your list is empty</h3><p>Add movies and series using the + icon on their cards.</p></div>`;
+  const rawList = MyList.get();
+  if (wlCount) wlCount.textContent = rawList.length;
+
+  const emptyState = (msg, submsg) => {
+    grid.innerHTML = `<div class="no-results list-empty"><div class="list-empty-ico">${ICONS.list}</div><h3>${msg}</h3><p>${submsg}</p></div>`;
     if (status) status.textContent = "";
   };
 
-  const rawList = MyList.get();
-  if (!rawList.length) { emptyState(); return; }
+  let loadedItems = [];
+  let historyItems = [];
+  let currentTab = "watchlist";
+  let currentType = "all";
+  let currentSort = "recent";
+  let currentFolderId = null;
 
-  grid.textContent = ""; skeletons(Math.min(rawList.length, 12)).forEach(s => grid.appendChild(s));
+  const loadData = async () => {
+    if (currentTab === "watchlist") {
+      if (!rawList.length) { emptyState("Your watchlist is empty", "Add movies and series using the + icon on their cards."); return; }
+      grid.textContent = ""; skeletons(Math.min(rawList.length, 12)).forEach(s => grid.appendChild(s));
+      const settled = await Promise.allSettled(rawList.map(i =>
+        tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
+      ));
+      loadedItems = dedupeItems(settled.filter(r => r.status === "fulfilled").map(r => r.value));
+      renderListGrid();
+    } else if (currentTab === "history") {
+      const prog = Progress.get();
+      const progList = Object.values(prog || {}).sort((a, b) => b.lastUpdated - a.lastUpdated);
+      if (!progList.length) { emptyState("No watch history", "Start watching titles and they will appear here."); return; }
+      grid.textContent = ""; skeletons(Math.min(progList.length, 12)).forEach(s => grid.appendChild(s));
+      const settled = await Promise.allSettled(progList.map(i =>
+        tmdb(i.mediaType === "tv" ? `/tv/${i.mediaId}` : `/movie/${i.mediaId}`).then(d => ({ ...d, _type: i.mediaType, _progress: i.progress }))
+      ));
+      historyItems = dedupeItems(settled.filter(r => r.status === "fulfilled").map(r => r.value));
+      renderListGrid();
+    } else if (currentTab === "folders") {
+      const fList = Folders.get();
+      if (!fList.length) { emptyState("No folders yet", "Create custom collections to organize your favorite titles."); return; }
+      grid.textContent = "";
+      if (status) status.textContent = `${fList.length} ${fList.length === 1 ? "folder" : "folders"}`;
+      fList.forEach(f => {
+        const c = document.createElement("div");
+        c.className = "folder-card";
+        c.style = "background:var(--bg-2);border-radius:12px;padding:24px;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;transition:transform 0.2s, background 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.1)";
+        c.onmouseover = () => { c.style.background = "var(--bg-3)"; c.style.transform = "scale(1.02)"; };
+        c.onmouseout = () => { c.style.background = "var(--bg-2)"; c.style.transform = "scale(1)"; };
+        c.innerHTML = `
+          <div style="color:var(--accent);margin-bottom:12px">${ICONS.list}</div>
+          <h3 style="font-size:1.1rem;margin-bottom:4px;color:var(--text)">${esc(f.name)}</h3>
+          <p style="font-size:0.85rem;color:var(--text-2)">${f.items.length} ${f.items.length === 1 ? "item" : "items"}</p>
+        `;
+        c.addEventListener("click", () => {
+          currentFolderId = f.id;
+          currentTab = "folder_items";
+          loadData();
+        });
+        grid.appendChild(c);
+      });
+    } else if (currentTab === "folder_items") {
+      const fList = Folders.get();
+      const folder = fList.find(f => f.id === currentFolderId);
+      if (!folder) { currentTab = "folders"; return loadData(); }
+      
+      const backBtn = document.createElement("button");
+      backBtn.className = "btn-play";
+      backBtn.style = "margin-bottom:20px;background:var(--bg-2);color:var(--text)";
+      backBtn.innerHTML = "← Back to Folders";
+      backBtn.onclick = () => { currentTab = "folders"; currentFolderId = null; loadData(); };
 
-  const settled = await Promise.allSettled(rawList.map(i =>
-    tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
-  ));
-  let loadedItems = dedupeItems(settled.filter(r => r.status === "fulfilled").map(r => r.value));
-  if (!loadedItems.length) { emptyState(); return; }
+      if (!folder.items.length) { 
+        emptyState(`Folder: ${esc(folder.name)}`, "This folder is empty."); 
+        grid.prepend(backBtn);
+        return; 
+      }
+
+      grid.textContent = ""; 
+      grid.appendChild(backBtn);
+      
+      const wrapper = document.createElement("div");
+      wrapper.style.display = "contents";
+      skeletons(Math.min(folder.items.length, 12)).forEach(s => wrapper.appendChild(s));
+      grid.appendChild(wrapper);
+
+      const settled = await Promise.allSettled(folder.items.map(i =>
+        tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
+      ));
+      loadedItems = dedupeItems(settled.filter(r => r.status === "fulfilled").map(r => r.value));
+      
+      wrapper.remove();
+      renderListGrid(backBtn);
+    }
+  };
 
   let currentType = "all";
   let currentSort = "recent";
 
-  const renderListGrid = () => {
-    let items = [...loadedItems];
+  const renderListGrid = (prependedEl = null) => {
+    if (currentTab === "folders") return;
+    
+    let items = currentTab === "history" ? [...historyItems] : [...loadedItems];
     if (currentType === "movie" || currentType === "tv") {
       items = items.filter(it => (it._type || (it.title ? "movie" : "tv")) === currentType);
-    } else if (currentType === "favorite") {
-      items = items.filter(it => (it.vote_average || 0) >= 7.5);
-    } else if (currentType === "planning") {
-      items = items.filter(it => {
-        const prog = Progress.getItem(it.id, it._type || "movie");
-        return !prog || prog.progress < 15;
-      });
-    } else if (currentType === "completed") {
-      items = items.filter(it => {
-        const prog = Progress.getItem(it.id, it._type || "movie");
-        return prog && prog.progress >= 85;
-      });
     }
 
     if (currentSort === "rating") {
@@ -4683,20 +4855,55 @@ async function initListPage() {
       items.sort((a, b) => ((b.release_date || b.first_air_date || "")).localeCompare(a.release_date || a.first_air_date || ""));
     }
 
-    if (status) status.textContent = `${items.length} ${items.length === 1 ? "title" : "titles"}`;
+    if (status && currentTab !== "folder_items") status.textContent = `${items.length} ${items.length === 1 ? "title" : "titles"}`;
+    else if (status && currentTab === "folder_items") {
+      const folder = Folders.get().find(f => f.id === currentFolderId);
+      status.textContent = folder ? `Folder: ${folder.name} (${items.length})` : "";
+    }
+    
     grid.textContent = "";
+    if (prependedEl) grid.appendChild(prependedEl);
+
     if (!items.length) {
-      grid.innerHTML = `<div class="no-results"><h3>No titles match filter</h3><p>Try switching filters.</p></div>`;
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "no-results";
+      emptyDiv.innerHTML = `<h3>No titles match filter</h3><p>Try switching filters.</p>`;
+      grid.appendChild(emptyDiv);
       return;
     }
-    items.forEach(it => grid.appendChild(buildCard(it, it._type === "tv" ? "tv" : "movie")));
+    items.forEach(it => {
+      const card = buildCard(it, it._type === "tv" ? "tv" : "movie");
+      if (currentTab === "history" && it._progress) {
+        const pbar = document.createElement("div");
+        pbar.className = "card-progress-bar";
+        pbar.innerHTML = `<div class="card-progress-fill" style="width:${Math.min(it._progress, 100)}%"></div>`;
+        card.appendChild(pbar);
+      }
+      grid.appendChild(card);
+    });
   };
+
+  const tabs = $$(".list-tab-btn");
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentTab = tab.dataset.tab;
+      loadData();
+    });
+  });
 
   const filterRow = $("#list-filter-chips");
   if (filterRow) {
     filterRow.querySelectorAll(".filter-chip").forEach(chip => {
       chip.addEventListener("click", () => {
-        filterRow.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("on"));
+        if (chip.dataset.type === "recent") {
+           currentSort = currentSort === "recent" ? "release" : "recent";
+           chip.classList.toggle("on", currentSort === "release");
+           renderListGrid();
+           return;
+        }
+        filterRow.querySelectorAll(".filter-chip:not([data-type='recent'])").forEach(c => c.classList.remove("on"));
         chip.classList.add("on");
         currentType = chip.dataset.type || "all";
         renderListGrid();
@@ -4704,15 +4911,45 @@ async function initListPage() {
     });
   }
 
-  const sortSel = $("#list-sort-select");
-  if (sortSel) {
-    sortSel.addEventListener("change", e => {
-      currentSort = e.target.value;
-      renderListGrid();
+  const newFolderBtn = $("#btn-new-folder");
+  if (newFolderBtn) {
+    newFolderBtn.addEventListener("click", () => {
+      let modal = $("#folder-modal");
+      if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "folder-modal";
+        modal.className = "modal-overlay";
+        modal.innerHTML = `
+          <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="folder-modal-title">
+            <h2 id="folder-modal-title" style="margin-bottom:12px;font-size:1.4rem">Create New Folder</h2>
+            <input type="text" id="folder-name-input" placeholder="e.g. Anime, Action, Watch with Friends" class="auth-input" style="width:100%;box-sizing:border-box" />
+            <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+              <button type="button" class="btn-play" id="folder-cancel" style="background:var(--bg-3);color:var(--text)">Cancel</button>
+              <button type="button" class="btn-play" id="folder-create">Create</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.addEventListener("click", e => { if(e.target === modal) modal.style.display = "none"; });
+        modal.querySelector("#folder-cancel").addEventListener("click", () => modal.style.display = "none");
+        modal.querySelector("#folder-create").addEventListener("click", () => {
+          const inp = modal.querySelector("#folder-name-input");
+          const val = inp.value.trim();
+          if (val) {
+            Folders.addFolder(val);
+            toast(`Folder "${val}" created`);
+            if (currentTab === "folders") loadData();
+          }
+          modal.style.display = "none";
+        });
+      }
+      modal.querySelector("#folder-name-input").value = "";
+      modal.style.display = "flex";
+      modal.querySelector("#folder-name-input").focus();
     });
   }
 
-  renderListGrid();
+  loadData();
 }
 
 function initDmcaPage() {
