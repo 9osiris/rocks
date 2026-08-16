@@ -378,7 +378,8 @@ function tmdb(path, retries = 1, opts = {}) {
       const timer = setTimeout(() => ctrl.abort(), 12000);
       try {
         const res = await fetch(`${TMDB_BASE}${finalPath}${sep}api_key=${TMDB_KEY}`, { signal: opts.signal || ctrl.signal });
-        if (!res.ok) throw new Error(`TMDB ${res.status}`);
+        if (res.status === 429) { toast("TMDB Rate limit exceeded. Please wait a moment."); throw new Error("TMDB Rate Limit 429"); }
+  if (!res.ok) throw new Error(`TMDB ${res.status}`);
         return await res.json();
       } catch (err) {
         if (err.name === 'AbortError' || attempts > retries) throw err;
@@ -622,7 +623,18 @@ function getAccentHex() {
   return /^[0-9a-fA-F]{6}$/.test(hex) ? hex : ACCENT;
 }
 
+function checkStorageQuota() {
+  if (navigator.storage && navigator.storage.estimate) {
+    navigator.storage.estimate().then(est => {
+      if (est.quota && est.usage && (est.usage / est.quota > 0.85)) {
+        console.warn("Storage usage high. Purging cached items.");
+        try { localStorage.removeItem("orc_tmdb_cache"); } catch (e) {}
+      }
+    }).catch(() => {});
+  }
+}
 function applyGlobalSettings() {
+  checkStorageQuota();
   let hex = SETTINGS.get(SETTINGS.accentKey, ACCENT) || ACCENT;
   hex = String(hex).replace("#", "");
   if (!/^[0-9a-fA-F]{6}$/.test(hex)) hex = ACCENT;
@@ -2014,7 +2026,7 @@ function buildCard(item, type = "movie", opts = {}) {
   card.innerHTML = `
     ${opts.rank && opts.top10Today ? `<span class="top10-today-card-badge"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>${opts.rank}</span>` : opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
     ${prog && prog > 2 ? `<span class="progress-badge">${Math.round(prog)}%</span>` : ""}
-    ${!opts.rank && (!prog || prog <= 2) && Number.isFinite(item.vote_average) && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
+    ${!opts.rank && (!prog || prog <= 2) && Number.isFinite(item.vote_average) && item.vote_average >= 6 ? `<span class="card-rating">★ ${(typeof item.vote_average === "number" ? item.vote_average.toFixed(1) : "")}</span>` : ""}
     ${img ? `<img src="${esc(img)}" alt="${esc(title)}" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img-poster">${ICONS.film}<span>${esc(title)}</span></div>`}
     ${prog ? `<div class="progress-bar"><span style="width:${Math.min(prog, 100)}%"></span></div>` : ""}
     <div class="card-quick">
@@ -2189,7 +2201,7 @@ function showPopup(card, item, type) {
   const thumb = item.backdrop_path ? `${IMG_W500}${item.backdrop_path}` : posterUrl(item.poster_path);
   const href = kind === "tv" ? `/tv?id=${id}` : `/movie?id=${id}`;
   const saved = MyList.has(id, kind);
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : "";
+  const rating = item.vote_average ? (typeof item.vote_average === "number" ? item.vote_average.toFixed(1) : "") : "";
 
   const pop = document.createElement("div");
   pop.className = "card-popup";
