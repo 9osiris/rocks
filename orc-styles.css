@@ -1292,10 +1292,11 @@ select:focus {
 .row-see-all { font-size: 0.82rem; font-weight: 600; color: var(--text-2); transition: color 0.2s; flex-shrink: 0; }
 .row-see-all:hover { color: var(--accent); }
 
-/* ===== Channels & Apps Row (Image 3 reference) ===== */
+/* ===== Channels & Apps Row (Image 3 reference + 10 local provider logos) ===== */
 .channels-track {
   display: flex; gap: 14px;
   padding: 8px var(--gutter) 20px;
+  align-items: center;
 }
 .channel-card {
   flex: 0 0 auto;
@@ -1304,6 +1305,7 @@ select:focus {
   background: var(--bg-1, #131316);
   border: 1px solid var(--border, rgba(255,255,255,0.09));
   display: flex; align-items: center; justify-content: center;
+  padding: 12px 16px;
   cursor: pointer;
   transition: transform 0.25s var(--ease-out), background 0.25s, border-color 0.25s, box-shadow 0.25s;
   box-shadow: 0 4px 14px rgba(0,0,0,0.25);
@@ -1311,18 +1313,84 @@ select:focus {
 .channel-card:hover {
   transform: translateY(-4px);
   background: var(--bg-2, #1c1c21);
-  border-color: rgba(255,255,255,0.22);
+  border-color: rgba(255,255,255,0.25);
   box-shadow: 0 8px 24px rgba(0,0,0,0.45);
 }
-.channel-logo {
-  font-size: 1.15rem; font-weight: 900; letter-spacing: -0.02em; color: var(--text);
+.channel-card-img {
+  max-width: 86%; max-height: 46px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  transition: transform 0.2s var(--ease-out);
 }
-.channel-logo-netflix { font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 2.5px; font-size: 1.1rem; color: #ffffff; }
-.channel-logo-primevideo { font-family: system-ui, sans-serif; font-weight: 800; font-size: 1rem; color: #38bdf8; }
-.channel-logo-disney { font-family: Georgia, serif; font-weight: 700; font-style: italic; font-size: 1.2rem; color: #ffffff; }
-.channel-logo-hulu { font-weight: 900; letter-spacing: -1px; font-size: 1.35rem; color: #22c55e; }
-.channel-logo-hbomax { font-weight: 900; font-size: 1.1rem; letter-spacing: -0.5px; color: #ffffff; }
-.channel-logo-appletv { font-weight: 700; font-size: 1.05rem; color: #ffffff; }
+.channel-card:hover .channel-card-img {
+  transform: scale(1.05);
+}
+
+/* ===== Notification Bell Popover (Image 2 reference) ===== */
+.notif-popover {
+  position: fixed; z-index: 400; width: 340px;
+  background: rgba(18, 18, 22, 0.92);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  padding: 18px;
+  opacity: 0; visibility: hidden; transform: translateY(-8px) scale(0.96);
+  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out), visibility 0.25s;
+}
+.notif-popover.is-open {
+  opacity: 1; visibility: visible; transform: translateY(0) scale(1);
+}
+.notif-popover-title {
+  font-size: 1.1rem; font-weight: 800; color: var(--text, #fff); margin-bottom: 2px;
+}
+.notif-popover-sub {
+  font-size: 0.78rem; color: var(--text-2, #94a3b8); margin-bottom: 12px;
+}
+.notif-popover-divider {
+  height: 1px; background: rgba(255, 255, 255, 0.08); margin: 0 -18px 14px;
+}
+.notif-empty-state {
+  text-align: center; padding: 24px 12px;
+  font-size: 0.85rem; font-weight: 600; color: var(--text-2, rgba(255,255,255,0.4));
+}
+
+/* ===== My Lists Page Sub-Tabs & Controls (Image 1 reference) ===== */
+.list-page-title {
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 14px;
+}
+.list-main-tabs {
+  display: flex; gap: 8px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--border); padding-bottom: 8px;
+}
+.list-tab-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--pill);
+  font-size: 0.85rem; font-weight: 600; color: var(--text-2);
+  background: transparent; border: none; cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.list-tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+.list-tab-btn.active {
+  color: var(--text); background: var(--bg-1);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.list-tab-badge {
+  font-size: 0.68rem; font-weight: 800; padding: 1px 6px; border-radius: 99px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.list-controls-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 22px; flex-wrap: wrap;
+}
+.btn-new-folder {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--pill);
+  font-size: 0.8rem; font-weight: 700; color: var(--text-2);
+  background: var(--bg-1); border: 1px solid var(--border);
+  cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn-new-folder:hover { color: var(--text); background: var(--bg-2); border-color: var(--border-2); }
 
 /* ===== Top 10 Today Row Header & Card Badge (Image 1 reference) ===== */
 .top10-today-badge {
