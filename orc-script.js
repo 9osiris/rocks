@@ -1749,7 +1749,7 @@ function initSidebar(active) {
   if (!el._scrollBound) {
     el._scrollBound = true;
     const onScroll = () => el.classList.toggle("scrolled", window.scrollY > 12);
-    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scroll", throttle(onScroll, 50), { passive: true });
     onScroll();
   }
 
@@ -1855,7 +1855,7 @@ function initBackToTop() {
   document.body.appendChild(btn);
   LiquidGlass.apply(btn, { borderRadius: 22, distortionScale: -80, blur: 8, brightness: 60, opacity: 0.9, saturation: 1.5 });
   const onScroll = () => btn.classList.toggle("visible", window.scrollY > 480);
-  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("scroll", throttle(onScroll, 50), { passive: true });
   onScroll();
   btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "auto" }));
 }
@@ -2184,7 +2184,7 @@ function showPopup(card, item, type) {
   });
   pop.addEventListener("mouseenter", () => clearTimeout(pop._closeTimer));
   pop.addEventListener("mouseleave", () => { pop._closeTimer = setTimeout(closePopup, 280); });
-  popupScrollHandler = () => closePopup();
+  popupScrollHandler = throttle(() => closePopup(), 100);
   document.addEventListener("scroll", popupScrollHandler, { passive: true, capture: true });
 }
 
@@ -3177,6 +3177,32 @@ async function renderRecommendedForYouRow() {
     wrap.querySelector(".row-arrow.left")?.addEventListener("click", () => track.scrollBy({ left: -scroll, behavior: "smooth" }));
     wrap.querySelector(".row-arrow.right")?.addEventListener("click", () => track.scrollBy({ left: scroll, behavior: "smooth" }));
   } catch (err) { console.warn('Caught error:', err); }
+}
+
+function navigateWithLoader(href, bg = "", title = "") {
+  try {
+    sessionStorage.setItem("orc_loader", JSON.stringify({ bg, title }));
+  } catch (err) { console.warn('Caught error:', err); }
+  location.href = href;
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+function throttle(func, limit) {
+  let inThrottle;
+  return function(...args) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
 }
 
 const DEVLOG_ID = "v2.9_aug2026";
