@@ -1601,6 +1601,7 @@ window.addEventListener("message", e => {
     const watched = d.currentTime ?? (dur * (d.progress / 100));
     if (dur > 0 && watched >= 10 && d.progress > 1 && d.progress < 98) {
       Progress.save(d.id, d.mediaType || "movie", d);
+      if (d.mediaType === "tv" && d.season && d.episode && d.progress >= 90) WatchedEpisodes.save(d.id, d.season, d.episode);
     }
   } catch (err) { console.warn('Caught error:', err); }
 });
@@ -3795,6 +3796,7 @@ async function initTvPage() {
           const dur = ep.runtime ? `${ep.runtime}m` : "";
           el.innerHTML = `
             <span class="ep-row-num">${ep.episode_number}</span>
+            ${WatchedEpisodes.has(id, sn, ep.episode_number) ? '<span class="ep-watched-check" title="Watched" style="color:var(--accent);margin-left:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' : ''}
             <div class="ep-row-thumb">${ep.still_path ? `<img src="${esc(IMG_W500 + ep.still_path)}" alt="${esc(ep.name || '')}" loading="lazy" draggable="false"/>` : ""}</div>
             <div class="ep-row-body">
               <div class="ep-row-title">${esc(ep.name || `Episode ${ep.episode_number}`)}</div>
@@ -3826,6 +3828,30 @@ async function initTvPage() {
     }
 
     renderProviders($("#provider-bar"), "tv", id, season, episode, update);
+    const eps = sd.episodes || [];
+    const nextEp = eps.find(e => e.episode_number === episode + 1);
+    let nextBtn = $("#next-ep-btn");
+    if (!nextBtn) {
+      nextBtn = document.createElement("button");
+      nextBtn.id = "next-ep-btn";
+      nextBtn.className = "retry-btn";
+      nextBtn.style.marginTop = "10px";
+      nextBtn.style.width = "100%";
+      $("#provider-bar").parentElement.insertBefore(nextBtn, $("#provider-bar").nextSibling);
+    }
+    if (nextEp) {
+      nextBtn.style.display = "block";
+      nextBtn.textContent = "Next Episode (" + season + "x" + nextEp.episode_number + ")";
+      nextBtn.onclick = () => {
+        episode = nextEp.episode_number;
+        const epr = $(".ep-row").find(r => parseInt(r.dataset.ep) === episode);
+        if (epr) { epr.click(); }
+        else { update(); scrollToSelector("#player-frame"); }
+      };
+    } else {
+      nextBtn.style.display = "none";
+    }
+  
 
     if (seasons.length && $("#season-select")) {
       $("#ep-block").style.display = "";
