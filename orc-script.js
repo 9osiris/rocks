@@ -311,7 +311,30 @@ function trapModalFocus(modal, label = "Dialog") {
   modal.setAttribute("role", "dialog");
   modal.setAttribute("aria-modal", "true");
   modal.setAttribute("aria-label", label);
-  requestAnimationFrame(() => modal.querySelector(".modal-close")?.focus());
+  
+  modal.addEventListener("keydown", function(e) {
+    if (e.key === "Tab") {
+      const focusableEls = modal.querySelectorAll('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      const firstFocusable = focusableEls[0];
+      const lastFocusable = focusableEls[focusableEls.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === firstFocusable) {
+          lastFocusable?.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastFocusable) {
+          firstFocusable?.focus();
+          e.preventDefault();
+        }
+      }
+    }
+  });
+
+  requestAnimationFrame(() => {
+    const defaultFocus = modal.querySelector(".modal-close, .modal-close-btn") || modal.querySelector('button, input');
+    if (defaultFocus) defaultFocus.focus();
+  });
 }
 
 function releaseModalFocus() {
@@ -1451,7 +1474,8 @@ function openAuthModal() {
 
   modal.querySelector("#auth-main-view").style.display = "flex";
   modal.querySelector("#auth-reset-view").style.display = "none";
-  modal.style.display = "flex";
+  modal.classList.add("open");
+  trapModalFocus(modal, "Save to Folder");
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       modal.classList.add("open");
@@ -1459,6 +1483,17 @@ function openAuthModal() {
       setTimeout(() => modal.querySelector("#auth-email")?.focus(), 120);
     });
   });
+}
+
+function openModal(modal) {
+  if (!modal) return;
+  modal.classList.add("open");
+  let label = "Dialog";
+  if (modal.id === "shortcuts-modal") label = "Keyboard Shortcuts";
+  else if (modal.id === "party-modal") label = "Watch Party";
+  else if (modal.id === "surprise-modal") label = "Surprise Me";
+  else if (modal.id === "save-modal") label = "Save to Folder";
+  trapModalFocus(modal, label);
 }
 
 function closeModal(sel = ".modal-overlay") {
@@ -2050,7 +2085,7 @@ function openSaveModal(item, onToggle) {
     document.body.appendChild(modal);
     modal.addEventListener("click", e => {
       if (e.target === modal || e.target.closest(".modal-close-btn")) {
-        modal.style.display = "none";
+        closeModal(modal);
       }
     });
   }
@@ -2092,7 +2127,7 @@ function openSaveModal(item, onToggle) {
       const nowSaved = MyList.has(item.id, item.type) || Folders.get().some(f => Folders.hasItem(f.id, item.id, item.type));
       if (onToggle) onToggle(nowSaved, added);
       
-      modal.style.display = "none";
+      closeModal(modal);
       toast(added ? "Added" : "Removed");
     });
   });
@@ -2990,6 +3025,7 @@ function initInstantSearch(inputEl) {
         if (!dropdown) {
           dropdown = document.createElement("div");
           dropdown.className = "instant-search-dropdown";
+          inputEl.setAttribute("aria-expanded", "true");
           inputEl.parentElement.appendChild(dropdown);
         }
 
@@ -3040,7 +3076,9 @@ function initGlobalShortcuts() {
       }
     } else if (e.key === "Escape") {
       closeTrailer();
-      $$(".instant-search-dropdown").forEach(d => d.remove());
+      $(".instant-search-dropdown").forEach(d => d.remove());
+      const s = $("#search-input") || $(".ep-search-input");
+      if (s) s.setAttribute("aria-expanded", "false");
       if (isPlayerFullscreen()) {
         if (document.exitFullscreen) document.exitFullscreen();
         else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -4959,7 +4997,7 @@ async function initListPage() {
           </div>
         `;
         document.body.appendChild(modal);
-        modal.addEventListener("click", e => { if(e.target === modal) modal.style.display = "none"; });
+        modal.addEventListener("click", e => { if(e.target === modal) closeModal(modal); });
         modal.querySelector("#folder-cancel").addEventListener("click", () => modal.style.display = "none");
         modal.querySelector("#folder-create").addEventListener("click", () => {
           const inp = modal.querySelector("#folder-name-input");
@@ -4969,7 +5007,7 @@ async function initListPage() {
             toast(`Folder "${val}" created`);
             if (currentTab === "folders") loadData();
           }
-          modal.style.display = "none";
+          closeModal(modal);
         });
       }
       modal.querySelector("#folder-name-input").value = "";
