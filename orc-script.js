@@ -346,7 +346,7 @@ const TMDB_CACHE_MAX = 100;
 const TMDB_CACHE_TTL = 10 * 60 * 1000;
 const _tmdbCache = new Map();
 
-function tmdb(path, retries = 1) {
+function tmdb(path, retries = 1, opts = {}) {
   const now = Date.now();
   const cached = _tmdbCache.get(path);
   if (cached && (now - cached.time < TMDB_CACHE_TTL)) {
@@ -367,11 +367,11 @@ function tmdb(path, retries = 1) {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 12000);
       try {
-        const res = await fetch(`${TMDB_BASE}${finalPath}${sep}api_key=${TMDB_KEY}`, { signal: ctrl.signal });
+        const res = await fetch(`${TMDB_BASE}${finalPath}${sep}api_key=${TMDB_KEY}`, { signal: opts.signal || ctrl.signal });
         if (!res.ok) throw new Error(`TMDB ${res.status}`);
         return await res.json();
       } catch (err) {
-        if (attempts > retries) throw err;
+        if (err.name === 'AbortError' || attempts > retries) throw err;
         await new Promise(r => setTimeout(r, 600));
       } finally {
         clearTimeout(timer);
@@ -3073,7 +3073,7 @@ function initGlobalShortcuts() {
       const searchInput = $("#main-search-input") || $(".topnav-search-input");
       if (searchInput) {
         e.preventDefault();
-        searchInput.focus();
+        if (window.innerWidth >= 768) searchInput.focus();
       }
     } else if (e.key === "Escape") {
       closeTrailer();
@@ -3786,6 +3786,11 @@ async function initTvPage() {
         const sd = await tmdb(`/tv/${id}/season/${sn}`);
         $("#ep-grid").textContent = "";
         const eps = sd.episodes || [];
+        if (!eps.length) {
+          $("#ep-grid").innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted);">No episodes have aired for this season yet.</div>`;
+          if ($("#detail-play")) $("#detail-play").disabled = true;
+          return;
+        }
         if (eps.length && !eps.some(ep => ep.episode_number === episode)) episode = eps[0].episode_number;
         eps.forEach(ep => {
           const el = document.createElement("button");
@@ -3828,31 +3833,6 @@ async function initTvPage() {
     }
 
     renderProviders($("#provider-bar"), "tv", id, season, episode, update);
-    const eps = sd.episodes || [];
-    const nextEp = eps.find(e => e.episode_number === episode + 1);
-    let nextBtn = $("#next-ep-btn");
-    if (!nextBtn) {
-      nextBtn = document.createElement("button");
-      nextBtn.id = "next-ep-btn";
-      nextBtn.className = "retry-btn";
-      nextBtn.style.marginTop = "10px";
-      nextBtn.style.width = "100%";
-      $("#provider-bar").parentElement.insertBefore(nextBtn, $("#provider-bar").nextSibling);
-    }
-    if (nextEp) {
-      nextBtn.style.display = "block";
-      nextBtn.textContent = "Next Episode (" + season + "x" + nextEp.episode_number + ")";
-      nextBtn.onclick = () => {
-        episode = nextEp.episode_number;
-        const epr = $(".ep-row").find(r => parseInt(r.dataset.ep) === episode);
-        if (epr) { epr.click(); }
-        else { update(); scrollToSelector("#player-frame"); }
-      };
-    } else {
-      nextBtn.style.display = "none";
-    }
-  
-
     if (seasons.length && $("#season-select")) {
       $("#ep-block").style.display = "";
       let epHead = $("#ep-block").querySelector(".ep-head");
@@ -3997,7 +3977,11 @@ function initSearchPage() {
     doSearch(lastQ || input?.value.trim() || "");
   }));
 
-  async function doSearch(q, append = false) {
+  let searchAbortController = null;
+async function doSearch(q, append = false) {
+  if (searchAbortController) searchAbortController.abort();
+  searchAbortController = new AbortController();
+  const searchOpts = { signal: searchAbortController.signal };
     if (!status || !grid) return;
     if (!append) {
       searchPage = 1;
@@ -4009,7 +3993,7 @@ function initSearchPage() {
     if (current === "ai") { aiSearch(q); return; }
     status.classList.remove("is-busy");
 
-    if (recentBox) recentBox.hidden = true;
+    if (recentBox) recentBox.hidden = !!q;
     if (!append && status) status.textContent = "Loading…";
 
     try {
@@ -4019,7 +4003,7 @@ function initSearchPage() {
         let path = "/search/multi";
         if (current === "movie") path = "/search/movie";
         if (current === "tv") path = "/search/tv";
-        const data = await tmdb(`${path}?query=${encodeURIComponent(q)}&page=${searchPage}`);
+        const data = await tmdb(`${path}?query=${encodeURIComponent(q)}&page=${searchPage}`, 1, searchOpts);
         items = (data.results || []).filter(i => i.poster_path || i.backdrop_path);
         if (current !== "all") items = items.filter(i => (i.media_type || current) === current);
         if (data.page >= (data.total_pages || 1)) hasMorePages = false;
@@ -4034,8 +4018,8 @@ function initSearchPage() {
 
         if (current === "all") {
           const [movData, tvData] = await Promise.all([
-            tmdb(`/discover/movie?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`).catch(() => ({ results: [] })),
-            tmdb(`/discover/tv?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`).catch(() => ({ results: [] }))
+            tmdb(`/discover/movie?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`, 1, searchOpts).catch(() => ({ results: [] })),
+            tmdb(`/discover/tv?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`, 1, searchOpts).catch(() => ({ results: [] }))
           ]);
           const movs = (movData.results || []).map(m => ({ ...m, media_type: "movie" }));
           const tvs = (tvData.results || []).map(t => ({ ...t, media_type: "tv" }));
@@ -4043,7 +4027,7 @@ function initSearchPage() {
           if ((movData.page >= (movData.total_pages || 1)) && (tvData.page >= (tvData.total_pages || 1))) hasMorePages = false;
         } else {
           const media = current === "tv" ? "tv" : "movie";
-          const data = await tmdb(`/discover/${media}?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`);
+          const data = await tmdb(`/discover/${media}?sort_by=${sortParam}&vote_count.gte=30${gParam}${pParam}&page=${searchPage}`, 1, searchOpts);
           items = (data.results || []).map(i => ({ ...i, media_type: media }));
           if (data.page >= (data.total_pages || 1)) hasMorePages = false;
         }
@@ -4137,7 +4121,7 @@ function initSearchPage() {
     });
     doSearch(q);
   }
-  clear?.addEventListener("click", () => { input.value = ""; clear.style.display = "none"; doSearch(""); input.focus(); });
+  clear?.addEventListener("click", () => { input.value = ""; clear.style.display = "none"; doSearch(""); if (window.innerWidth >= 768) input.focus(); });
   renderRecent();
 }
 
