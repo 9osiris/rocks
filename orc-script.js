@@ -1801,12 +1801,12 @@ function buildCard(item, type = "movie", opts = {}) {
   const y = year(item.release_date || item.first_air_date);
 
   const card = document.createElement("div");
-  card.className = `media-card${watched && SETTINGS.get(SETTINGS.hideWatchedKey) === "1" ? " is-watched" : ""}`;
+  card.className = `media-card${watched && SETTINGS.get(SETTINGS.hideWatchedKey) === "1" ? " is-watched" : ""}${opts.top10 ? " top10-card" : ""}`;
   card.tabIndex = 0;
   card.setAttribute("role", "link");
   card.setAttribute("aria-label", title);
   card.innerHTML = `
-    ${opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
+    ${opts.rank && opts.top10 ? `<span class="rank rank-top10" aria-hidden="true">${opts.rank}</span>` : opts.rank ? `<span class="rank">${opts.rank}</span>` : ""}
     ${prog && prog > 2 ? `<span class="progress-badge">${Math.round(prog)}%</span>` : ""}
     ${!opts.rank && (!prog || prog <= 2) && Number.isFinite(item.vote_average) && item.vote_average >= 6 ? `<span class="card-rating">★ ${item.vote_average.toFixed(1)}</span>` : ""}
     ${img ? `<img src="${esc(img)}" alt="${esc(title)}" loading="lazy" draggable="false" decoding="async" />` : `<div class="no-img-poster">${ICONS.film}<span>${esc(title)}</span></div>`}
@@ -3085,6 +3085,7 @@ async function initHomePage() {
 
   const cats = [
     { title: "Trending Now", path: "/trending/all/week", type: "movie", id: "trending", ranks: true, eager: true },
+    { title: "Top 10 Today", path: "/trending/movie/day", type: "movie", top10: true, eager: true },
     { title: "New This Week", path: "/movie/now_playing", type: "movie", eager: true },
     { title: "Top Rated Movies", path: "/movie/top_rated", type: "movie", seeAll: "/search?type=movie" },
     { title: "Coming Soon", path: "/movie/upcoming", type: "movie" },
@@ -3098,8 +3099,11 @@ async function initHomePage() {
 
   const catRowEls = cats.map(c => {
     const w = document.createElement("div");
-    w.className = "row-wrapper visible";
-    w.innerHTML = `<div class="row-header"><h2 class="row-title">${esc(c.title)}</h2></div><div class="row-track-container"><button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><div class="row-track"></div><button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
+    w.className = `row-wrapper visible${c.top10 ? " top10-row" : ""}`;
+    const badge = c.top10
+      ? `<span class="row-title-badge top10-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg> #1 Today</span>`
+      : "";
+    w.innerHTML = `<div class="row-header"><h2 class="row-title">${esc(c.title)}${badge}</h2></div><div class="row-track-container"><button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><div class="row-track${c.top10 ? " top10-track" : ""}"></div><button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
     const track = w.querySelector(".row-track");
     track.append(...skeletons(8));
     const scroll = 360;
@@ -3115,10 +3119,12 @@ async function initHomePage() {
       const items = dedupeItems(data.results || []);
       const target = catRowEls[i];
       if (target && items.length) {
+        const sliced = c.top10 ? items.slice(0, 10) : items;
         target.track.textContent = "";
-        items.forEach((it, idx) => {
+        sliced.forEach((it, idx) => {
           target.track.appendChild(buildCard(it, c.type, {
-            rank: c.ranks ? idx + 1 : null,
+            rank: (c.ranks || c.top10) ? idx + 1 : null,
+            top10: c.top10 || false,
             eager: c.eager || idx < 4
           }));
         });
@@ -3134,6 +3140,54 @@ async function initHomePage() {
     } catch (_) {
       if (catRowEls[i]) catRowEls[i].w.remove();
     }
+  });
+
+  // Provider-curated rows — fetched non-blocking from TMDB discover API
+  const STREAM_PROVIDERS = [
+    { title: "Trending on Netflix",    id: 8,    type: "movie",  icon: "N" },
+    { title: "Trending on Prime Video", id: 9,    type: "movie",  icon: "P" },
+    { title: "Trending on Disney+",    id: 337,  type: "movie",  icon: "D" },
+    { title: "Trending on Max",         id: 1899, type: "tv",    icon: "M" },
+    { title: "Trending on Apple TV+",  id: 350,  type: "movie",  icon: "A" },
+    { title: "Trending on Hulu",       id: 15,   type: "tv",    icon: "H" },
+  ];
+
+  STREAM_PROVIDERS.forEach(sp => {
+    const pw = document.createElement("div");
+    pw.className = "row-wrapper provider-row";
+    pw.innerHTML = `
+      <div class="row-header">
+        <h2 class="row-title">
+          <span class="provider-icon-badge" aria-hidden="true">${esc(sp.icon)}</span>
+          ${esc(sp.title)}
+        </h2>
+      </div>
+      <div class="row-track-container">
+        <button class="row-arrow left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button>
+        <div class="row-track"></div>
+        <button class="row-arrow right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
+      </div>`;
+    const pt = pw.querySelector(".row-track");
+    pt.append(...skeletons(8));
+    const scroll = 360;
+    pw.querySelector(".row-arrow.left")?.addEventListener("click", () => pt.scrollBy({ left: -scroll, behavior: "smooth" }));
+    pw.querySelector(".row-arrow.right")?.addEventListener("click", () => pt.scrollBy({ left: scroll, behavior: "smooth" }));
+    el.appendChild(pw);
+    observeLazyRow(pw, async () => {
+      try {
+        const res = await tmdb(`/discover/${sp.type}?with_watch_providers=${sp.id}&watch_region=US&sort_by=popularity.desc`);
+        const provItems = dedupeItems(res.results || []);
+        if (provItems.length) {
+          pt.textContent = "";
+          provItems.forEach(it => pt.appendChild(buildCard(it, sp.type)));
+          initRowDrag(pt);
+          initRowKeyboard(pt);
+          pw.classList.add("visible");
+        } else {
+          pw.remove();
+        }
+      } catch (_) { pw.remove(); }
+    });
   });
 
   const gRow = document.createElement("div");
