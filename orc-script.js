@@ -3642,7 +3642,7 @@ async function initMoviePage() {
       <p class="detail-overview">${esc(m.overview || "")}</p>
       ${resume ? `<p class="detail-resume">${esc(resume)}</p>` : ""}
       <div class="detail-actions">
-        <button class="btn-play" id="detail-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> ${resume ? "Resume" : "Play"}</button>
+        <button type="button" class="btn-play" id="detail-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> ${resume ? "Resume" : "Play"}</button>
         ${trailer ? `<button class="btn-ghost" id="detail-trailer">Trailer</button>` : ""}
         <button class="btn-ghost" id="detail-save">${saved ? "✓ Saved" : "+ My List"}</button>
         <button class="btn-ghost btn-icon-text" id="detail-share">${ICONS.share}<span>Share</span></button>
@@ -3771,7 +3771,7 @@ async function initTvPage() {
       <p class="detail-overview">${esc(show.overview || "")}</p>
       ${resume ? `<p class="detail-resume">${esc(resume)}</p>` : ""}
       <div class="detail-actions">
-        <button class="btn-play" id="detail-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> ${resume ? "Resume" : "Play"}</button>
+        <button type="button" class="btn-play" id="detail-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> ${resume ? "Resume" : "Play"}</button>
         ${trailer ? `<button class="btn-ghost" id="detail-trailer">Trailer</button>` : ""}
         <button class="btn-ghost" id="detail-save">${saved ? "✓ Saved" : "+ My List"}</button>
         <button class="btn-ghost btn-icon-text" id="detail-share">${ICONS.share}<span>Share</span></button>
@@ -5326,6 +5326,7 @@ function checkPlayLoader() {
 document.addEventListener("DOMContentLoaded", () => {
   PAGE = detectPage();
   try {
+    document.documentElement.lang = "en";
     LiquidGlass.init();
     applyGlobalSettings();
     injectGlassFilters();
