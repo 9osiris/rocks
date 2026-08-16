@@ -636,7 +636,11 @@ function injectMetaTags() {
   }
   safeSetItem("orc_version", "2.5.0");
 }
+function logDiagnostics() {
+  console.log("%c OsirisWatch Engine v2.5.0 %c DPR: " + window.devicePixelRatio + " | iOS: " + (/iPhone|iPad|iPod/.test(navigator.userAgent)), "background:#14b8a6; color:#fff; font-weight:bold;", "background:#222; color:#fff;");
+}
 function checkStorageQuota() {
+  logDiagnostics();
   injectMetaTags();
   if (navigator.storage && navigator.storage.estimate) {
     navigator.storage.estimate().then(est => {
