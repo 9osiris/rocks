@@ -2883,13 +2883,7 @@ async function loadHero(item) {
     if (d.genres?.length) metaParts.push(`<span class="hero-badge-pill">${esc(d.genres[0].name)}</span>`);
     if ($("#hero-meta")) $("#hero-meta").innerHTML = metaParts.join("");
 
-    const videos = d.videos?.results || [];
-    const trailer = videos.find(v => v.type === "Trailer" && v.site === "YouTube") || videos.find(v => v.site === "YouTube");
-    if (trailer && SETTINGS.get(SETTINGS.autoplayTrailersKey) === "1" && !prefersReducedMotion() && !window.__orcHeroTrailerPlayed) {
-      const play = () => { window.__orcHeroTrailerPlayed = true; setTimeout(() => openTrailer(trailer.key), 400); };
-      if (!$("#splash-screen") || sessionStorage.getItem("orc_splash")) play();
-      else setTimeout(play, 2700);
-    }
+    // Auto-play trailer popups disabled
   } catch (err) { console.warn('Caught error:', err);
     if ($("#hero-title")) $("#hero-title").textContent = title;
   }
