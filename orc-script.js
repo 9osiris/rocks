@@ -366,7 +366,8 @@ function tmdb(path, retries = 1, opts = {}) {
   const req = (async () => {
     let finalPath = path;
     const hideAdult = SETTINGS.get(SETTINGS.hideAdultKey, "1") !== "0";
-    if (hideAdult && !finalPath.includes("include_adult=")) {
+    const isSearchOrDiscover = finalPath.startsWith("/search") || finalPath.startsWith("/discover");
+    if (hideAdult && isSearchOrDiscover && !finalPath.includes("include_adult=")) {
       const pSep = finalPath.includes("?") ? "&" : "?";
       finalPath = `${finalPath}${pSep}include_adult=false`;
     }
