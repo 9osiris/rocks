@@ -2,8 +2,8 @@
 
 const APP_CONFIG = {
   TMDB_API_KEY: "5622cafbfe8f8cfe358a29c53e19bba0",
-  SUPABASE_URL: "https://ewuiiwaqjsyilinkdobm.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3dWlpd2FxanN5aWxpbmtkb2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODAxMTcsImV4cCI6MjEwMjE1NjExN30.S2ogyCUHzaQuXV5jCyT-u3zIX2wzt1m23qFvMeEL05I"
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: ""
 };
 
 const TMDB_KEY  = APP_CONFIG.TMDB_API_KEY;
