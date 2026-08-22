@@ -7,7 +7,7 @@
   <meta name="description" content="OsirisWatch official announcement.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="orc-styles.css?v=3.0.1">
+  <link rel="stylesheet" href="orc-styles.css?v=3.0.3">
   <style>
     body {
       min-height: 100vh;
@@ -41,7 +41,7 @@
       font-size: 0.95rem;
       line-height: 1.7;
       color: #d4d4d8;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
     .wfc-body p {
       margin-bottom: 14px;
@@ -61,6 +61,58 @@
     }
     .wfc-box div {
       margin-bottom: 4px;
+    }
+    .countdown-container {
+      background: rgba(56, 189, 248, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 16px;
+      padding: 18px 16px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .countdown-header {
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #38bdf8;
+      margin-bottom: 12px;
+    }
+    .countdown-timer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .timer-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px 8px;
+      min-width: 58px;
+      text-align: center;
+    }
+    .timer-num {
+      font-size: 1.45rem;
+      font-weight: 800;
+      font-family: 'Plus Jakarta Sans', monospace;
+      color: #ffffff;
+      display: block;
+      line-height: 1;
+    }
+    .timer-unit {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #a1a1aa;
+      letter-spacing: 0.05em;
+      margin-top: 5px;
+      display: block;
+    }
+    .timer-colon {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-top: -10px;
     }
     .wfc-btn {
       display: inline-block;
@@ -91,6 +143,31 @@
     <div class="wfc-body">
       <p>OsirisWatch is officially down and this website will be completely changed in 5 days. It's been a good run people. Though OsirisWatch is gone, i will give you our most recommended alternative which is <a href="https://shuttletv.su" target="_blank" rel="noopener">https://shuttletv.su</a>.</p>
 
+      <div class="countdown-container">
+        <div class="countdown-header">Website Redesign Countdown</div>
+        <div class="countdown-timer">
+          <div class="timer-box">
+            <span class="timer-num" id="cd-days">04</span>
+            <span class="timer-unit">DAYS</span>
+          </div>
+          <div class="timer-colon">:</div>
+          <div class="timer-box">
+            <span class="timer-num" id="cd-hours">00</span>
+            <span class="timer-unit">HOURS</span>
+          </div>
+          <div class="timer-colon">:</div>
+          <div class="timer-box">
+            <span class="timer-num" id="cd-mins">00</span>
+            <span class="timer-unit">MINS</span>
+          </div>
+          <div class="timer-colon">:</div>
+          <div class="timer-box">
+            <span class="timer-num" id="cd-secs">00</span>
+            <span class="timer-unit">SECS</span>
+          </div>
+        </div>
+      </div>
+
       <p>The full source to this can be found at<br>
       <a href="https://github.com/9osiris/rocks" target="_blank" rel="noopener">https://github.com/9osiris/rocks</a></p>
 
@@ -104,5 +181,31 @@
 
     <a href="why.html" class="wfc-btn">why did you even make this?</a>
   </div>
+
+  <script>
+    const targetDate = new Date("2026-08-26T20:15:00Z").getTime();
+    function updateCountdown() {
+      const now = Date.now();
+      const diff = Math.max(0, targetDate - now);
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const pad = n => String(n).padStart(2, '0');
+      const dEl = document.getElementById("cd-days");
+      const hEl = document.getElementById("cd-hours");
+      const mEl = document.getElementById("cd-mins");
+      const sEl = document.getElementById("cd-secs");
+
+      if (dEl) dEl.textContent = pad(days);
+      if (hEl) hEl.textContent = pad(hours);
+      if (mEl) mEl.textContent = pad(mins);
+      if (sEl) sEl.textContent = pad(secs);
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+  </script>
 </body>
 </html>
