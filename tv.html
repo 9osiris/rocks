@@ -3,88 +3,179 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>TV Shows — Watch Free Seasons & Episodes | Osiris Watch</title>
-  <meta name="description" content="Stream popular TV series, full seasons, and new episodes online for free on Osiris Watch. High quality playback, multi-server streaming, and zero subscription.">
-  <link rel="canonical" href="https://www.osiris.rocks/tv.html">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": "TV Shows — Osiris Watch",
-    "description": "Stream popular TV series, full seasons, and new episodes online for free on Osiris Watch.",
-    "url": "https://www.osiris.rocks/tv.html",
-    "isPartOf": {
-      "@type": "WebSite",
-      "name": "Osiris Watch",
-      "url": "https://www.osiris.rocks/"
-    }
-  }
-  </script>
+  <title>Thank You | Osiris Watch</title>
+  <meta name="description" content="OsirisWatch official announcement.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f6f6f8" media="(prefers-color-scheme: light)">
-  <meta name="color-scheme" content="dark light">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="orc-styles.css">
+  <link rel="stylesheet" href="orc-styles.css?v=3.0.0">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0b0b0d;
+      color: #f4f4f5;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    .ambient-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(20, 184, 166, 0.18) 0%, rgba(59, 130, 246, 0.08) 40%, transparent 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .farewell-card {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      width: 100%;
+      background: rgba(18, 18, 24, 0.8);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 28px;
+      padding: 44px 40px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      animation: cardFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes cardFadeUp {
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .logo-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    .logo-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #14b8a6 0%, #3b82f6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.4rem;
+      box-shadow: 0 8px 24px rgba(20, 184, 166, 0.35);
+    }
+    .brand-name {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .message-body {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: #d4d4d8;
+      margin-bottom: 36px;
+    }
+    .message-body p {
+      margin-bottom: 16px;
+    }
+    .message-body a {
+      color: #2dd4bf;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .message-body a:hover {
+      color: #5eead4;
+      text-decoration: underline;
+    }
+    .contact-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 18px 22px;
+      margin-top: 24px;
+    }
+    .contact-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a1a1aa;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .contact-item {
+      font-size: 0.95rem;
+      color: #e4e4e7;
+      margin-bottom: 6px;
+    }
+    .contact-item:last-child {
+      margin-bottom: 0;
+    }
+    .question-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 24px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .why-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #a1a1aa;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .why-link:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateX(2px);
+    }
+  </style>
 </head>
-<body class="detail-page">
-
-  <aside class="sidebar" id="sidebar"></aside>
-
-  <div class="app-shell">
-    <div class="detail-hero">
-      <div class="detail-hero-bg" id="detail-backdrop"></div>
-      <div class="detail-hero-fade"></div>
+<body>
+  <div class="ambient-glow"></div>
+  <div class="farewell-card">
+    <div class="logo-header">
+      <div class="logo-badge">O</div>
+      <div class="brand-name">OsirisWatch</div>
+    </div>
+    
+    <div class="message-body">
+      <p>Thank you for allowing me to serve you</p>
+      <p>OsirisWatch is officially down and this website will be completely changed in 5 days. It's been a good run people. Though OsirisWatch is gone, i will give you our most recommended alternative which is <a href="https://shuttletv.su" target="_blank" rel="noopener">https://shuttletv.su</a>.</p>
+      
+      <p>The full source to this can be found at <br><a href="https://github.com/9osiris/rocks" target="_blank" rel="noopener">https://github.com/9osiris/rocks</a></p>
+      
+      <div class="contact-box">
+        <div class="contact-title">You can find me at</div>
+        <div class="contact-item"><strong>Discord:</strong> @trulyosiris</div>
+        <div class="contact-item"><strong>Telegram:</strong> @therealosiris</div>
+        <div class="contact-item" style="margin-top:8px;color:#a1a1aa;">Literally just osirisdev anywhere</div>
+      </div>
     </div>
 
-    <div class="detail-body">
-      <div id="detail-header">
-        <div class="skeleton-card" style="width:280px;height:32px;margin-bottom:12px;border-radius:6px"></div>
-      </div>
-
-      <section class="player-wrap">
-        <div id="provider-bar"></div>
-        <div class="player-frame" id="player-frame">
-          <div class="spinner" style="position:absolute;top:50%;left:50%;margin:-18px 0 0 -18px"></div>
-        </div>
-      </section>
-
-      <div class="ep-block" id="ep-block" style="display:none">
-        <div class="ep-controls-bar">
-          <select id="season-select"></select>
-          <input type="search" id="ep-search-input" class="ep-search-input" placeholder="Search episodes…" aria-label="Filter episodes" />
-        </div>
-        <div class="ep-grid" id="ep-grid"></div>
-      </div>
-
-      <div id="detail-info"></div>
+    <div class="question-footer">
+      <a href="why.html" class="why-link">
+        why did you even make this?
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
     </div>
-
-    <section id="cast-section" style="display:none">
-      <h2 class="section-head">Cast</h2>
-      <div class="cast-scroll" id="cast-row"></div>
-    </section>
-
-    <section id="similar-section" style="display:none">
-      <h2 class="section-head">More Like This</h2>
-      <div class="similar-row" id="similar-row"></div>
-    </section>
-
-    <footer class="page-foot">
-      <p>Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>.</p>
-      <p>Osiris's Cinema does not store or host media. Streams are provided by third-party services; legal concerns should be raised with those hosts directly. Osiris's Cinema is not responsible for content served by external providers.</p>
-      <p>© LYRD INNO. · <a href="/dmca">DMCA</a> · <a href="/settings">Settings</a></p>
-      <p class="foot-social"><a href="https://discord.gg/yv8cVk8p4f" target="_blank" rel="noopener" aria-label="Join our Discord"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"></path></svg><span>Discord</span></a></p>
-    </footer>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="orc-script.js"></script>
 </body>
 </html>
