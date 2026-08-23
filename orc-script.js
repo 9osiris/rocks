@@ -159,12 +159,12 @@ function safeGetItem(key, fallback = null) {
 function safeSetItem(key, val) {
   try {
     try {
-      localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val));
+      try { localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val)); } catch(e) {}
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
         console.warn('Storage quota exceeded. Clearing old items.');
         localStorage.removeItem('orc_tmdb_cache'); // Try to free up space
-        localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val));
+        try { localStorage.setItem(key, typeof val === "string" ? val : JSON.stringify(val)); } catch(e) {}
       } else {
         throw e;
       }
@@ -490,7 +490,7 @@ function renderCardRow(sectionSel, rowSel, items, type) {
   if (!section || !row || !items.length) return;
   section.style.display = "";
   row.textContent = "";
-  items.forEach(it => row.appendChild(buildCard(it, type)));
+  { const frag = document.createDocumentFragment(); items.forEach(it => frag.appendChild(buildCard(it, type))); row.appendChild(frag); }
 }
 function ensureRecommendSection() {
   let sec = $("#recommend-section");
@@ -638,7 +638,7 @@ function injectMetaTags() {
   safeSetItem("orc_version", "2.5.0");
 }
 function logDiagnostics() {
-  console.log("%c OsirisWatch Engine v2.5.0 %c DPR: " + window.devicePixelRatio + " | iOS: " + (/iPhone|iPad|iPod/.test(navigator.userAgent)), "background:#14b8a6; color:#fff; font-weight:bold;", "background:#222; color:#fff;");
+   color:#fff; font-weight:bold;", "background:#222; color:#fff;");
 }
 function checkStorageQuota() {
   logDiagnostics();
@@ -1038,8 +1038,8 @@ const SupabaseSync = {
   },
 
   async pullFromCloud() {
-    if (sessionStorage.getItem('orc_sync_lock')) return;
-    sessionStorage.setItem('orc_sync_lock', '1');
+    if (safeSessionGet('orc_sync_lock')) return;
+    safeSessionSet('orc_sync_lock', '1');
     try {
     const user = await this.getUser();
     if (!user) return;
@@ -1348,7 +1348,7 @@ async function initAuthUI() {
       btn.innerHTML = `<img src="${esc(profile.avatar_url)}" class="account-avatar-badge-img" alt="PFP" />`;
     } else {
       const initial = (profile.username || profile.email).charAt(0).toUpperCase();
-      btn.innerHTML = `<span class="account-avatar-badge">${initial}</span>`;
+      btn.innerHTML = `<span class="account-avatar-badge">${esc(initial)}</span>`;
     }
     btn.title = `Account (${profile.username || profile.email})`;
     btn.onclick = () => {
@@ -1530,7 +1530,7 @@ function openAuthModal() {
     requestAnimationFrame(() => {
       modal.classList.add("open");
       trapModalFocus(modal, "Authentication");
-      setTimeout(() => modal.querySelector("#auth-email")?.focus(), 120);
+      requestAnimationFrame(() => requestAnimationFrame(() => modal.querySelector("#auth-email")?.focus()));
     });
   });
 }
@@ -1755,14 +1755,14 @@ function initScrollRestoration() {
   const pageKey = `orc_scroll_${location.pathname}${location.search}`;
 
   window.addEventListener("beforeunload", () => {
-    try { sessionStorage.setItem(pageKey, String(window.scrollY)); } catch (err) { console.warn('Caught error:', err); }
+    try { safeSessionSet(pageKey, String(window.scrollY)); } catch (err) { console.warn('Caught error:', err); }
   });
 
-  const savedY = sessionStorage.getItem(pageKey);
+  const savedY = safeSessionGet(pageKey);
   if (savedY && !isNaN(savedY)) {
     const y = parseInt(savedY, 10);
     if (y > 0) {
-      setTimeout(() => window.scrollTo({ top: y, behavior: "auto" }), 60);
+      requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "auto" }));
     }
   }
 }
@@ -2301,7 +2301,7 @@ function buildRow(title, items, type = "movie", opts = {}) {
     </div>`;
 
   const track = wrap.querySelector(".row-track");
-  skeletons(6).forEach(s => track.appendChild(s));
+  { const frag = document.createDocumentFragment(); skeletons(6).forEach(s => frag.appendChild(s)); track.appendChild(frag); }
 
   const loadCards = () => {
     track.textContent = "";
@@ -2357,7 +2357,7 @@ function attachPeriodDropdown(wrap, opts) {
       opt.classList.add("active");
       btn.textContent = `${opt.textContent} ▾`;
       track.textContent = "";
-      skeletons(10).forEach(s => track.appendChild(s));
+      { const frag = document.createDocumentFragment(); skeletons(10).forEach(s => frag.appendChild(s)); track.appendChild(frag); }
       try {
         const data = await tmdb(opt.dataset.path);
         track.textContent = "";
@@ -2427,7 +2427,7 @@ function initSplash() {
   const main = $("#main-content");
   if (s) s.remove();
   if (main) main.style.opacity = "1";
-  sessionStorage.setItem("orc_splash", "1");
+  safeSessionSet("orc_splash", "1");
 }
 
 const HERO_INTERVAL = 7000;
@@ -2830,7 +2830,7 @@ function initGenreStrip() {
       const titleEl = row.querySelector(".row-title");
       if (titleEl) titleEl.textContent = g.name;
       const track = row.querySelector(".row-track");
-      track.textContent = ""; skeletons(10).forEach(s => track.appendChild(s));
+      track.textContent = ""; { const frag = document.createDocumentFragment(); skeletons(10).forEach(s => frag.appendChild(s)); track.appendChild(frag); }
       row.scrollIntoView({ behavior: "auto", block: "nearest" });
       try {
         const data = await tmdb(`/discover/movie?with_genres=${g.id}&sort_by=popularity.desc`);
@@ -3128,7 +3128,7 @@ async function renderRecommendedForYouRow() {
 
 function navigateWithLoader(href, bg = "", title = "") {
   try {
-    sessionStorage.setItem("orc_loader", JSON.stringify({ bg, title }));
+    safeSessionSet("orc_loader", JSON.stringify({ bg, title }));
   } catch (err) { console.warn('Caught error:', err); }
   location.href = href;
 }
@@ -3203,7 +3203,7 @@ async function initHomePage() {
   renderDevLogAnnouncement();
 
   const main = $("#main-content");
-  if (main && (!$("#splash-screen") || sessionStorage.getItem("orc_splash"))) {
+  if (main && (!$("#splash-screen") || safeSessionGet("orc_splash"))) {
     main.style.opacity = "1";
   }
 
@@ -3228,7 +3228,7 @@ async function initHomePage() {
         const items = cw.filter(r => r.status === "fulfilled").map(r => r.value);
         if (items.length) {
           cwTrack.textContent = "";
-          items.forEach(it => cwTrack.appendChild(buildCard(it, it._type || "movie", { progressValue: it._progress, eager: true })));
+          { const frag = document.createDocumentFragment(); items.forEach(it => frag.appendChild(buildCard(it, it._type || "movie", { progressValue: it._progress, eager: true }))); cwTrack.appendChild(frag); }
           initRowDrag(cwTrack);
           initRowKeyboard(cwTrack);
         } else {
@@ -3255,7 +3255,7 @@ async function initHomePage() {
         const items = ml.filter(r => r.status === "fulfilled").map(r => r.value);
         if (items.length) {
           mlTrack.textContent = "";
-          items.forEach(it => mlTrack.appendChild(buildCard(it, it._type || "movie", { eager: true })));
+          { const frag = document.createDocumentFragment(); items.forEach(it => frag.appendChild(buildCard(it, it._type || "movie", { eager: true }))); mlTrack.appendChild(frag); }
           initRowDrag(mlTrack);
           initRowKeyboard(mlTrack);
         } else {
@@ -3351,7 +3351,7 @@ async function initHomePage() {
           if (c.top10Side) {
             const itemWrap = document.createElement("div");
             itemWrap.className = "top10-item-wrap";
-            itemWrap.innerHTML = `<span class="top10-side-num" aria-hidden="true">${idx + 1}</span>`;
+            itemWrap.innerHTML = `<span class="top10-side-num" aria-hidden="true">${esc(String(idx + 1))}</span>`;
             itemWrap.appendChild(buildCard(it, c.type, { eager: idx < 4 }));
             target.track.appendChild(itemWrap);
           } else {
@@ -3410,7 +3410,7 @@ async function initHomePage() {
         const provItems = dedupeItems(res.results || []);
         if (provItems.length) {
           pt.textContent = "";
-          provItems.forEach(it => pt.appendChild(buildCard(it, sp.type)));
+          { const frag = document.createDocumentFragment(); provItems.forEach(it => frag.appendChild(buildCard(it, sp.type))); pt.appendChild(frag); }
           initRowDrag(pt);
           initRowKeyboard(pt);
           pw.classList.add("visible");
@@ -3424,7 +3424,7 @@ async function initHomePage() {
   const gRow = document.createElement("div");
   gRow.id = "genre-row";
   gRow.className = "row-wrapper visible";
-  gRow.innerHTML = `<div class="row-header"><h2 class="row-title">${GENRES[0].name}</h2></div><div class="row-track-container"><div class="row-track"></div></div>`;
+  gRow.innerHTML = `<div class="row-header"><h2 class="row-title">${esc(GENRES[0].name)}</h2></div><div class="row-track-container"><div class="row-track"></div></div>`;
   try {
     const gd = await tmdb(`/discover/movie?with_genres=${GENRES[0].id}&sort_by=popularity.desc`);
     dedupeItems(gd.results || []).slice(0, 20).forEach(it => gRow.querySelector(".row-track").appendChild(buildCard(it, "movie")));
@@ -3451,8 +3451,8 @@ async function initHomePage() {
 
   const hash = location.hash.replace("#", "");
   if (hash) {
-    const delay = ($("#splash-screen") && !sessionStorage.getItem("orc_splash")) ? 3000 : 500;
-    setTimeout(() => scrollToEl(document.getElementById(hash)), delay);
+    const delay = ($("#splash-screen") && !safeSessionGet("orc_splash")) ? 3000 : 500;
+    requestAnimationFrame(() => scrollToEl(document.getElementById(hash)));
   }
 }
 
@@ -3895,7 +3895,7 @@ async function doSearch(q, append = false) {
       searchPage = 1;
       hasMorePages = true;
       grid.textContent = "";
-      skeletons(12).forEach(s => grid.appendChild(s));
+      { const frag = document.createDocumentFragment(); skeletons(12).forEach(s => frag.appendChild(s)); grid.appendChild(frag); }
     }
     lastQ = q;
     if (current === "ai") { aiSearch(q); return; }
@@ -4016,7 +4016,7 @@ async function doSearch(q, append = false) {
   });
 
   const q = params.get("q") || "";
-  if (input && !q && !genreId) setTimeout(() => input.focus(), 120);
+  if (input && !q && !genreId) requestAnimationFrame(() => requestAnimationFrame(() => input.focus()));
   if (input) {
     input.value = q;
     input.addEventListener("input", () => {
@@ -4195,9 +4195,9 @@ async function aiSearch(q) {
   }
   RecentSearches.add(q);
   status.innerHTML = `<span class="search-pending"><span class="spin-dot"></span> Asking AI…</span>`;
-  grid.textContent = ""; skeletons(8).forEach(s => grid.appendChild(s));
+  grid.textContent = ""; { const frag = document.createDocumentFragment(); skeletons(8).forEach(s => frag.appendChild(s)); grid.appendChild(frag); }
   try {
-    const res = await fetch("/api/ai-search", {
+    if(window.aiSearchController) window.aiSearchController.abort(); window.aiSearchController = new AbortController(); const res = await fetch("/api/ai-search", { signal: window.aiSearchController.signal,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: q }),
@@ -4250,7 +4250,7 @@ async function aiSearch(q) {
       none.innerHTML = `<p>AI suggested titles, but none were found in the catalog.</p>`;
       grid.appendChild(none);
     } else {
-      cards.forEach(c => grid.appendChild(buildCard(c.item, c.type)));
+      { const frag = document.createDocumentFragment(); cards.forEach(c => frag.appendChild(buildCard(c.item, c.type))); grid.appendChild(frag); }
     }
     status.textContent = `${cards.length} AI picks`;
   } catch (err) { console.warn('Caught error:', err);
@@ -4750,7 +4750,7 @@ async function initListPage() {
   const loadData = async () => {
     if (currentTab === "watchlist") {
       if (!rawList.length) { emptyState("Your watchlist is empty", "Add movies and series using the + icon on their cards."); return; }
-      grid.textContent = ""; skeletons(Math.min(rawList.length, 12)).forEach(s => grid.appendChild(s));
+      grid.textContent = ""; { const frag = document.createDocumentFragment(); skeletons(Math.min(rawList.length, 12)).forEach(s => frag.appendChild(s)); grid.appendChild(frag); }
       const settled = await Promise.allSettled(rawList.map(i =>
         tmdb(i.type === "tv" ? `/tv/${i.id}` : `/movie/${i.id}`).then(d => ({ ...d, _type: i.type }))
       ));
@@ -4760,7 +4760,7 @@ async function initListPage() {
       const prog = Progress.get();
       const progList = Object.values(prog || {}).sort((a, b) => b.lastUpdated - a.lastUpdated);
       if (!progList.length) { emptyState("No watch history", "Start watching titles and they will appear here."); return; }
-      grid.textContent = ""; skeletons(Math.min(progList.length, 12)).forEach(s => grid.appendChild(s));
+      grid.textContent = ""; { const frag = document.createDocumentFragment(); skeletons(Math.min(progList.length, 12)).forEach(s => frag.appendChild(s)); grid.appendChild(frag); }
       const settled = await Promise.allSettled(progList.map(i =>
         tmdb(i.mediaType === "tv" ? `/tv/${i.mediaId}` : `/movie/${i.mediaId}`).then(d => ({ ...d, _type: i.mediaType, _progress: i.progress }))
       ));
@@ -4811,7 +4811,7 @@ async function initListPage() {
       
       const wrapper = document.createElement("div");
       wrapper.style.display = "contents";
-      skeletons(Math.min(folder.items.length, 12)).forEach(s => wrapper.appendChild(s));
+      { const frag = document.createDocumentFragment(); skeletons(Math.min(folder.items.length, 12)).forEach(s => frag.appendChild(s)); wrapper.appendChild(frag); }
       grid.appendChild(wrapper);
 
       const settled = await Promise.allSettled(folder.items.map(i =>
@@ -4861,7 +4861,7 @@ async function initListPage() {
       if (currentTab === "history" && it._progress) {
         const pbar = document.createElement("div");
         pbar.className = "card-progress-bar";
-        pbar.innerHTML = `<div class="card-progress-fill" style="width:${Math.min(it._progress, 100)}%"></div>`;
+        pbar.innerHTML = `<div class="card-progress-fill" style="width:${esc(String(Math.min(it._progress, 100)))}%"></div>`;
         card.appendChild(pbar);
       }
       grid.appendChild(card);
@@ -5210,7 +5210,7 @@ function initGlobalShortcuts() {
 }
 
 function checkPlayLoader() {
-  const d = sessionStorage.getItem("orc_loader");
+  const d = safeSessionGet("orc_loader");
   if (!d) return Promise.resolve();
   sessionStorage.removeItem("orc_loader");
   try { const { bg, title } = JSON.parse(d); return playLoader(bg, title); } catch { return Promise.resolve(); }
