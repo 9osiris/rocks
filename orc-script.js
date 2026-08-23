@@ -1736,7 +1736,7 @@ function initMobilePillNavScroll() {
   nav._scrollBound = true;
 
   let lastY = window.scrollY;
-  window.addEventListener("scroll", () => {
+  window.addEventListener("scroll", throttle(() => {
     const curY = window.scrollY;
     if (curY < 50) {
       nav.classList.remove("nav-hidden");
@@ -1746,7 +1746,7 @@ function initMobilePillNavScroll() {
       nav.classList.remove("nav-hidden");
     }
     lastY = curY;
-  }, { passive: true });
+  }, 100), { passive: true });
 }
 
 function initScrollRestoration() {
@@ -2408,171 +2408,26 @@ function initAnchorScroll() {
 }
 
 function injectGlassFilters() {
-  if ($("#glass-soft")) return;
-  const distortion = `
-    <filter id="glass-distortion" x="-12%" y="-12%" width="124%" height="124%" filterUnits="objectBoundingBox">
-      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="42" result="turbulence"/>
-      <feGaussianBlur in="turbulence" stdDeviation="2" result="softMap"/>
-      <feDisplacementMap in="SourceGraphic" in2="softMap" scale="34" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>`;
-  const soft = `
-    <filter id="glass-soft" x="-20%" y="-20%" width="140%" height="140%" filterUnits="objectBoundingBox">
-      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.009" numOctaves="2" seed="12" result="n"/>
-      <feGaussianBlur in="n" stdDeviation="1.4" result="m"/>
-      <feDisplacementMap in="SourceGraphic" in2="m" scale="8" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>`;
-  const existing = $(".splash-filters");
-  if (existing) {
-    existing.insertAdjacentHTML("beforeend", ($("#glass-distortion") ? "" : distortion) + soft);
-    return;
-  }
-  const wrap = document.createElement("div");
-  wrap.className = "glass-filters-root";
-  wrap.innerHTML = `
-    <svg aria-hidden="true">
-      <filter id="orc-glass" x="-50%" y="-50%" width="200%" height="200%" primitiveUnits="objectBoundingBox">
-        <feImage id="orc-glass-map" x="-50%" y="-50%" width="200%" height="200%" result="map"/>
-        <feGaussianBlur in="SourceGraphic" stdDeviation="0.02" result="blur"/>
-        <feDisplacementMap in="blur" in2="map" scale="0.75" xChannelSelector="R" yChannelSelector="G"/>
-      </filter>
-      ${distortion}
-      ${soft}
-    </svg>`;
-  document.body.prepend(wrap);
+  // Disabled for performance
 }
 
-const LiquidGlass = (() => {
-  const NS = "http://www.w3.org/2000/svg";
-  let SUP = null, idc = 0;
-
-  function detect() {
-    const ua = navigator.userAgent || "";
-    const isWebkit = /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|Android/.test(ua);
-    const isFirefox = /Firefox/.test(ua);
-    if (isWebkit || isFirefox) return false;
-    const d = document.createElement("div");
-    try { d.style.backdropFilter = "url(#x)"; } catch (e) { return false; }
-    return d.style.backdropFilter !== "";
-  }
-  function supported() { if (SUP === null) SUP = detect(); return SUP; }
-  function init() {
-    const on = supported();
-    document.documentElement.classList.toggle("lg-on", on);
-    document.documentElement.classList.toggle("lg-fallback", !on);
-  }
-  function defs() {
-    let r = document.getElementById("lg-defs");
-    if (!r) {
-      r = document.createElementNS(NS, "svg");
-      r.setAttribute("id", "lg-defs");
-      r.setAttribute("aria-hidden", "true");
-      r.setAttribute("style", "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none");
-      document.body.appendChild(r);
-    }
-    return r;
-  }
-  const mk = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
-
-  function dmap(w, h, o) {
-    const edge = Math.min(w, h) * (o.borderWidth * 0.5);
-    const svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="r" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/></linearGradient><linearGradient id="b" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/></linearGradient></defs><rect width="${w}" height="${h}" fill="black"/><rect width="${w}" height="${h}" rx="${o.borderRadius}" fill="url(#r)"/><rect width="${w}" height="${h}" rx="${o.borderRadius}" fill="url(#b)" style="mix-blend-mode:${o.mixBlendMode}"/><rect x="${edge}" y="${edge}" width="${w - edge * 2}" height="${h - edge * 2}" rx="${o.borderRadius}" fill="hsl(0 0% ${o.brightness}% / ${o.opacity})" style="filter:blur(${o.blur}px)"/></svg>`;
-    return "data:image/svg+xml," + encodeURIComponent(svg);
-  }
-
-  function apply(node, opts) {
-    if (!node) return;
-    const o = Object.assign({
-      borderRadius: 24, borderWidth: 0.07, brightness: 56, opacity: 0.9,
-      blur: 11, displace: 0.4, saturation: 1.5, distortionScale: -140,
-      redOffset: 0, greenOffset: 10, blueOffset: 20, xChannel: "R", yChannel: "G",
-      mixBlendMode: "difference", frost: 0, inline: true, noClass: false, id: null
-    }, opts);
-    if (!o.noClass) node.classList.add("lg-surface");
-    if (!supported()) return;
-
-    const id = o.id || ("lg-f-" + (++idc));
-    const prev = document.getElementById(id);
-    if (prev) prev.remove();
-    const f = mk("filter", { id, x: "0%", y: "0%", width: "100%", height: "100%" });
-    f.setAttribute("color-interpolation-filters", "sRGB");
-    const feImg = mk("feImage", { x: "0", y: "0", width: "100%", height: "100%", preserveAspectRatio: "none", result: "map" });
-    f.appendChild(feImg);
-    const chans = [
-      ["red", o.redOffset, "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"],
-      ["green", o.greenOffset, "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0"],
-      ["blue", o.blueOffset, "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0"]
-    ];
-    chans.forEach(([name, off, mat]) => {
-      f.appendChild(mk("feDisplacementMap", { in: "SourceGraphic", in2: "map", scale: String(o.distortionScale + off), xChannelSelector: o.xChannel, yChannelSelector: o.yChannel, result: "disp_" + name }));
-      f.appendChild(mk("feColorMatrix", { in: "disp_" + name, type: "matrix", values: mat, result: name }));
-    });
-    f.appendChild(mk("feBlend", { in: "red", in2: "green", mode: "screen", result: "rg" }));
-    f.appendChild(mk("feBlend", { in: "rg", in2: "blue", mode: "screen", result: "out" }));
-    f.appendChild(mk("feGaussianBlur", { in: "out", stdDeviation: String(o.displace) }));
-    defs().appendChild(f);
-
-    if (o.inline) {
-      const bf = (o.frost ? `blur(${o.frost}px) ` : "") + `url(#${id}) saturate(${o.saturation})`;
-      node.style.backdropFilter = bf;
-      node.style.webkitBackdropFilter = bf;
-    }
-    const upd = () => {
-      const rect = node.getBoundingClientRect();
-      if (rect.width && rect.height) feImg.setAttribute("href", dmap(Math.round(rect.width), Math.round(rect.height), o));
-    };
-    upd();
-    setTimeout(upd, 80);
-    if (window.ResizeObserver) { new ResizeObserver(() => upd()).observe(node); }
-    else window.addEventListener("resize", upd, { passive: true });
-  }
-
-  function glassify(root) {
-    (root || document).querySelectorAll(".btn-ghost:not([data-lg])").forEach(b => {
-      b.setAttribute("data-lg", "1");
-      apply(b, { borderRadius: 999, distortionScale: -70, blur: 6, brightness: 60, opacity: 0.9, saturation: 1.4 });
-    });
-  }
-
-  return { init, apply, glassify, supported };
-})();
+const LiquidGlass = {
+  init: () => {},
+  apply: () => {},
+  glassify: () => {},
+  supported: () => false
+};
 
 function initGlassFilter() {
-  injectGlassFilters();
-  const fe = $("#orc-glass-map");
-  if (!fe || fe.getAttribute("href")) return;
-  fetch("https://essykings.github.io/JavaScript/map.png")
-    .then(r => r.blob())
-    .then(b => fe.setAttribute("href", URL.createObjectURL(b)))
-    .catch(() => {});
+  // Disabled for performance
 }
 
 function initSplash() {
-  initGlassFilter();
   const s = $("#splash-screen");
   const main = $("#main-content");
-  if (!s) {
-    if (main) main.style.opacity = "1";
-    return;
-  }
-  if (sessionStorage.getItem("orc_splash")) {
-    s.remove();
-    if (main) main.style.opacity = "1";
-    return;
-  }
-
-  const sg = s.querySelector(".splash-glass");
-  if (sg) LiquidGlass.apply(sg, { borderRadius: 80, distortionScale: -140, blur: 16, brightness: 60, opacity: 0.9, saturation: 1.7 });
-
-  const finish = () => {
-    s.classList.add("splash-exit");
-    if (main) main.style.opacity = "1";
-    setTimeout(() => {
-      s.remove();
-      sessionStorage.setItem("orc_splash", "1");
-    }, 700);
-  };
-
-  setTimeout(finish, 2600);
+  if (s) s.remove();
+  if (main) main.style.opacity = "1";
+  sessionStorage.setItem("orc_splash", "1");
 }
 
 const HERO_INTERVAL = 7000;
@@ -4143,7 +3998,7 @@ async function doSearch(q, append = false) {
   }
 
   // Infinite Scroll Listener
-  window.addEventListener("scroll", () => {
+  window.addEventListener("scroll", throttle(() => {
     if (isFetchingMore || !hasMorePages) return;
     const scrollPos = window.innerHeight + window.scrollY;
     const threshold = document.body.offsetHeight - 700;
@@ -4154,7 +4009,7 @@ async function doSearch(q, append = false) {
         isFetchingMore = false;
       });
     }
-  }, { passive: true });
+  }, 100), { passive: true });
 
   ["#filter-genre", "#filter-provider", "#filter-era", "#filter-rating", "#filter-sort"].forEach(sel => {
     $(sel)?.addEventListener("change", () => doSearch(input?.value.trim() || ""));
