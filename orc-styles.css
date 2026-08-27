@@ -344,24 +344,3 @@ body {
     display: none !important;
   }
 }
-
-.diag-hud {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: var(--surface-blur);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-family: monospace;
-  font-size: 0.75rem;
-  color: var(--text-2);
-  z-index: 9999;
-  pointer-events: none;
-}
-.diag-hud span {
-  color: var(--text);
-  font-weight: 700;
-}

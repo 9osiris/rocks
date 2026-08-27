@@ -19,12 +19,6 @@
   <canvas id="bg-canvas"></canvas>
   <div class="cursor-dot" id="cursor-dot"></div>
 
-  <div id="diag-hud" class="diag-hud">
-    <div>FPS: <span id="hud-fps">60</span></div>
-    <div>RES: <span id="hud-res">0x0</span></div>
-    <div>GRID: <span id="hud-grid">0x0</span></div>
-  </div>
-
   <div class="top-corner-redirect">
     <a href="https://shuttletv.su">if you're here for OsirisWatch, click here.</a>
   </div>
@@ -266,35 +260,7 @@
       });
     });
 
-    const hud = document.getElementById('diag-hud');
-    const hudFps = document.getElementById('hud-fps');
-    const hudRes = document.getElementById('hud-res');
-    const hudGrid = document.getElementById('hud-grid');
-    let hudVisible = false;
-    let frames = 0, prevTime = performance.now();
 
-    document.addEventListener('keydown', (e) => {
-      if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
-        hudVisible = !hudVisible;
-        hud.style.display = hudVisible ? 'block' : 'none';
-      }
-    });
-
-    function updateHudMetrics() {
-      if (hudVisible) {
-        frames++;
-        const now = performance.now();
-        if (now - prevTime >= 500) {
-          hudFps.textContent = Math.round((frames * 1000) / (now - prevTime));
-          hudRes.textContent = `${window.innerWidth}x${window.innerHeight}`;
-          hudGrid.textContent = `${cols}x${rows}`;
-          frames = 0;
-          prevTime = now;
-        }
-      }
-      requestAnimationFrame(updateHudMetrics);
-    }
-    updateHudMetrics();
 
     const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
     let konamiPos = 0;
