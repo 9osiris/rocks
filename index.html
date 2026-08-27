@@ -262,26 +262,13 @@
 
 
 
-    const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-    let konamiPos = 0;
-    let typedKeys = '';
-
+    let keyBuffer = '';
     document.addEventListener('keydown', (e) => {
-      if (e.key === konamiSequence[konamiPos]) {
-        konamiPos++;
-        if (konamiPos === konamiSequence.length) {
-          matrixMode = !matrixMode;
-          konamiPos = 0;
-        }
-      } else {
-        konamiPos = 0;
-      }
-
-      typedKeys += e.key.toLowerCase();
-      if (typedKeys.length > 10) typedKeys = typedKeys.slice(-10);
-      if (typedKeys.endsWith('fibre')) {
+      keyBuffer += e.key.toLowerCase();
+      if (keyBuffer.length > 10) keyBuffer = keyBuffer.slice(-10);
+      if (keyBuffer.endsWith('fibre')) {
         matrixMode = !matrixMode;
-        typedKeys = '';
+        keyBuffer = '';
       }
     });
   </script>
