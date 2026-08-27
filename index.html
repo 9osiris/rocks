@@ -213,10 +213,11 @@
       draw();
     })();
 
-    // Cursor - no lag, velocity stretch only
+    // Cursor - morphs to wrap around boxes on hover, stretches on movement when free
     (function() {
       const dot = document.getElementById('cursor-dot');
       let x = 0, y = 0, px = 0, py = 0;
+      let activeTarget = null;
 
       document.addEventListener('mousemove', (e) => {
         x = e.clientX;
@@ -225,11 +226,27 @@
 
       function tick() {
         requestAnimationFrame(tick);
+
+        if (activeTarget) {
+          const rect = activeTarget.getBoundingClientRect();
+          const computedStyle = window.getComputedStyle(activeTarget);
+          dot.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0)`;
+          dot.style.width = `${rect.width}px`;
+          dot.style.height = `${rect.height}px`;
+          dot.style.borderRadius = computedStyle.borderRadius;
+          return;
+        }
+
+        dot.style.width = '';
+        dot.style.height = '';
+        dot.style.borderRadius = '';
+
         const dx = x - px;
         const dy = y - py;
         px = x;
         py = y;
         const dist = Math.sqrt(dx * dx + dy * dy);
+
         if (dist < 0.3) {
           dot.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 50%), 0)`;
           return;
@@ -240,10 +257,21 @@
       }
       tick();
 
-      document.querySelectorAll('a, .glass-btn, #demo-btn').forEach(el => {
-        el.addEventListener('mouseenter', () => dot.classList.add('on-link'));
-        el.addEventListener('mouseleave', () => dot.classList.remove('on-link'));
-      });
+      function bindHoverTargets() {
+        document.querySelectorAll('a, .glass-btn, #demo-btn, .top-corner-redirect a').forEach(el => {
+          el.addEventListener('mouseenter', () => {
+            activeTarget = el;
+            dot.classList.add('on-box');
+          });
+          el.addEventListener('mouseleave', () => {
+            if (activeTarget === el) {
+              activeTarget = null;
+              dot.classList.remove('on-box');
+            }
+          });
+        });
+      }
+      bindHoverTargets();
     })();
   </script>
 </body>
