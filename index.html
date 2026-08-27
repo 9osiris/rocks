@@ -92,86 +92,127 @@
       });
     });
 
-    // ASCII background
+    // ASCII background - optimised
     (function() {
       const canvas = document.getElementById('ascii-canvas');
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { alpha: true });
       const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
-      const fontSize = 13;
-      let cols, rows, grid, time = 0;
+      const FONT_SIZE = 15;
+      const CELL_W = FONT_SIZE * 0.62;
+      const SKIP_FRAME = 2;  // only repaint every N rAF ticks
+      let cols, rows, grid;
+      let time = 0;
+      let frameCount = 0;
+      let charFlipTimer = 0;
 
       function resize() {
-        canvas.width = window.innerWidth;
+        // use logical pixels, ignore dpr - saves 2-4x fill ops on retina
+        canvas.width  = window.innerWidth;
         canvas.height = window.innerHeight;
-        cols = Math.ceil(canvas.width / (fontSize * 0.65));
-        rows = Math.ceil(canvas.height / fontSize);
-        grid = Array.from({ length: rows }, () =>
-          Array.from({ length: cols }, () => ({
-            char: chars[Math.floor(Math.random() * chars.length)],
-            speed: 0.002 + Math.random() * 0.004,
-            offset: Math.random() * Math.PI * 2
-          }))
-        );
+        cols = Math.ceil(canvas.width  / CELL_W);
+        rows = Math.ceil(canvas.height / FONT_SIZE);
+        grid = [];
+        for (let r = 0; r < rows; r++) {
+          grid[r] = [];
+          for (let c = 0; c < cols; c++) {
+            grid[r][c] = {
+              char:   chars[Math.floor(Math.random() * chars.length)],
+              offset: Math.random() * Math.PI * 2
+            };
+          }
+        }
+        ctx.font = `${FONT_SIZE}px monospace`;
+      }
+
+      // pre-compute sin table to avoid repeated Math.sin in hot loop
+      const SIN_TABLE_SIZE = 2048;
+      const SIN_TABLE = new Float32Array(SIN_TABLE_SIZE);
+      for (let i = 0; i < SIN_TABLE_SIZE; i++) {
+        SIN_TABLE[i] = Math.sin((i / SIN_TABLE_SIZE) * Math.PI * 2);
+      }
+      function fastSin(v) {
+        const i = ((v % (Math.PI * 2)) / (Math.PI * 2) * SIN_TABLE_SIZE + SIN_TABLE_SIZE) % SIN_TABLE_SIZE | 0;
+        return SIN_TABLE[i];
       }
 
       function draw() {
+        frameCount++;
+        if (frameCount % SKIP_FRAME !== 0) {
+          requestAnimationFrame(draw);
+          return;
+        }
+
+        time += 0.024; // doubled step to compensate for skip
+        charFlipTimer++;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = `${fontSize}px monospace`;
-        time += 0.012;
 
         for (let r = 0; r < rows; r++) {
+          const rowPhase = r * 0.12;
           for (let c = 0; c < cols; c++) {
             const cell = grid[r][c];
-            const wave = Math.sin(time * 0.6 + c * 0.18 + r * 0.12 + cell.offset);
-            const alpha = (wave * 0.5 + 0.5) * 0.22;
-            if (alpha < 0.02) continue;
-            if (Math.random() < 0.004) {
+            const wave = fastSin(time * 0.6 + c * 0.18 + rowPhase + cell.offset);
+            const alpha = (wave * 0.5 + 0.5) * 0.20;
+            if (alpha < 0.025) continue;
+            // flip chars rarely - only on even frames and low probability
+            if (charFlipTimer % 4 === 0 && Math.random() < 0.003) {
               cell.char = chars[Math.floor(Math.random() * chars.length)];
             }
-            ctx.fillStyle = `rgba(80, 140, 220, ${alpha})`;
-            ctx.fillText(cell.char, c * fontSize * 0.65, r * fontSize + fontSize);
+            // quantise alpha to 8 steps to reduce fillStyle churn
+            const aq = (Math.round(alpha * 8) / 8).toFixed(2);
+            ctx.fillStyle = `rgba(80,140,220,${aq})`;
+            ctx.fillText(cell.char, c * CELL_W, r * FONT_SIZE + FONT_SIZE);
           }
         }
         requestAnimationFrame(draw);
       }
 
-      window.addEventListener('resize', resize);
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 120);
+      });
       resize();
       draw();
     })();
 
-    // Stretchy cursor
+    // Stretchy cursor - GPU composited
     (function() {
       const dot = document.getElementById('cursor-dot');
-      let curX = 0, curY = 0;
-      let prevX = 0, prevY = 0;
-      let raf;
+      let curX = window.innerWidth / 2;
+      let curY = window.innerHeight / 2;
+      let prevX = curX, prevY = curY;
+      let mouseDirty = false;
 
       document.addEventListener('mousemove', (e) => {
         curX = e.clientX;
         curY = e.clientY;
-      });
+        mouseDirty = true;
+      }, { passive: true });
 
       function lerp(a, b, t) { return a + (b - a) * t; }
 
       function tick() {
+        requestAnimationFrame(tick);
+
         const dx = curX - prevX;
         const dy = curY - prevY;
-        const speed = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        const dist = Math.sqrt(dx * dx + dy * dy);
 
-        prevX = lerp(prevX, curX, 0.18);
-        prevY = lerp(prevY, curY, 0.18);
+        // skip paint if cursor is essentially stationary
+        if (dist < 0.1 && !mouseDirty) return;
+        mouseDirty = false;
 
-        const stretch = Math.min(speed * 0.08, 1.6);
+        prevX = lerp(prevX, curX, 0.16);
+        prevY = lerp(prevY, curY, 0.16);
+
+        const angle  = Math.atan2(dy, dx) * (180 / Math.PI);
+        const stretch = Math.min(dist * 0.07, 1.5);
         const scaleX = 1 + stretch;
-        const scaleY = 1 - stretch * 0.3;
+        const scaleY = Math.max(1 - stretch * 0.3, 0.5);
 
-        dot.style.left = prevX + 'px';
-        dot.style.top = prevY + 'px';
-        dot.style.transform = `translate(-50%, -50%) rotate(${angle}deg) scaleX(${scaleX}) scaleY(${scaleY})`;
-
-        raf = requestAnimationFrame(tick);
+        // translate3d forces a composited GPU layer, avoiding layout
+        dot.style.transform = `translate3d(calc(${prevX}px - 50%), calc(${prevY}px - 50%), 0) rotate(${angle}deg) scaleX(${scaleX}) scaleY(${scaleY})`;
       }
       tick();
 
