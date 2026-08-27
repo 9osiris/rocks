@@ -326,16 +326,15 @@ body {
     pointer-events: none;
     z-index: 99999;
     will-change: transform, width, height, border-radius;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
     mix-blend-mode: difference;
-    box-shadow: 0 0 10px rgba(255,255,255,0.2);
   }
 
   .cursor-dot.on-box {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.02);
     mix-blend-mode: normal;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1), inset 0 0 15px rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: none;
   }
 }
 

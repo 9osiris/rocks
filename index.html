@@ -213,16 +213,20 @@
       draw();
     })();
 
-    // Cursor - morphs to wrap around boxes on hover, stretches on movement when free
+    // Cursor - ultra-smooth box snapping & subtle highlight
     (function() {
       const dot = document.getElementById('cursor-dot');
       let x = 0, y = 0, px = 0, py = 0;
       let activeTarget = null;
+      
+      let bx = 0, by = 0, bw = 10, bh = 10, br = 50;
 
       document.addEventListener('mousemove', (e) => {
         x = e.clientX;
         y = e.clientY;
       }, { passive: true });
+
+      function lerp(a, b, t) { return a + (b - a) * t; }
 
       function tick() {
         requestAnimationFrame(tick);
@@ -230,12 +234,26 @@
         if (activeTarget) {
           const rect = activeTarget.getBoundingClientRect();
           const computedStyle = window.getComputedStyle(activeTarget);
-          dot.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0)`;
-          dot.style.width = `${rect.width}px`;
-          dot.style.height = `${rect.height}px`;
-          dot.style.borderRadius = computedStyle.borderRadius;
+          const targetR = parseFloat(computedStyle.borderRadius) || 16;
+          
+          bx = lerp(bx, rect.left, 0.28);
+          by = lerp(by, rect.top, 0.28);
+          bw = lerp(bw, rect.width, 0.28);
+          bh = lerp(bh, rect.height, 0.28);
+          br = lerp(br, targetR, 0.28);
+
+          dot.style.transform = `translate3d(${bx}px, ${by}px, 0)`;
+          dot.style.width = `${bw}px`;
+          dot.style.height = `${bh}px`;
+          dot.style.borderRadius = `${br}px`;
           return;
         }
+
+        bx = x - 5;
+        by = y - 5;
+        bw = 10;
+        bh = 10;
+        br = 50;
 
         dot.style.width = '';
         dot.style.height = '';
@@ -260,6 +278,13 @@
       function bindHoverTargets() {
         document.querySelectorAll('a, .glass-btn, #demo-btn, .top-corner-redirect a').forEach(el => {
           el.addEventListener('mouseenter', () => {
+            if (!activeTarget) {
+              const rect = el.getBoundingClientRect();
+              bx = rect.left;
+              by = rect.top;
+              bw = rect.width;
+              bh = rect.height;
+            }
             activeTarget = el;
             dot.classList.add('on-box');
           });
