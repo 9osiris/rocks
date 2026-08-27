@@ -16,20 +16,7 @@
   --ease:          cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg:           #f8fafc;
-    --bg-1:         #ffffff;
-    --bg-2:         #f1f5f9;
-    --surface-blur: rgba(255,255,255,0.85);
-    --border:       rgba(0,0,0,0.1);
-    --border-2:     rgba(0,0,0,0.18);
-    --text:         #0b0b0d;
-    --text-2:       #474752;
-    --text-3:       #75757f;
-    --accent:       #0b0b0d;
-  }
-}
+
 
 * { cursor: none !important; }
 
@@ -120,14 +107,7 @@ body {
   to { background-position: 200% center; }
 }
 
-@media (prefers-color-scheme: light) {
-  .accent-gradient {
-    background: linear-gradient(90deg, #555 0%, #000 50%, #555 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-}
+
 
 .bio {
   color: var(--text-2);
@@ -142,25 +122,41 @@ body {
 }
 
 .demo-link {
+  width: 100%;
   margin-bottom: 48px;
 }
 
 .demo-link a {
-  display: inline-block;
-  color: var(--text);
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--surface-blur);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   text-decoration: none;
+  color: var(--text);
   font-weight: 600;
-  font-size: 0.9rem;
-  padding: 10px 24px;
-  border-radius: 999px;
-  border: 1px solid var(--border-2);
-  background: var(--bg-2);
-  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+  font-size: 0.95rem;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+}
+
+.demo-link a::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
 }
 
 .demo-link a:hover {
-  background: var(--accent);
-  color: var(--bg);
+  border-color: var(--border-2);
+  background: rgba(28,28,33,0.9);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
 .section-title {
