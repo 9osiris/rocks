@@ -54,21 +54,25 @@ body::before {
   position: fixed;
   top: -50%; left: -50%; right: -50%; bottom: -50%;
   width: 200%; height: 200%;
-  background: radial-gradient(circle at 50% 50%, #001122, #000a14 60%, #000000 100%),
-              radial-gradient(circle at 80% 20%, #003366, transparent 50%),
-              radial-gradient(circle at 20% 80%, #004080, transparent 50%);
+  background: 
+    radial-gradient(circle at 50% 50%, #001024 0%, #00030a 60%, #000000 100%),
+    radial-gradient(circle at 80% 20%, #1a52ff, transparent 45%),
+    radial-gradient(circle at 20% 80%, #0033cc, transparent 45%),
+    radial-gradient(circle at 40% 40%, #e6f2ff, transparent 25%),
+    radial-gradient(circle at 60% 60%, #80b3ff, transparent 35%);
   background-blend-mode: screen;
-  animation: liquid-bg 25s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  animation: liquid-bg 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   z-index: -1;
-  opacity: 0.8;
+  opacity: 0.95;
 }
 
 @keyframes liquid-bg {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  33% { transform: translate(-3%, 4%) scale(1.05) rotate(3deg); }
-  66% { transform: translate(4%, -3%) scale(0.95) rotate(-2deg); }
-  100% { transform: translate(-2%, -5%) scale(1.02) rotate(1deg); }
+  25% { transform: translate(-2%, 3%) scale(1.05) rotate(3deg); }
+  50% { transform: translate(3%, -4%) scale(1.1) rotate(-1deg); }
+  75% { transform: translate(-4%, -1%) scale(0.95) rotate(-3deg); }
+  100% { transform: translate(1%, -5%) scale(1.02) rotate(2deg); }
 }
 
 .top-corner-redirect {
