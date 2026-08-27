@@ -20,6 +20,8 @@
   <div class="top-corner-redirect">
     <a href="https://shuttletv.su">if you're here for OsirisWatch, click here.</a>
   </div>
+  
+  <div class="cursor-dot" id="cursor-dot"></div>
 
   <div class="app-shell centered">
     <div class="logo-wrap">
@@ -29,11 +31,9 @@
     
     <h1 class="hero-title">hello, im <span class="accent-gradient">osiris</span>.</h1>
     
-    <p class="bio" id="typing-bio" style="min-height: 80px;"></p>
+    <p class="bio" id="typing-bio" style="min-height: 80px; opacity: 0; transition: opacity 0.5s ease;"></p>
     
-    <p class="bio startup-bio">
-      in december 2025, i founded an ai startup called Layered Innovation (LAYRD INNO.) where i engineered 'Fibre' - a proprietary language model line optimized specifically for complex coding tasks and deep reasoning. fibre is slated for public release next year.
-    </p>
+    <p class="bio startup-bio" id="typing-bio-2" style="min-height: 80px; opacity: 0; transition: opacity 0.5s ease;"></p>
 
     <div class="countdown-container">
       <div class="countdown-label">FIBRE BETA RELEASE</div>
@@ -73,7 +73,7 @@
   </div>
 
   <div class="audio-widget" id="audio-widget">
-    <img src="Kanye%20West%20Album%20Cover.jfif" class="album-art" alt="album cover" />
+    <img src="cover.jfif" class="album-art" alt="album cover" />
     <div class="audio-info">
       <span class="track-name">Guilt Trip</span>
       <span class="artist-name">Kanye West</span>
@@ -86,7 +86,7 @@
       <div class="bar"></div>
     </div>
     <audio id="bg-audio" loop>
-      <source src="Guilt%20Trip%20-%20Kanye%20West.mp3" type="audio/mpeg">
+      <source src="guilt_trip.mp3" type="audio/mpeg">
     </audio>
   </div>
 
@@ -105,18 +105,37 @@
     });
 
     // Terminal Typing Effect
-    const bioText = "i specialize in full-stack software engineering, modern web design, and ai infrastructure. with 3 years pushing production code, 2 years shaping digital experiences, and 1.5 years architecting intelligent systems, i focus on building clean, highly performant software.";
-    const bioElement = document.getElementById('typing-bio');
-    let i = 0;
+    const bioText1 = "i specialize in full-stack software engineering, modern web design, and ai infrastructure. with 3 years pushing production code, 2 years shaping digital experiences, and 1.5 years architecting intelligent systems, i focus on building clean, highly performant software.";
+    const bioText2 = "in december 2025, i founded an ai startup called Layered Innovation (LAYRD INNO.) where i engineered 'Fibre' a proprietary language model line optimized specifically for complex coding tasks and deep reasoning. fibre is slated for public release next year.";
+    const bioElement1 = document.getElementById('typing-bio');
+    const bioElement2 = document.getElementById('typing-bio-2');
     
-    function typeWriter() {
-      if (i < bioText.length) {
-        bioElement.innerHTML += bioText.charAt(i);
-        i++;
-        setTimeout(typeWriter, 15);
+    function typeText(element, text, callback) {
+      let i = 0;
+      element.innerHTML = '<span class="typed-text"></span><span class="cursor">|</span>';
+      const textSpan = element.querySelector('.typed-text');
+      const cursorSpan = element.querySelector('.cursor');
+      element.style.opacity = '1';
+      
+      function typeChar() {
+        if (i < text.length) {
+          textSpan.innerHTML += text.charAt(i);
+          i++;
+          const typingSpeed = Math.random() * 20 + 10;
+          setTimeout(typeChar, typingSpeed);
+        } else {
+          cursorSpan.style.display = 'none';
+          if(callback) callback();
+        }
       }
+      setTimeout(typeChar, 200);
     }
-    setTimeout(typeWriter, 500);
+    
+    setTimeout(() => {
+      typeText(bioElement1, bioText1, () => {
+        typeText(bioElement2, bioText2);
+      });
+    }, 500);
 
     // Magnetic 3D Hover Effects
     const magneticElements = document.querySelectorAll('.glass-btn, #demo-btn');
@@ -141,10 +160,10 @@
       });
     });
 
-    // Fibre Countdown
+    // Fibre Countdown (11 months approx)
     const countdownEl = document.getElementById('fibre-countdown');
     const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 4);
+    targetDate.setDate(targetDate.getDate() + 334);
     
     setInterval(() => {
       const now = new Date().getTime();
@@ -182,6 +201,19 @@
         visualizer.classList.remove('playing');
         audioWidget.classList.remove('active');
       }
+    });
+
+    // Custom Cursor tracking
+    const cursorDot = document.getElementById('cursor-dot');
+    document.addEventListener('mousemove', (e) => {
+      cursorDot.style.left = e.clientX + 'px';
+      cursorDot.style.top = e.clientY + 'px';
+    });
+    
+    const interactables = document.querySelectorAll('a, .audio-widget, .glass-btn, #demo-btn');
+    interactables.forEach(el => {
+      el.addEventListener('mouseenter', () => cursorDot.classList.add('hovering'));
+      el.addEventListener('mouseleave', () => cursorDot.classList.remove('hovering'));
     });
   </script>
 </body>

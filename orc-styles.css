@@ -325,7 +325,6 @@ body::before {
   font-size: 2rem;
   font-weight: 800;
   color: var(--accent);
-  text-shadow: 0 0 10px rgba(255,255,255,0.3);
 }
 
 /* Audio Widget */
@@ -391,32 +390,67 @@ body::before {
 
 .visualizer {
   display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 16px;
-  margin-left: 8px;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+  margin-left: 12px;
 }
 
 .bar {
-  width: 3px;
+  width: 4px;
   background: var(--text-2);
-  border-radius: 2px;
-  height: 3px;
-  transition: height 0.1s ease;
+  border-radius: 4px;
+  height: 4px;
+  transition: all 0.2s ease;
 }
 
 .visualizer.playing .bar {
-  animation: equalize 1s ease-in-out infinite alternate;
   background: var(--accent);
+  animation: equalize 1s cubic-bezier(0.8, 0, 0.2, 1) infinite alternate;
 }
 
-.visualizer.playing .bar:nth-child(1) { animation-delay: 0.0s; }
-.visualizer.playing .bar:nth-child(2) { animation-delay: 0.2s; }
-.visualizer.playing .bar:nth-child(3) { animation-delay: 0.4s; }
-.visualizer.playing .bar:nth-child(4) { animation-delay: 0.1s; }
-.visualizer.playing .bar:nth-child(5) { animation-delay: 0.3s; }
+.visualizer.playing .bar:nth-child(1) { animation-delay: -0.8s; animation-duration: 0.8s; }
+.visualizer.playing .bar:nth-child(2) { animation-delay: -0.6s; animation-duration: 0.9s; }
+.visualizer.playing .bar:nth-child(3) { animation-delay: -0.4s; animation-duration: 1.1s; }
+.visualizer.playing .bar:nth-child(4) { animation-delay: -0.2s; animation-duration: 0.7s; }
+.visualizer.playing .bar:nth-child(5) { animation-delay: -1.0s; animation-duration: 1.2s; }
 
 @keyframes equalize {
-  0% { height: 3px; }
-  100% { height: 16px; }
+  0% { height: 4px; }
+  100% { height: 20px; }
+}
+
+/* Custom Cursor */
+* { cursor: none !important; }
+.cursor-dot {
+  position: fixed;
+  top: 0; left: 0;
+  width: 12px; height: 12px;
+  background: white;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), height 0.3s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease, border 0.3s ease;
+  mix-blend-mode: difference;
+}
+
+.cursor-dot.hovering {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.1);
+  mix-blend-mode: normal;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Typing Cursor */
+.cursor {
+  display: inline-block;
+  color: var(--accent);
+  font-weight: 800;
+  animation: blink 1s step-start infinite;
+  margin-left: 2px;
+}
+@keyframes blink {
+  50% { opacity: 0; }
 }
