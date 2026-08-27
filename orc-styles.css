@@ -48,31 +48,28 @@ body {
   padding: 40px 20px;
 }
 
-/* Animated Liquid Metallic Blue Background */
+/* Dynamic Animated Liquid Metallic Blue Background */
 body::before {
   content: "";
   position: fixed;
-  top: -50%; left: -50%; right: -50%; bottom: -50%;
-  width: 200%; height: 200%;
+  top: -10%; left: -10%; right: -10%; bottom: -10%;
+  width: 120%; height: 120%;
   background: 
-    radial-gradient(circle at 50% 50%, #001024 0%, #00030a 60%, #000000 100%),
-    radial-gradient(circle at 80% 20%, #1a52ff, transparent 45%),
-    radial-gradient(circle at 20% 80%, #0033cc, transparent 45%),
-    radial-gradient(circle at 40% 40%, #e6f2ff, transparent 25%),
-    radial-gradient(circle at 60% 60%, #80b3ff, transparent 35%);
+    radial-gradient(circle at calc(var(--mouse-x, 0.5) * 100%) calc(var(--mouse-y, 0.5) * 100%), #101b34 0%, #050810 60%),
+    radial-gradient(circle at 20% 80%, #0a276a, transparent 50%),
+    radial-gradient(circle at 80% 20%, #4e8ae8, transparent 40%),
+    radial-gradient(circle at 50% 50%, #e6f0fa, transparent 20%);
   background-blend-mode: screen;
-  animation: liquid-bg 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+  background-size: 200% 200%;
+  animation: liquid-bg 20s infinite alternate ease-in-out;
   pointer-events: none;
   z-index: -1;
-  opacity: 0.95;
 }
 
 @keyframes liquid-bg {
-  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  25% { transform: translate(-2%, 3%) scale(1.05) rotate(3deg); }
-  50% { transform: translate(3%, -4%) scale(1.1) rotate(-1deg); }
-  75% { transform: translate(-4%, -1%) scale(0.95) rotate(-3deg); }
-  100% { transform: translate(1%, -5%) scale(1.02) rotate(2deg); }
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 100%; }
 }
 
 .top-corner-redirect {
@@ -113,11 +110,55 @@ body::before {
   text-align: center;
 }
 
-.profile-logo {
+.logo-wrap {
+  position: relative;
   width: 90px;
   height: 90px;
   margin-bottom: 24px;
   border-radius: 24px;
+  filter: drop-shadow(0 0 20px rgba(78,138,232,0.35))
+          drop-shadow(0 0 40px rgba(10,39,106,0.25));
+  animation: float 6s ease-in-out infinite;
+}
+
+.profile-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.shine {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.4) 60%, transparent 80%);
+  background-size: 200% 200%;
+  -webkit-mask-image: url('osirisweb.svg');
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: url('osirisweb.svg');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  animation: shine-sweep 5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.9; filter: brightness(1.15); }
+}
+
+@keyframes shine-sweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .hero-title {
