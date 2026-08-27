@@ -122,23 +122,19 @@
       alert("i didnt actually feel like putting the demos here rn so wait a few, thx.");
     });
 
-    // (3D tilt removed to prevent cursor misalignment)
-
-    // ASCII background - optimised
     (function() {
       const canvas = document.getElementById('ascii-canvas');
       const ctx = canvas.getContext('2d', { alpha: true });
       const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
       const FONT_SIZE = 15;
       const CELL_W = FONT_SIZE * 0.62;
-      const SKIP_FRAME = 2;  // only repaint every N rAF ticks
+      const SKIP_FRAME = 2;
       let cols, rows, grid;
       let time = 0;
       let frameCount = 0;
       let charFlipTimer = 0;
 
       function resize() {
-        // use logical pixels, ignore dpr - saves 2-4x fill ops on retina
         canvas.width  = window.innerWidth;
         canvas.height = window.innerHeight;
         cols = Math.ceil(canvas.width  / CELL_W);
@@ -157,7 +153,6 @@
         ctx.font = `${FONT_SIZE}px monospace`;
       }
 
-      // pre-compute sin table to avoid repeated Math.sin in hot loop
       const SIN_TABLE_SIZE = 2048;
       const SIN_TABLE = new Float32Array(SIN_TABLE_SIZE);
       for (let i = 0; i < SIN_TABLE_SIZE; i++) {
@@ -211,7 +206,6 @@
       draw();
     })();
 
-    // Cursor - ultra-smooth box snapping & subtle highlight
     (function() {
       const dot = document.getElementById('cursor-dot');
       let x = 0, y = 0, px = 0, py = 0;
@@ -297,7 +291,6 @@
       bindHoverTargets();
     })();
 
-    // Shift + D Diagnostic HUD
     (function() {
       const hud = document.getElementById('diag-hud');
       const hudFps = document.getElementById('hud-fps');
@@ -332,7 +325,6 @@
       updateHud();
     })();
 
-    // Konami Code & 'fibre' Matrix Toggle
     (function() {
       const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
       let konamiIndex = 0;
