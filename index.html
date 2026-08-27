@@ -35,6 +35,11 @@
       in december 2025, i founded an ai startup called Layered Innovation (LAYRD INNO.) where i engineered 'Fibre' - a proprietary language model line optimized specifically for complex coding tasks and deep reasoning. fibre is slated for public release next year.
     </p>
 
+    <div class="countdown-container">
+      <div class="countdown-label">FIBRE BETA RELEASE</div>
+      <div class="countdown" id="fibre-countdown">00:00:00:00</div>
+    </div>
+
     <div class="demo-link">
       <a href="#" id="demo-btn">see demos</a>
     </div>
@@ -65,6 +70,24 @@
         </div>
       </a>
     </div>
+  </div>
+
+  <div class="audio-widget" id="audio-widget">
+    <img src="Kanye%20West%20Album%20Cover.jfif" class="album-art" alt="album cover" />
+    <div class="audio-info">
+      <span class="track-name">Guilt Trip</span>
+      <span class="artist-name">Kanye West</span>
+    </div>
+    <div class="visualizer">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+    <audio id="bg-audio" loop>
+      <source src="Guilt%20Trip%20-%20Kanye%20West.mp3" type="audio/mpeg">
+    </audio>
   </div>
 
   <script>
@@ -116,6 +139,49 @@
       elem.addEventListener('mouseleave', () => {
         elem.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
       });
+    });
+
+    // Fibre Countdown
+    const countdownEl = document.getElementById('fibre-countdown');
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + 4);
+    
+    setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+      
+      if (distance < 0) {
+        countdownEl.innerText = "DEPLOYED";
+        return;
+      }
+      
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      
+      countdownEl.innerText = 
+        String(days).padStart(2, '0') + ":" + 
+        String(hours).padStart(2, '0') + ":" + 
+        String(minutes).padStart(2, '0') + ":" + 
+        String(seconds).padStart(2, '0');
+    }, 1000);
+
+    // Audio Widget
+    const audioWidget = document.getElementById('audio-widget');
+    const bgAudio = document.getElementById('bg-audio');
+    const visualizer = document.querySelector('.visualizer');
+    
+    audioWidget.addEventListener('click', () => {
+      if (bgAudio.paused) {
+        bgAudio.play();
+        visualizer.classList.add('playing');
+        audioWidget.classList.add('active');
+      } else {
+        bgAudio.pause();
+        visualizer.classList.remove('playing');
+        audioWidget.classList.remove('active');
+      }
     });
   </script>
 </body>
