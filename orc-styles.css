@@ -3,7 +3,6 @@
 :root {
   color-scheme: dark light;
 
-  /* Cinematic dark */
   --bg:            #0b0b0d;
   --bg-1:          #131316;
   --bg-2:          #1c1c21;
@@ -48,17 +47,16 @@ body {
   padding: 40px 20px;
 }
 
-/* Dynamic Animated Liquid Metallic Blue Background */
 body::before {
   content: "";
   position: fixed;
   top: -10%; left: -10%; right: -10%; bottom: -10%;
   width: 120%; height: 120%;
   background: 
-    radial-gradient(circle at calc(var(--mouse-x, 0.5) * 100%) calc(var(--mouse-y, 0.5) * 100%), #0a1b42 0%, #03050a 60%),
-    radial-gradient(circle at 20% 80%, #061c52, transparent 60%),
-    radial-gradient(circle at 80% 20%, #1a4da1, transparent 60%),
-    radial-gradient(circle at 50% 50%, #092a6b, transparent 70%);
+    radial-gradient(circle at calc(var(--mouse-x, 0.5) * 100%) calc(var(--mouse-y, 0.5) * 100%), #040914 0%, #010204 60%),
+    radial-gradient(circle at 20% 80%, #02091a, transparent 50%),
+    radial-gradient(circle at 80% 20%, #061c42, transparent 50%),
+    radial-gradient(circle at 50% 50%, #030d24, transparent 60%);
   background-blend-mode: screen;
   background-size: 200% 200%;
   animation: liquid-bg 20s infinite alternate ease-in-out;
