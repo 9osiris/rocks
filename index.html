@@ -15,6 +15,7 @@
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="orc-styles.css">
+  <script src="https://unpkg.com/lenis@1.1.9/dist/lenis.min.js"></script>
 </head>
 <body>
   <div class="top-corner-redirect">
@@ -78,13 +79,7 @@
       <span class="track-name">Guilt Trip</span>
       <span class="artist-name">Kanye West</span>
     </div>
-    <div class="visualizer">
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-    </div>
+    <canvas id="visualizer-canvas" class="visualizer-canvas" width="60" height="20"></canvas>
     <audio id="bg-audio" loop>
       <source src="guilt_trip.mp3" type="audio/mpeg">
     </audio>
@@ -104,6 +99,13 @@
       document.body.style.setProperty('--mouse-y', y);
     });
 
+    // Initialize Lenis Smooth Scroll
+    const lenis = new Lenis({
+      autoRaf: true,
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    });
+
     // Terminal Typing Effect
     const bioText1 = "i specialize in full-stack software engineering, modern web design, and ai infrastructure. with 3 years pushing production code, 2 years shaping digital experiences, and 1.5 years architecting intelligent systems, i focus on building clean, highly performant software.";
     const bioText2 = "in december 2025, i founded an ai startup called Layered Innovation (LAYRD INNO.) where i engineered 'Fibre' a proprietary language model line optimized specifically for complex coding tasks and deep reasoning. fibre is slated for public release next year.";
@@ -115,6 +117,9 @@
       element.innerHTML = '<span class="typed-text"></span><span class="cursor">|</span>';
       const textSpan = element.querySelector('.typed-text');
       const cursorSpan = element.querySelector('.cursor');
+      
+      // force reflow to ensure the fade-in animates properly
+      void element.offsetWidth;
       element.style.opacity = '1';
       
       function typeChar() {
@@ -186,20 +191,78 @@
         String(seconds).padStart(2, '0');
     }, 1000);
 
-    // Audio Widget
+    // Real Web Audio API Visualizer
     const audioWidget = document.getElementById('audio-widget');
     const bgAudio = document.getElementById('bg-audio');
-    const visualizer = document.querySelector('.visualizer');
+    const canvas = document.getElementById('visualizer-canvas');
+    const ctx = canvas.getContext('2d');
     
+    let audioContext;
+    let analyser;
+    let dataArray;
+    let isPlaying = false;
+    
+    function drawResting() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for(let i=0; i<10; i++) {
+         ctx.fillStyle = '#75757f';
+         ctx.beginPath();
+         ctx.roundRect(i * 6, canvas.height - 4, 4, 4, 2);
+         ctx.fill();
+      }
+    }
+    drawResting();
+    
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaElementSource(bgAudio);
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+        analyser.fftSize = 64; 
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+      }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+    
+    function drawVisualizer() {
+      if (!isPlaying) return;
+      requestAnimationFrame(drawVisualizer);
+      
+      analyser.getByteFrequencyData(dataArray);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      let x = 0;
+      for (let i = 0; i < 10; i++) {
+        let v = dataArray[i] / 255;
+        const barHeight = Math.max(v * canvas.height * 1.5, 4);
+        
+        ctx.fillStyle = '#ffffff'; 
+        ctx.beginPath();
+        const drawHeight = barHeight > canvas.height ? canvas.height : barHeight;
+        ctx.roundRect(x, canvas.height - drawHeight, 4, drawHeight, 2);
+        ctx.fill();
+        x += 6;
+      }
+    }
+
     audioWidget.addEventListener('click', () => {
+      initAudio();
       if (bgAudio.paused) {
-        bgAudio.play();
-        visualizer.classList.add('playing');
-        audioWidget.classList.add('active');
+        bgAudio.play().then(() => {
+          isPlaying = true;
+          audioWidget.classList.add('active');
+          drawVisualizer();
+        }).catch(e => console.error("Audio play failed:", e));
       } else {
         bgAudio.pause();
-        visualizer.classList.remove('playing');
+        isPlaying = false;
         audioWidget.classList.remove('active');
+        drawResting();
       }
     });
 
