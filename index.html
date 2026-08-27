@@ -22,6 +22,12 @@
 
   <div class="cursor-dot" id="cursor-dot"></div>
 
+  <div id="diag-hud" class="diag-hud" style="display: none;">
+    <div>FPS: <span id="hud-fps">60</span></div>
+    <div>RES: <span id="hud-res">0x0</span></div>
+    <div>GRID: <span id="hud-grid">0x0</span></div>
+  </div>
+
   <div class="top-corner-redirect">
     <a href="https://shuttletv.su">if you're here for OsirisWatch, click here.</a>
   </div>
@@ -109,6 +115,8 @@
   </div>
 
   <script>
+    console.log("%cwhy are you here bru stop trying to look at my shit", "color: #00ff66; font-size: 14px; font-weight: bold; font-family: monospace;");
+
     document.getElementById('demo-btn').addEventListener('click', (e) => {
       e.preventDefault();
       alert("i didnt actually feel like putting the demos here rn so wait a few, thx.");
@@ -145,6 +153,7 @@
             };
           }
         }
+        window.asciiGrid = { cols, rows };
         ctx.font = `${FONT_SIZE}px monospace`;
       }
 
@@ -166,25 +175,27 @@
           return;
         }
 
-        time += 0.024; // doubled step to compensate for skip
+        time += 0.024;
         charFlipTimer++;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const rCol = window.matrixMode ? 0 : 80;
+        const gCol = window.matrixMode ? 255 : 140;
+        const bCol = window.matrixMode ? 102 : 220;
 
         for (let r = 0; r < rows; r++) {
           const rowPhase = r * 0.12;
           for (let c = 0; c < cols; c++) {
             const cell = grid[r][c];
             const wave = fastSin(time * 0.6 + c * 0.18 + rowPhase + cell.offset);
-            const alpha = (wave * 0.5 + 0.5) * 0.20;
+            const alpha = (wave * 0.5 + 0.5) * (window.matrixMode ? 0.45 : 0.20);
             if (alpha < 0.025) continue;
-            // flip chars rarely - only on even frames and low probability
             if (charFlipTimer % 4 === 0 && Math.random() < 0.003) {
               cell.char = chars[Math.floor(Math.random() * chars.length)];
             }
-            // quantise alpha to 8 steps to reduce fillStyle churn
             const aq = (Math.round(alpha * 8) / 8).toFixed(2);
-            ctx.fillStyle = `rgba(80,140,220,${aq})`;
+            ctx.fillStyle = `rgba(${rCol},${gCol},${bCol},${aq})`;
             ctx.fillText(cell.char, c * CELL_W, r * FONT_SIZE + FONT_SIZE);
           }
         }
@@ -284,6 +295,68 @@
         });
       }
       bindHoverTargets();
+    })();
+
+    // Shift + D Diagnostic HUD
+    (function() {
+      const hud = document.getElementById('diag-hud');
+      const hudFps = document.getElementById('hud-fps');
+      const hudRes = document.getElementById('hud-res');
+      const hudGrid = document.getElementById('hud-grid');
+      let hudActive = false;
+      let frameCounter = 0, lastTime = performance.now();
+
+      document.addEventListener('keydown', (e) => {
+        if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+          hudActive = !hudActive;
+          hud.style.display = hudActive ? 'block' : 'none';
+        }
+      });
+
+      function updateHud() {
+        requestAnimationFrame(updateHud);
+        if (!hudActive) return;
+        frameCounter++;
+        const now = performance.now();
+        if (now - lastTime >= 500) {
+          const fps = Math.round((frameCounter * 1000) / (now - lastTime));
+          hudFps.textContent = fps;
+          hudRes.textContent = `${window.innerWidth}x${window.innerHeight}`;
+          if (window.asciiGrid) {
+            hudGrid.textContent = `${window.asciiGrid.cols}x${window.asciiGrid.rows}`;
+          }
+          frameCounter = 0;
+          lastTime = now;
+        }
+      }
+      updateHud();
+    })();
+
+    // Konami Code & 'fibre' Matrix Toggle
+    (function() {
+      const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+      let konamiIndex = 0;
+      let keyBuffer = '';
+      window.matrixMode = false;
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === konamiCode[konamiIndex]) {
+          konamiIndex++;
+          if (konamiIndex === konamiCode.length) {
+            window.matrixMode = !window.matrixMode;
+            konamiIndex = 0;
+          }
+        } else {
+          konamiIndex = 0;
+        }
+
+        keyBuffer += e.key.toLowerCase();
+        if (keyBuffer.length > 10) keyBuffer = keyBuffer.slice(-10);
+        if (keyBuffer.endsWith('fibre')) {
+          window.matrixMode = !window.matrixMode;
+          keyBuffer = '';
+        }
+      });
     })();
   </script>
 </body>
