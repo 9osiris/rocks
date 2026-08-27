@@ -2,27 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>osiris</title>
   <meta name="description" content="osi the goat">
   <meta name="theme-color" content="#0b0b0d">
-
+  
   <link rel="icon" type="image/svg+xml" href="osirisweb.svg">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="orc-styles.css">
 </head>
 <body>
 
-  <canvas id="ascii-canvas"></canvas>
-
+  <canvas id="bg-canvas"></canvas>
   <div class="cursor-dot" id="cursor-dot"></div>
 
-  <div id="diag-hud" class="diag-hud" style="display: none;">
+  <div id="diag-hud" class="diag-hud">
     <div>FPS: <span id="hud-fps">60</span></div>
     <div>RES: <span id="hud-res">0x0</span></div>
     <div>GRID: <span id="hud-grid">0x0</span></div>
@@ -32,52 +29,52 @@
     <a href="https://shuttletv.su">if you're here for OsirisWatch, click here.</a>
   </div>
 
-  <div class="app-shell centered">
+  <main class="app-shell centered">
     <img src="osirisweb.svg" alt="osiris logo" class="profile-logo" draggable="false" />
-
+    
     <h1 class="hero-title">hello, im <span class="accent-gradient">osiris</span>.</h1>
-
+    
     <p class="bio">
       i specialize in full-stack software engineering, modern web design, and ai infrastructure. with 3 years pushing production code, 2 years shaping digital experiences, and 1.5 years architecting intelligent systems, i focus on building clean, highly performant software.
     </p>
-
+    
     <p class="bio startup-bio">
       in december 2025, i founded an ai startup called Layered Innovation (LAYRD INNO.) where i engineered 'Fibre Intelligence', a proprietary language model line and systemic AI engine built specifically for complex algorithmic reasoning, automated synthesis, and deep logic optimization. fibre is slated for public release next year.
     </p>
 
     <div class="ticker-wrap">
       <div class="ticker">
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="">Python</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python">Python</span>
         <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="">React</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="React">React</span>
         <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" alt="">JavaScript</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" alt="JavaScript">JavaScript</span>
         <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" alt="">HTML</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" alt="HTML">HTML</span>
         <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg" alt="">C++</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg" alt="C++">C++</span>
         <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/lua/lua-original.svg" alt="">Lua</span>
-        <span class="ticker-sep">·</span>
-        <span class="ticker-item"><span class="luau-badge">Lu</span>Luau</span>
-        <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" alt="">Next.js</span>
-        <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="">Python</span>
-        <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="">React</span>
-        <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" alt="">JavaScript</span>
-        <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" alt="">HTML</span>
-        <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg" alt="">C++</span>
-        <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/lua/lua-original.svg" alt="">Lua</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/lua/lua-original.svg" alt="Lua">Lua</span>
         <span class="ticker-sep">·</span>
         <span class="ticker-item"><span class="luau-badge">Lu</span>Luau</span>
         <span class="ticker-sep">·</span>
-        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" alt="">Next.js</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" alt="Next.js" class="invert-icon">Next.js</span>
+        <span class="ticker-sep">·</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python">Python</span>
+        <span class="ticker-sep">·</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="React">React</span>
+        <span class="ticker-sep">·</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" alt="JavaScript">JavaScript</span>
+        <span class="ticker-sep">·</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" alt="HTML">HTML</span>
+        <span class="ticker-sep">·</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg" alt="C++">C++</span>
+        <span class="ticker-sep">·</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/lua/lua-original.svg" alt="Lua">Lua</span>
+        <span class="ticker-sep">·</span>
+        <span class="ticker-item"><span class="luau-badge">Lu</span>Luau</span>
+        <span class="ticker-sep">·</span>
+        <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" alt="Next.js" class="invert-icon">Next.js</span>
         <span class="ticker-sep">·</span>
       </div>
     </div>
@@ -95,7 +92,7 @@
           <span class="lower">@osirisplus</span>
         </div>
       </a>
-
+      
       <a href="https://t.me/therealosiris" target="_blank" class="glass-btn">
         <div class="btn-icon"><i class="fa-brands fa-telegram"></i></div>
         <div class="btn-text">
@@ -103,7 +100,7 @@
           <span class="lower">@therealosiris</span>
         </div>
       </a>
-
+      
       <a href="https://github.com/9osiris" target="_blank" class="glass-btn">
         <div class="btn-icon"><i class="fa-brands fa-github"></i></div>
         <div class="btn-text">
@@ -112,7 +109,7 @@
         </div>
       </a>
     </div>
-  </div>
+  </main>
 
   <script>
     console.log("%cwhy are you here bru stop trying to look at my shit", "color: #00ff66; font-size: 14px; font-weight: bold; font-family: monospace;");
@@ -122,234 +119,205 @@
       alert("i didnt actually feel like putting the demos here rn so wait a few, thx.");
     });
 
-    (function() {
-      const canvas = document.getElementById('ascii-canvas');
-      const ctx = canvas.getContext('2d', { alpha: true });
-      const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
-      const FONT_SIZE = 15;
-      const CELL_W = FONT_SIZE * 0.62;
-      const SKIP_FRAME = 2;
-      let cols, rows, grid;
-      let time = 0;
-      let frameCount = 0;
-      let charFlipTimer = 0;
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    const characters = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+    const fontSize = 14;
+    const colWidth = fontSize * 0.65;
+    
+    let cols = 0, rows = 0;
+    let grid = [];
+    let time = 0;
+    let matrixMode = false;
 
-      function resize() {
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
-        cols = Math.ceil(canvas.width  / CELL_W);
-        rows = Math.ceil(canvas.height / FONT_SIZE);
-        grid = [];
-        for (let r = 0; r < rows; r++) {
-          grid[r] = [];
-          for (let c = 0; c < cols; c++) {
-            grid[r][c] = {
-              char:   chars[Math.floor(Math.random() * chars.length)],
-              offset: Math.random() * Math.PI * 2
-            };
-          }
-        }
-        window.asciiGrid = { cols, rows };
-        ctx.font = `${FONT_SIZE}px monospace`;
-      }
-
-      const SIN_TABLE_SIZE = 2048;
-      const SIN_TABLE = new Float32Array(SIN_TABLE_SIZE);
-      for (let i = 0; i < SIN_TABLE_SIZE; i++) {
-        SIN_TABLE[i] = Math.sin((i / SIN_TABLE_SIZE) * Math.PI * 2);
-      }
-      function fastSin(v) {
-        const i = ((v % (Math.PI * 2)) / (Math.PI * 2) * SIN_TABLE_SIZE + SIN_TABLE_SIZE) % SIN_TABLE_SIZE | 0;
-        return SIN_TABLE[i];
-      }
-
-      function draw() {
-        frameCount++;
-        if (frameCount % SKIP_FRAME !== 0) {
-          requestAnimationFrame(draw);
-          return;
-        }
-
-        time += 0.024;
-        charFlipTimer++;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const rCol = window.matrixMode ? 0 : 80;
-        const gCol = window.matrixMode ? 255 : 140;
-        const bCol = window.matrixMode ? 102 : 220;
-
-        for (let r = 0; r < rows; r++) {
-          const rowPhase = r * 0.12;
-          for (let c = 0; c < cols; c++) {
-            const cell = grid[r][c];
-            const wave = fastSin(time * 0.6 + c * 0.18 + rowPhase + cell.offset);
-            const alpha = (wave * 0.5 + 0.5) * (window.matrixMode ? 0.45 : 0.20);
-            if (alpha < 0.025) continue;
-            if (charFlipTimer % 4 === 0 && Math.random() < 0.003) {
-              cell.char = chars[Math.floor(Math.random() * chars.length)];
-            }
-            const aq = (Math.round(alpha * 8) / 8).toFixed(2);
-            ctx.fillStyle = `rgba(${rCol},${gCol},${bCol},${aq})`;
-            ctx.fillText(cell.char, c * CELL_W, r * FONT_SIZE + FONT_SIZE);
-          }
-        }
-        requestAnimationFrame(draw);
-      }
-
-      let resizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(resize, 120);
-      });
-      resize();
-      draw();
-    })();
-
-    (function() {
-      const dot = document.getElementById('cursor-dot');
-      let x = 0, y = 0, px = 0, py = 0;
-      let activeTarget = null;
+    function initCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      cols = Math.ceil(canvas.width / colWidth);
+      rows = Math.ceil(canvas.height / fontSize);
       
-      let bx = 0, by = 0, bw = 10, bh = 10, br = 50;
+      grid = [];
+      for (let r = 0; r < rows; r++) {
+        let row = [];
+        for (let c = 0; c < cols; c++) {
+          row.push({
+            char: characters[Math.floor(Math.random() * characters.length)],
+            offset: Math.random() * 6.28
+          });
+        }
+        grid.push(row);
+      }
+      window.asciiGrid = { cols, rows };
+    }
 
-      document.addEventListener('mousemove', (e) => {
-        x = e.clientX;
-        y = e.clientY;
-      }, { passive: true });
+    function renderCanvas() {
+      time += 0.02;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = `${fontSize}px monospace`;
 
-      function lerp(a, b, t) { return a + (b - a) * t; }
+      const red = matrixMode ? 0 : 80;
+      const green = matrixMode ? 255 : 140;
+      const blue = matrixMode ? 102 : 220;
 
-      function tick() {
-        requestAnimationFrame(tick);
-
-        if (activeTarget) {
-          const rect = activeTarget.getBoundingClientRect();
-          const computedStyle = window.getComputedStyle(activeTarget);
-          const targetR = parseFloat(computedStyle.borderRadius) || 16;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const item = grid[r][c];
+          const val = Math.sin(time * 0.8 + c * 0.15 + r * 0.1 + item.offset);
+          const alpha = (val * 0.5 + 0.5) * (matrixMode ? 0.45 : 0.2);
           
-          bx = lerp(bx, rect.left, 0.28);
-          by = lerp(by, rect.top, 0.28);
-          bw = lerp(bw, rect.width, 0.28);
-          bh = lerp(bh, rect.height, 0.28);
-          br = lerp(br, targetR, 0.28);
+          if (alpha < 0.03) continue;
+          
+          if (Math.random() < 0.002) {
+            item.char = characters[Math.floor(Math.random() * characters.length)];
+          }
 
-          dot.style.transform = `translate3d(${bx}px, ${by}px, 0)`;
-          dot.style.width = `${bw}px`;
-          dot.style.height = `${bh}px`;
-          dot.style.borderRadius = `${br}px`;
-          return;
+          ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha.toFixed(2)})`;
+          ctx.fillText(item.char, c * colWidth, (r + 1) * fontSize);
         }
+      }
+      requestAnimationFrame(renderCanvas);
+    }
 
-        bx = x - 5;
-        by = y - 5;
-        bw = 10;
-        bh = 10;
-        br = 50;
+    window.addEventListener('resize', initCanvas);
+    initCanvas();
+    renderCanvas();
 
-        dot.style.width = '';
-        dot.style.height = '';
-        dot.style.borderRadius = '';
+    const cursorDot = document.getElementById('cursor-dot');
+    let mouseX = 0, mouseY = 0;
+    let lastX = 0, lastY = 0;
+    let currentTarget = null;
+    let boxPos = { x: 0, y: 0, w: 10, h: 10, r: 50 };
 
-        const dx = x - px;
-        const dy = y - py;
-        px = x;
-        py = y;
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }, { passive: true });
+
+    function lerp(start, end, factor) {
+      return start + (end - start) * factor;
+    }
+
+    function updateCursor() {
+      if (currentTarget) {
+        const rect = currentTarget.getBoundingClientRect();
+        const style = window.getComputedStyle(currentTarget);
+        const radius = parseFloat(style.borderRadius) || 16;
+
+        boxPos.x = lerp(boxPos.x, rect.left, 0.25);
+        boxPos.y = lerp(boxPos.y, rect.top, 0.25);
+        boxPos.w = lerp(boxPos.w, rect.width, 0.25);
+        boxPos.h = lerp(boxPos.h, rect.height, 0.25);
+        boxPos.r = lerp(boxPos.r, radius, 0.25);
+
+        cursorDot.style.transform = `translate3d(${boxPos.x}px, ${boxPos.y}px, 0)`;
+        cursorDot.style.width = `${boxPos.w}px`;
+        cursorDot.style.height = `${boxPos.h}px`;
+        cursorDot.style.borderRadius = `${boxPos.r}px`;
+      } else {
+        boxPos.x = mouseX - 5;
+        boxPos.y = mouseY - 5;
+        boxPos.w = 10;
+        boxPos.h = 10;
+        boxPos.r = 50;
+
+        cursorDot.style.width = '';
+        cursorDot.style.height = '';
+        cursorDot.style.borderRadius = '';
+
+        const dx = mouseX - lastX;
+        const dy = mouseY - lastY;
+        lastX = mouseX;
+        lastY = mouseY;
+        
         const dist = Math.sqrt(dx * dx + dy * dy);
-
+        
         if (dist < 0.3) {
-          dot.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 50%), 0)`;
-          return;
-        }
-        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        const stretch = Math.min(dist * 0.06, 1.2);
-        dot.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 50%), 0) rotate(${angle}deg) scaleX(${1 + stretch}) scaleY(${Math.max(1 - stretch * 0.35, 0.5)})`;
-      }
-      tick();
-
-      function bindHoverTargets() {
-        document.querySelectorAll('a, .glass-btn, #demo-btn, .top-corner-redirect a').forEach(el => {
-          el.addEventListener('mouseenter', () => {
-            if (!activeTarget) {
-              const rect = el.getBoundingClientRect();
-              bx = rect.left;
-              by = rect.top;
-              bw = rect.width;
-              bh = rect.height;
-            }
-            activeTarget = el;
-            dot.classList.add('on-box');
-          });
-          el.addEventListener('mouseleave', () => {
-            if (activeTarget === el) {
-              activeTarget = null;
-              dot.classList.remove('on-box');
-            }
-          });
-        });
-      }
-      bindHoverTargets();
-    })();
-
-    (function() {
-      const hud = document.getElementById('diag-hud');
-      const hudFps = document.getElementById('hud-fps');
-      const hudRes = document.getElementById('hud-res');
-      const hudGrid = document.getElementById('hud-grid');
-      let hudActive = false;
-      let frameCounter = 0, lastTime = performance.now();
-
-      document.addEventListener('keydown', (e) => {
-        if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
-          hudActive = !hudActive;
-          hud.style.display = hudActive ? 'block' : 'none';
-        }
-      });
-
-      function updateHud() {
-        requestAnimationFrame(updateHud);
-        if (!hudActive) return;
-        frameCounter++;
-        const now = performance.now();
-        if (now - lastTime >= 500) {
-          const fps = Math.round((frameCounter * 1000) / (now - lastTime));
-          hudFps.textContent = fps;
-          hudRes.textContent = `${window.innerWidth}x${window.innerHeight}`;
-          if (window.asciiGrid) {
-            hudGrid.textContent = `${window.asciiGrid.cols}x${window.asciiGrid.rows}`;
-          }
-          frameCounter = 0;
-          lastTime = now;
-        }
-      }
-      updateHud();
-    })();
-
-    (function() {
-      const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-      let konamiIndex = 0;
-      let keyBuffer = '';
-      window.matrixMode = false;
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === konamiCode[konamiIndex]) {
-          konamiIndex++;
-          if (konamiIndex === konamiCode.length) {
-            window.matrixMode = !window.matrixMode;
-            konamiIndex = 0;
-          }
+          cursorDot.style.transform = `translate3d(${mouseX - 5}px, ${mouseY - 5}px, 0)`;
         } else {
-          konamiIndex = 0;
+          const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+          const stretch = Math.min(dist * 0.05, 1.2);
+          const scaleX = 1 + stretch;
+          const scaleY = Math.max(1 - stretch * 0.3, 0.5);
+          cursorDot.style.transform = `translate3d(${mouseX - 5}px, ${mouseY - 5}px, 0) rotate(${angle}deg) scale(${scaleX}, ${scaleY})`;
         }
+      }
+      requestAnimationFrame(updateCursor);
+    }
+    updateCursor();
 
-        keyBuffer += e.key.toLowerCase();
-        if (keyBuffer.length > 10) keyBuffer = keyBuffer.slice(-10);
-        if (keyBuffer.endsWith('fibre')) {
-          window.matrixMode = !window.matrixMode;
-          keyBuffer = '';
+    const hoverables = document.querySelectorAll('a, .glass-btn, #demo-btn, .top-corner-redirect a');
+    hoverables.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        if (!currentTarget) {
+          const rect = el.getBoundingClientRect();
+          boxPos.x = rect.left;
+          boxPos.y = rect.top;
+          boxPos.w = rect.width;
+          boxPos.h = rect.height;
+        }
+        currentTarget = el;
+        cursorDot.classList.add('on-box');
+      });
+      el.addEventListener('mouseleave', () => {
+        if (currentTarget === el) {
+          currentTarget = null;
+          cursorDot.classList.remove('on-box');
         }
       });
-    })();
+    });
+
+    const hud = document.getElementById('diag-hud');
+    const hudFps = document.getElementById('hud-fps');
+    const hudRes = document.getElementById('hud-res');
+    const hudGrid = document.getElementById('hud-grid');
+    let hudVisible = false;
+    let frames = 0, prevTime = performance.now();
+
+    document.addEventListener('keydown', (e) => {
+      if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+        hudVisible = !hudVisible;
+        hud.style.display = hudVisible ? 'block' : 'none';
+      }
+    });
+
+    function updateHudMetrics() {
+      if (hudVisible) {
+        frames++;
+        const now = performance.now();
+        if (now - prevTime >= 500) {
+          hudFps.textContent = Math.round((frames * 1000) / (now - prevTime));
+          hudRes.textContent = `${window.innerWidth}x${window.innerHeight}`;
+          hudGrid.textContent = `${cols}x${rows}`;
+          frames = 0;
+          prevTime = now;
+        }
+      }
+      requestAnimationFrame(updateHudMetrics);
+    }
+    updateHudMetrics();
+
+    const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    let konamiPos = 0;
+    let typedKeys = '';
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === konamiSequence[konamiPos]) {
+        konamiPos++;
+        if (konamiPos === konamiSequence.length) {
+          matrixMode = !matrixMode;
+          konamiPos = 0;
+        }
+      } else {
+        konamiPos = 0;
+      }
+
+      typedKeys += e.key.toLowerCase();
+      if (typedKeys.length > 10) typedKeys = typedKeys.slice(-10);
+      if (typedKeys.endsWith('fibre')) {
+        matrixMode = !matrixMode;
+        typedKeys = '';
+      }
+    });
   </script>
 </body>
 </html>

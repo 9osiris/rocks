@@ -34,7 +34,7 @@ body {
   padding: 40px 20px;
 }
 
-#ascii-canvas {
+#bg-canvas {
   position: fixed;
   inset: 0;
   width: 100%;
