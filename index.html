@@ -80,8 +80,8 @@
           <i class="fa-solid fa-play" id="audio-play-icon"></i>
         </button>
         <div class="audio-info">
-          <span class="audio-title">guilt_trip.mp3</span>
-          <span class="audio-artist">Osiris</span>
+          <span class="audio-title">Guilt Trip</span>
+          <span class="audio-artist">Kanye West</span>
         </div>
         <div class="audio-progress-wrap">
           <div class="audio-progress-bar" id="audio-progress-bar">
@@ -89,7 +89,7 @@
           </div>
           <span class="audio-time" id="audio-time">0:00</span>
         </div>
-        <audio id="audio-element" src="guilt_trip.mp3" preload="metadata"></audio>
+        <audio id="audio-element" src="guilt_trip.mp3" preload="auto"></audio>
       </div>
     </div>
 
@@ -118,21 +118,21 @@
 
       <div class="project-box">
         <div class="project-box-header">
-          <span class="project-box-title">OsirisBase</span>
-          <span class="project-box-tag">C++ Systems</span>
+          <span class="project-box-title">Orchid & Sonnet</span>
+          <span class="project-box-tag">UI Architecture</span>
         </div>
         <p class="project-box-desc">
-          low-level systems architecture, external memory manipulation framework, dynamic byte-pattern scanning, and runtime hook management.
+          dynamic visual layout engine, liquid interfaces, and custom high-performance frontend framework.
         </p>
       </div>
 
       <div class="project-box">
         <div class="project-box-header">
-          <span class="project-box-title">Lumen</span>
-          <span class="project-box-tag">Web Core</span>
+          <span class="project-box-title">Matcha / OsirisBase</span>
+          <span class="project-box-tag">C++ Systems</span>
         </div>
         <p class="project-box-desc">
-          modern, modular web interface architecture designed for zero-latency media browsing and high-efficiency client-side rendering.
+          low-level external memory reading/writing architecture, dynamic byte-pattern scanning, and native hook management.
         </p>
       </div>
     </div>
@@ -185,7 +185,7 @@
     let time = 0;
     let matrixMode = false;
     let lastTime = 0;
-    const frameInterval = 1000 / 35; // 35fps canvas throttle for performance
+    const frameInterval = 1000 / 35;
 
     function initCanvas() {
       canvas.width = window.innerWidth;
@@ -255,7 +255,7 @@
     const timeDisplay = document.getElementById('audio-time');
 
     function formatTime(seconds) {
-      if (isNaN(seconds)) return '0:00';
+      if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
       const m = Math.floor(seconds / 60);
       const s = Math.floor(seconds % 60);
       return `${m}:${s < 10 ? '0' : ''}${s}`;
@@ -263,8 +263,11 @@
 
     playBtn.addEventListener('click', () => {
       if (audioElement.paused) {
-        audioElement.play();
-        playIcon.className = 'fa-solid fa-pause';
+        audioElement.play().then(() => {
+          playIcon.className = 'fa-solid fa-pause';
+        }).catch((err) => {
+          console.error('Audio play error:', err);
+        });
       } else {
         audioElement.pause();
         playIcon.className = 'fa-solid fa-play';
