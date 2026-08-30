@@ -23,6 +23,25 @@
     <a href="https://shuttletv.su" target="_blank" rel="noopener noreferrer">if you're here for OsirisWatch, click here.</a>
   </div>
 
+  <!-- Floating Bottom Audio Player -->
+  <div class="floating-audio-player" id="audio-player-widget">
+    <img src="cover.jfif" alt="Yeezus cover" class="audio-cover" draggable="false" />
+    <button id="audio-play-btn" class="audio-btn" aria-label="Play or Pause">
+      <i class="fa-solid fa-play" id="audio-play-icon"></i>
+    </button>
+    <div class="audio-info">
+      <span class="audio-title">Guilt Trip</span>
+      <span class="audio-artist">Kanye West</span>
+    </div>
+    <div class="audio-progress-wrap">
+      <div class="audio-progress-bar" id="audio-progress-bar">
+        <div class="audio-progress-fill" id="audio-progress-fill"></div>
+      </div>
+      <span class="audio-time" id="audio-time">0:00</span>
+    </div>
+    <audio id="audio-element" src="guilt_trip.mp3" preload="auto" playsinline></audio>
+  </div>
+
   <main class="app-shell centered">
     <img src="osirisweb.svg" alt="osiris logo" class="profile-logo" draggable="false" />
     
@@ -70,70 +89,6 @@
         <span class="ticker-sep">·</span>
         <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" alt="Next.js" class="invert-icon">Next.js</span>
         <span class="ticker-sep">·</span>
-      </div>
-    </div>
-
-    <!-- Audio Player -->
-    <div class="audio-player-container">
-      <div class="audio-player">
-        <button id="audio-play-btn" class="audio-btn" aria-label="Play audio">
-          <i class="fa-solid fa-play" id="audio-play-icon"></i>
-        </button>
-        <div class="audio-info">
-          <span class="audio-title">Guilt Trip</span>
-          <span class="audio-artist">Kanye West</span>
-        </div>
-        <div class="audio-progress-wrap">
-          <div class="audio-progress-bar" id="audio-progress-bar">
-            <div class="audio-progress-fill" id="audio-progress-fill"></div>
-          </div>
-          <span class="audio-time" id="audio-time">0:00</span>
-        </div>
-        <audio id="audio-element" src="guilt_trip.mp3" preload="auto"></audio>
-      </div>
-    </div>
-
-    <!-- Projects Section -->
-    <h2 class="section-title">projects</h2>
-    <div class="projects-container">
-      <div class="project-box">
-        <div class="project-box-header">
-          <span class="project-box-title">Fibre Intelligence</span>
-          <span class="project-box-tag">coming soon ;)</span>
-        </div>
-        <p class="project-box-desc">
-          proprietary language model line and systemic ai engine built specifically for complex algorithmic reasoning, automated synthesis, and deep logic optimization.
-        </p>
-      </div>
-
-      <a href="https://shuttletv.su" target="_blank" rel="noopener noreferrer" class="project-box">
-        <div class="project-box-header">
-          <span class="project-box-title">OsirisWatch / ShuttleTV</span>
-          <span class="project-box-tag">shuttletv.su ↗</span>
-        </div>
-        <p class="project-box-desc">
-          resilient multi-provider streaming platform featuring high-concurrency video delivery, custom playback controls, and automated provider failovers.
-        </p>
-      </a>
-
-      <div class="project-box">
-        <div class="project-box-header">
-          <span class="project-box-title">Orchid & Sonnet</span>
-          <span class="project-box-tag">UI Architecture</span>
-        </div>
-        <p class="project-box-desc">
-          dynamic visual layout engine, liquid interfaces, and custom high-performance frontend framework.
-        </p>
-      </div>
-
-      <div class="project-box">
-        <div class="project-box-header">
-          <span class="project-box-title">Matcha / OsirisBase</span>
-          <span class="project-box-tag">C++ Systems</span>
-        </div>
-        <p class="project-box-desc">
-          low-level external memory reading/writing architecture, dynamic byte-pattern scanning, and native hook management.
-        </p>
       </div>
     </div>
 
@@ -246,13 +201,15 @@
     initCanvas();
     requestAnimationFrame(renderCanvas);
 
-    // Audio Player Logic
+    // Audio Player Logic with Autoplay
     const audioElement = document.getElementById('audio-element');
+    const audioWidget = document.getElementById('audio-player-widget');
     const playBtn = document.getElementById('audio-play-btn');
     const playIcon = document.getElementById('audio-play-icon');
     const progressBar = document.getElementById('audio-progress-bar');
     const progressFill = document.getElementById('audio-progress-fill');
     const timeDisplay = document.getElementById('audio-time');
+    let userPaused = false;
 
     function formatTime(seconds) {
       if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
@@ -261,16 +218,57 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    playBtn.addEventListener('click', () => {
-      if (audioElement.paused) {
-        audioElement.play().then(() => {
-          playIcon.className = 'fa-solid fa-pause';
-        }).catch((err) => {
-          console.error('Audio play error:', err);
-        });
+    function setPlayingState(playing) {
+      if (playing) {
+        playIcon.className = 'fa-solid fa-pause';
+        audioWidget.classList.add('is-playing');
       } else {
-        audioElement.pause();
         playIcon.className = 'fa-solid fa-play';
+        audioWidget.classList.remove('is-playing');
+      }
+    }
+
+    function tryAutoplay() {
+      const playPromise = audioElement.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          setPlayingState(true);
+        }).catch(() => {
+          // Autoplay blocked by browser policy; play on first user interaction
+          setPlayingState(false);
+          const enableAudioOnInteraction = () => {
+            if (!userPaused && audioElement.paused) {
+              audioElement.play().then(() => setPlayingState(true)).catch(() => {});
+            }
+            document.removeEventListener('click', enableAudioOnInteraction);
+            document.removeEventListener('keydown', enableAudioOnInteraction);
+            document.removeEventListener('touchstart', enableAudioOnInteraction);
+          };
+          document.addEventListener('click', enableAudioOnInteraction, { once: true });
+          document.addEventListener('keydown', enableAudioOnInteraction, { once: true });
+          document.addEventListener('touchstart', enableAudioOnInteraction, { once: true });
+        });
+      }
+    }
+
+    // Trigger autoplay as soon as DOM loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', tryAutoplay);
+    } else {
+      tryAutoplay();
+    }
+
+    playBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (audioElement.paused) {
+        userPaused = false;
+        audioElement.play().then(() => {
+          setPlayingState(true);
+        }).catch(() => {});
+      } else {
+        userPaused = true;
+        audioElement.pause();
+        setPlayingState(false);
       }
     });
 
@@ -283,12 +281,13 @@
     });
 
     audioElement.addEventListener('ended', () => {
-      playIcon.className = 'fa-solid fa-play';
+      setPlayingState(false);
       progressFill.style.width = '0%';
       timeDisplay.textContent = '0:00';
     });
 
     progressBar.addEventListener('click', (e) => {
+      e.stopPropagation();
       const rect = progressBar.getBoundingClientRect();
       const clickPos = (e.clientX - rect.left) / rect.width;
       if (audioElement.duration) {
@@ -360,7 +359,7 @@
     }
     updateCursor();
 
-    const hoverables = document.querySelectorAll('a, .glass-btn, .project-box, .audio-player, .audio-btn, .top-corner-redirect a');
+    const hoverables = document.querySelectorAll('a, .glass-btn, .floating-audio-player, .audio-btn, .top-corner-redirect a');
     hoverables.forEach(el => {
       el.addEventListener('mouseenter', () => {
         if (!currentTarget) {
