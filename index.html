@@ -37,6 +37,7 @@
           <span class="audio-bar"></span>
           <span class="audio-bar"></span>
           <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
         </div>
       </div>
       <span class="audio-artist">Kanye West</span>
@@ -163,23 +164,29 @@
     let analyser = null;
     let freqData = null;
     let bassEnergy = 0;
+    let kickPulse = 0;
+    let midEnergy = 0;
+    let highEnergy = 0;
+    let avgBassTracker = 0.2;
 
     const defaultColors = [
       'rgba(80, 140, 220, 0.04)',
-      'rgba(80, 140, 220, 0.08)',
-      'rgba(80, 140, 220, 0.12)',
-      'rgba(80, 140, 220, 0.16)',
-      'rgba(80, 140, 220, 0.20)',
-      'rgba(80, 140, 220, 0.24)'
+      'rgba(80, 140, 220, 0.09)',
+      'rgba(80, 140, 220, 0.15)',
+      'rgba(90, 160, 240, 0.22)',
+      'rgba(120, 185, 255, 0.32)',
+      'rgba(180, 220, 255, 0.45)',
+      'rgba(240, 248, 255, 0.65)'
     ];
 
     const matrixColors = [
-      'rgba(0, 255, 120, 0.08)',
-      'rgba(0, 255, 120, 0.16)',
+      'rgba(0, 255, 120, 0.06)',
+      'rgba(0, 255, 120, 0.14)',
       'rgba(0, 255, 120, 0.24)',
-      'rgba(0, 255, 120, 0.32)',
-      'rgba(0, 255, 120, 0.40)',
-      'rgba(0, 255, 120, 0.48)'
+      'rgba(20, 255, 140, 0.36)',
+      'rgba(50, 255, 165, 0.50)',
+      'rgba(120, 255, 200, 0.68)',
+      'rgba(200, 255, 235, 0.85)'
     ];
 
     function resizeCanvas() {
@@ -220,22 +227,35 @@
 
       if (analyser && freqData) {
         analyser.getByteFrequencyData(freqData);
-        let sumBass = 0;
-        for (let i = 0; i < 4; i++) sumBass += freqData[i];
-        const targetBass = sumBass / (4 * 255);
-        bassEnergy += (targetBass - bassEnergy) * 0.25;
 
-        if (visualizerBars.length >= 3) {
-          const b1 = Math.max(3, (freqData[1] / 255) * 11);
-          const b2 = Math.max(3, (freqData[3] / 255) * 11);
-          const b3 = Math.max(3, (freqData[6] / 255) * 11);
-          visualizerBars[0].style.height = `${b1}px`;
-          visualizerBars[1].style.height = `${b2}px`;
-          visualizerBars[2].style.height = `${b3}px`;
+        let subBassRaw = (freqData[0] + freqData[1] + freqData[2]) / (3 * 255);
+        let kickRaw = (freqData[2] + freqData[3] + freqData[4] + freqData[5]) / (4 * 255);
+        let midRaw = (freqData[7] + freqData[9] + freqData[12] + freqData[15]) / (4 * 255);
+        let highRaw = (freqData[18] + freqData[22] + freqData[26] + freqData[30]) / (4 * 255);
+
+        bassEnergy += (subBassRaw - bassEnergy) * 0.35;
+        midEnergy += (midRaw - midEnergy) * 0.3;
+        highEnergy += (highRaw - highEnergy) * 0.3;
+        avgBassTracker = avgBassTracker * 0.95 + subBassRaw * 0.05;
+
+        if (subBassRaw > avgBassTracker * 1.3 && subBassRaw > 0.35) {
+          kickPulse = Math.min(1.0, kickPulse + 0.6);
+        }
+        kickPulse *= 0.85;
+
+        if (visualizerBars.length >= 4) {
+          const v1 = Math.max(2.5, subBassRaw * 11);
+          const v2 = Math.max(2.5, kickRaw * 11);
+          const v3 = Math.max(2.5, midRaw * 11);
+          const v4 = Math.max(2.5, highRaw * 11);
+          visualizerBars[0].style.height = `${v1}px`;
+          visualizerBars[1].style.height = `${v2}px`;
+          visualizerBars[2].style.height = `${v3}px`;
+          visualizerBars[3].style.height = `${v4}px`;
         }
       }
 
-      tick += 0.035 + bassEnergy * 0.03;
+      tick += 0.032 + bassEnergy * 0.05 + kickPulse * 0.04;
       const w = window.innerWidth;
       const h = window.innerHeight;
       
@@ -244,21 +264,30 @@
 
       const palette = matrix ? matrixColors : defaultColors;
       const tiers = palette.length;
+      const midCol = cols * 0.5;
 
       for (let r = 0; r < rows; r++) {
         const row = grid[r];
         const y = (r + 1) * charSize;
         for (let c = 0; c < cols; c++) {
           const item = row[c];
-          const val = Math.sin(tick + c * 0.2 + r * 0.15 + item.offset);
-          const boost = bassEnergy * 0.35;
-          const norm = val * 0.5 + 0.5 + boost;
           
-          if (norm < 0.25) continue;
+          let colFreq = 0;
+          if (freqData) {
+            const distFromCenter = Math.abs(c - midCol) / midCol;
+            const bin = Math.min(31, Math.floor(distFromCenter * 24));
+            colFreq = (freqData[bin] || 0) / 255;
+          }
+
+          const wave = Math.sin(tick + c * 0.18 + r * 0.14 + item.offset);
+          const dynamicBoost = (bassEnergy * 0.45) + (kickPulse * 0.4) + (colFreq * 0.35);
+          const norm = wave * 0.5 + 0.5 + dynamicBoost;
+          
+          if (norm < 0.22) continue;
           
           const idx = Math.min(Math.max((norm * tiers) | 0, 0), tiers - 1);
           
-          if (Math.random() < 0.003) {
+          if (Math.random() < 0.002 + (highEnergy * 0.035)) {
             item.char = chars[(Math.random() * chars.length) | 0];
           }
 
@@ -314,8 +343,8 @@
         if (AudioContextClass) {
           audioCtx = new AudioContextClass();
           analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 64;
-          analyser.smoothingTimeConstant = 0.8;
+          analyser.fftSize = 128;
+          analyser.smoothingTimeConstant = 0.75;
           freqData = new Uint8Array(analyser.frequencyBinCount);
           
           const srcNode = audioCtx.createMediaElementSource(audio);
