@@ -50,4 +50,4 @@ My dumbass portfolio website that isn't completed, used my own AI to vibecode, a
 
 ## License
 
-&copy; 2026 LYRD INNO. All rights reserved.
+&copy; 2026 LYRD INNO. All rights reserved. Fibre Automated Systems.
