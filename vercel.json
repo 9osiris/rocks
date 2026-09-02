@@ -2,7 +2,9 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/css/orc-styles.css", "destination": "/orc-styles.css" },
-    { "source": "/images/favicon.svg", "destination": "/favicon.svg" }
+    { "source": "/favicon.ico", "destination": "/osirisweb.svg" },
+    { "source": "/favicon.svg", "destination": "/osirisweb.svg" },
+    { "source": "/favicon.png", "destination": "/osirisweb.png" }
   ],
   "redirects": [
     { "source": "/index.html", "destination": "/", "permanent": true }
