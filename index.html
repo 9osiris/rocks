@@ -167,26 +167,26 @@
     let kickPulse = 0;
     let midEnergy = 0;
     let highEnergy = 0;
-    let avgBassTracker = 0.2;
+    let avgBassTracker = 0.15;
 
     const defaultColors = [
-      'rgba(80, 140, 220, 0.04)',
-      'rgba(80, 140, 220, 0.09)',
-      'rgba(80, 140, 220, 0.15)',
-      'rgba(90, 160, 240, 0.22)',
-      'rgba(120, 185, 255, 0.32)',
-      'rgba(180, 220, 255, 0.45)',
-      'rgba(240, 248, 255, 0.65)'
+      'rgba(70, 120, 200, 0.04)',
+      'rgba(75, 130, 210, 0.07)',
+      'rgba(80, 140, 220, 0.11)',
+      'rgba(90, 155, 230, 0.16)',
+      'rgba(100, 170, 240, 0.22)',
+      'rgba(130, 190, 255, 0.30)',
+      'rgba(170, 215, 255, 0.40)'
     ];
 
     const matrixColors = [
-      'rgba(0, 255, 120, 0.06)',
-      'rgba(0, 255, 120, 0.14)',
-      'rgba(0, 255, 120, 0.24)',
-      'rgba(20, 255, 140, 0.36)',
-      'rgba(50, 255, 165, 0.50)',
-      'rgba(120, 255, 200, 0.68)',
-      'rgba(200, 255, 235, 0.85)'
+      'rgba(0, 200, 100, 0.05)',
+      'rgba(0, 220, 110, 0.10)',
+      'rgba(0, 240, 120, 0.17)',
+      'rgba(10, 250, 135, 0.24)',
+      'rgba(30, 255, 150, 0.32)',
+      'rgba(80, 255, 175, 0.42)',
+      'rgba(150, 255, 210, 0.54)'
     ];
 
     function resizeCanvas() {
@@ -228,34 +228,30 @@
       if (analyser && freqData) {
         analyser.getByteFrequencyData(freqData);
 
-        let subBassRaw = (freqData[0] + freqData[1] + freqData[2]) / (3 * 255);
-        let kickRaw = (freqData[2] + freqData[3] + freqData[4] + freqData[5]) / (4 * 255);
-        let midRaw = (freqData[7] + freqData[9] + freqData[12] + freqData[15]) / (4 * 255);
-        let highRaw = (freqData[18] + freqData[22] + freqData[26] + freqData[30]) / (4 * 255);
+        const subBassRaw = (freqData[0] + freqData[1] + freqData[2]) / (3 * 255);
+        const kickRaw = (freqData[2] + freqData[3] + freqData[4] + freqData[5]) / (4 * 255);
+        const midRaw = (freqData[7] + freqData[9] + freqData[12] + freqData[15]) / (4 * 255);
+        const highRaw = (freqData[18] + freqData[22] + freqData[26] + freqData[30]) / (4 * 255);
 
-        bassEnergy += (subBassRaw - bassEnergy) * 0.35;
-        midEnergy += (midRaw - midEnergy) * 0.3;
-        highEnergy += (highRaw - highEnergy) * 0.3;
-        avgBassTracker = avgBassTracker * 0.95 + subBassRaw * 0.05;
+        bassEnergy += (subBassRaw - bassEnergy) * 0.28;
+        midEnergy += (midRaw - midEnergy) * 0.22;
+        highEnergy += (highRaw - highEnergy) * 0.22;
+        avgBassTracker = avgBassTracker * 0.98 + subBassRaw * 0.02;
 
-        if (subBassRaw > avgBassTracker * 1.3 && subBassRaw > 0.35) {
-          kickPulse = Math.min(1.0, kickPulse + 0.6);
+        if (subBassRaw > avgBassTracker * 1.6 && subBassRaw > 0.38) {
+          kickPulse = Math.min(0.35, kickPulse + 0.25);
         }
-        kickPulse *= 0.85;
+        kickPulse *= 0.72;
 
         if (visualizerBars.length >= 4) {
-          const v1 = Math.max(2.5, subBassRaw * 11);
-          const v2 = Math.max(2.5, kickRaw * 11);
-          const v3 = Math.max(2.5, midRaw * 11);
-          const v4 = Math.max(2.5, highRaw * 11);
-          visualizerBars[0].style.height = `${v1}px`;
-          visualizerBars[1].style.height = `${v2}px`;
-          visualizerBars[2].style.height = `${v3}px`;
-          visualizerBars[3].style.height = `${v4}px`;
+          visualizerBars[0].style.height = `${Math.max(2.5, subBassRaw * 11)}px`;
+          visualizerBars[1].style.height = `${Math.max(2.5, kickRaw * 11)}px`;
+          visualizerBars[2].style.height = `${Math.max(2.5, midRaw * 11)}px`;
+          visualizerBars[3].style.height = `${Math.max(2.5, highRaw * 11)}px`;
         }
       }
 
-      tick += 0.032 + bassEnergy * 0.05 + kickPulse * 0.04;
+      tick += 0.028 + bassEnergy * 0.035 + kickPulse * 0.02;
       const w = window.innerWidth;
       const h = window.innerHeight;
       
@@ -280,14 +276,14 @@
           }
 
           const wave = Math.sin(tick + c * 0.18 + r * 0.14 + item.offset);
-          const dynamicBoost = (bassEnergy * 0.45) + (kickPulse * 0.4) + (colFreq * 0.35);
-          const norm = wave * 0.5 + 0.5 + dynamicBoost;
+          const audioBoost = bassEnergy * 0.12 + kickPulse * 0.18 + colFreq * 0.06;
+          const norm = Math.min(0.99, wave * 0.5 + 0.5 + audioBoost);
           
-          if (norm < 0.22) continue;
+          if (norm < 0.32) continue;
           
-          const idx = Math.min(Math.max((norm * tiers) | 0, 0), tiers - 1);
+          const idx = Math.min(Math.max(((norm - 0.32) / 0.67 * tiers) | 0, 0), tiers - 1);
           
-          if (Math.random() < 0.002 + (highEnergy * 0.035)) {
+          if (Math.random() < 0.0012 + highEnergy * 0.015) {
             item.char = chars[(Math.random() * chars.length) | 0];
           }
 
