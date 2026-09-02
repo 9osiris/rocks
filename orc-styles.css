@@ -217,7 +217,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Contact and Links */
 .section-title {
   font-size: 0.75rem;
   font-weight: 600;
@@ -295,7 +294,6 @@ body {
   color: var(--text-2);
 }
 
-/* Floating Bottom Corner Audio Player */
 .floating-audio-player {
   position: fixed;
   bottom: 24px;
@@ -418,7 +416,6 @@ body {
   }
 }
 
-/* Footer */
 .footer {
   margin-top: 48px;
   font-size: 0.8rem;
@@ -430,7 +427,6 @@ body {
   animation: fade-up 0.8s 0.85s var(--ease) both;
 }
 
-/* Cursor Dot */
 @media (hover: hover) and (pointer: fine) {
   .cursor-dot {
     position: fixed;

@@ -93,7 +93,6 @@
       </div>
     </div>
 
-    <!-- Contact & Socials -->
     <h2 class="section-title">contact & socials</h2>
     <div class="link-container">
       <a href="https://discord.com/users/osirisplus" target="_blank" rel="noopener noreferrer" class="glass-btn">
@@ -341,21 +340,14 @@
       }
     });
 
-    // Improved Fluid Magnetic Cursor
     const cursorDot = document.getElementById('cursor-dot');
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !prefersReducedMotion) {
-      // Raw mouse target
       let mouseX = -100, mouseY = -100;
-      // Smoothed position (follows mouse)
       let posX = -100, posY = -100;
-      // Smoothed size/shape
       let curW = 10, curH = 10, curR = 50;
-      // Velocity tracking for stretch
       let vx = 0, vy = 0;
       let prevMouseX = -100, prevMouseY = -100;
-      // Smoothed stretch values to avoid snapping
       let sStretch = 0, sAngle = 0;
-      // Current hover target
       let targetEl = null;
 
       document.addEventListener('mousemove', (e) => {
@@ -366,13 +358,11 @@
       function lerp(a, b, t) { return a + (b - a) * t; }
 
       function updateCursor() {
-        // Raw velocity from mouse deltas
         const rawVx = mouseX - prevMouseX;
         const rawVy = mouseY - prevMouseY;
         prevMouseX = mouseX;
         prevMouseY = mouseY;
 
-        // Low-pass filter velocity so stretch doesn't flicker
         vx = lerp(vx, rawVx, 0.25);
         vy = lerp(vy, rawVy, 0.25);
 
@@ -380,14 +370,12 @@
           const rect = targetEl.getBoundingClientRect();
           const br = parseFloat(window.getComputedStyle(targetEl).borderRadius) || 14;
 
-          // Position spring - slightly tighter when locked to element
           posX = lerp(posX, rect.left, 0.20);
           posY = lerp(posY, rect.top,  0.20);
           curW = lerp(curW, rect.width,  0.18);
           curH = lerp(curH, rect.height, 0.18);
           curR = lerp(curR, br, 0.20);
 
-          // Kill stretch while morphed
           sStretch = lerp(sStretch, 0, 0.25);
 
           cursorDot.style.transform    = `translate3d(${posX}px, ${posY}px, 0)`;
@@ -395,22 +383,18 @@
           cursorDot.style.height       = `${curH}px`;
           cursorDot.style.borderRadius = `${curR}px`;
         } else {
-          // Follow mouse with lag
           posX = lerp(posX, mouseX - 5, 0.28);
           posY = lerp(posY, mouseY - 5, 0.28);
           curW = lerp(curW, 10, 0.20);
           curH = lerp(curH, 10, 0.20);
           curR = lerp(curR, 50, 0.20);
 
-          // Velocity magnitude -> stretch amount
           const speed = Math.sqrt(vx * vx + vy * vy);
           const targetStretch = Math.min(speed * 0.032, 0.65);
           sStretch = lerp(sStretch, targetStretch, 0.18);
 
-          // Smooth angle to prevent instant rotation flips
           if (speed > 0.5) {
             const rawAngle = Math.atan2(vy, vx) * (180 / Math.PI);
-            // Shortest-path angle interpolation
             let diff = rawAngle - sAngle;
             if (diff > 180) diff -= 360;
             if (diff < -180) diff += 360;
@@ -439,8 +423,6 @@
           if (targetEl === el) {
             targetEl = null;
             cursorDot.classList.remove('on-box');
-            // Instantly reset to dot at cursor - prevents the smear/stretch glitch
-            // that occurs when lerping from large box dimensions back to 10px.
             posX = mouseX - 5;
             posY = mouseY - 5;
             curW = 10;
@@ -454,7 +436,6 @@
       });
     }
 
-    // Easter Egg
     let keyBuffer = '';
     document.addEventListener('keydown', (e) => {
       if (!e.key) return;
