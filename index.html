@@ -219,11 +219,11 @@
       if (analyser && freqData) {
         analyser.getByteFrequencyData(freqData);
 
-        const bins = freqData.length;
-        subBassRaw = (freqData[0] + freqData[1] + freqData[2]) / (3 * 255);
-        kickRaw    = (freqData[2] + freqData[3] + freqData[4] + freqData[5]) / (4 * 255);
-        midRaw     = (freqData[8] + freqData[10] + freqData[13] + freqData[16]) / (4 * 255);
-        highRaw    = (freqData[20] + freqData[25] + freqData[30] + freqData[35]) / (4 * 255);
+        const bins = freqData.length; // 1024 bins now (21.5 Hz per bin)
+        subBassRaw = (freqData[1] + freqData[2] + freqData[3]) / (3 * 255); // 21Hz - 86Hz
+        kickRaw    = (freqData[4] + freqData[5] + freqData[6] + freqData[7] + freqData[8]) / (5 * 255); // 86Hz - 193Hz
+        midRaw     = (freqData[20] + freqData[25] + freqData[30] + freqData[35] + freqData[40]) / (5 * 255);
+        highRaw    = (freqData[100] + freqData[150] + freqData[200] + freqData[250] + freqData[300]) / (5 * 255);
 
         bassEnergy += (subBassRaw - bassEnergy) * 0.5;
         midEnergy  += (midRaw - midEnergy) * 0.4;
@@ -232,21 +232,22 @@
 
         if (prevFreqData) {
           let flux = 0;
-          const bassBins = Math.min(bins, 16); // Only track flux in the sub/kick/low-mid ranges
-          for (let i = 0; i < bassBins; i++) {
+          const bassBins = 10; // Exactly bins 1 through 10 (21.5 Hz to 215 Hz)
+          for (let i = 1; i <= bassBins; i++) {
             const d = freqData[i] - prevFreqData[i];
             if (d > 0) flux += d;
           }
           flux /= bassBins * 255;
-          fluxEnergy += (flux - fluxEnergy) * 0.65;
-          avgFluxTracker = avgFluxTracker * 0.95 + fluxEnergy * 0.05;
+          fluxEnergy += (flux - fluxEnergy) * 0.4;
+          avgFluxTracker = avgFluxTracker * 0.98 + fluxEnergy * 0.02;
 
-          // Gate it: must have a sudden bass flux spike, AND there must actually be bass/kick audio present
-          const isBassHit = (subBassRaw > 0.12 || kickRaw > 0.12);
-          const isOnset = fluxEnergy > avgFluxTracker * 2.2 && fluxEnergy > 0.015 && isBassHit && (time - lastOnset > 180);
+          // Gate: there must be a sharp spike in low-end flux, AND absolute volume must be loud enough, AND we wait 250ms between hits
+          const isBassHit = (subBassRaw > 0.4 || kickRaw > 0.4); 
+          const isOnset = fluxEnergy > avgFluxTracker * 2.8 && fluxEnergy > 0.015 && isBassHit && (time - lastOnset > 250);
+          
           if (isOnset) {
             lastOnset = time;
-            const strength = Math.min(1, (fluxEnergy / avgFluxTracker - 1) * 0.5);
+            const strength = Math.min(1, (fluxEnergy / avgFluxTracker - 1) * 0.4);
             kickPulse  = Math.min(0.8,  kickPulse  + 0.45 + strength * 0.35);
             globalPulse = Math.min(1.0, globalPulse + 0.6  + strength * 0.3);
 
@@ -325,7 +326,7 @@
 
         let rowFreq = 0;
         if (freqData && bins > 0) {
-          const logBin = Math.min(bins - 1, Math.floor(Math.pow(rowNorm, 1.5) * bins * 0.9));
+          const logBin = Math.floor(Math.pow(rowNorm, 1.5) * 400); // Map rows over 0-8kHz
           rowFreq = (freqData[logBin] || 0) / 255;
         }
 
@@ -358,9 +359,9 @@
 
           let colFreq = 0;
           if (freqData && bins > 0) {
-            const logCol = Math.pow(c / cols, 0.7);
-            const bin = Math.min(bins - 1, Math.floor(logCol * bins * 0.55));
-            colFreq = ((freqData[bin] || 0) + (freqData[Math.min(bin + 1, bins - 1)] || 0)) / (2 * 255);
+            const logCol = Math.pow(c / cols, 1.2);
+            const bin = Math.floor(logCol * 400); // Map cols over 0-8kHz
+            colFreq = ((freqData[bin] || 0) + (freqData[bin + 1] || 0)) / (2 * 255);
           }
 
           const wave1 = Math.sin(tick + c * 0.17 + r * 0.13 + item.offset);
@@ -467,8 +468,8 @@
         if (AudioContextClass) {
           audioCtx = new AudioContextClass();
           analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 128;
-          analyser.smoothingTimeConstant = 0.35;
+          analyser.fftSize = 2048;
+          analyser.smoothingTimeConstant = 0.82;
           freqData = new Uint8Array(analyser.frequencyBinCount);
           prevFreqData = new Uint8Array(analyser.frequencyBinCount);
           
