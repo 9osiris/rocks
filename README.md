@@ -1,8 +1,8 @@
 # osiris.rocks
 
-Personal developer portfolio and digital presence for **Osiris** / **Layered Innovation (LAYRD INNO.)**.
+Personal developer portfolio by **Osiris** / **Layered Innovation (LAYRD INNO.)**.
 
-Live at: [https://osiris.rocks](https://osiris.rocks)
+Live at: [here](https://osiris.rocks)
 
 ---
 
@@ -50,4 +50,4 @@ A lightweight, zero-framework single-page portfolio engineered for performance, 
 
 ## License
 
-&copy; 2026 LYRD INNO. All rights reserved.
+&copy; 2026 LYRD INNO. All rights reserved. Fibre Automated System.
