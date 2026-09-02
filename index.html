@@ -147,18 +147,19 @@
     const ctx = canvas.getContext('2d', { alpha: true });
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+    const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモ';
     const charSize = 22;
     const colStep = 18;
     
     let cols = 0, rows = 0;
     let grid = [];
+    let rainCols = [];
     let tick = 0;
     let matrix = false;
     let frameId = null;
     let tabActive = true;
     let lastTick = 0;
-    const frameInterval = 1000 / 35;
+    const frameInterval = 1000 / 40;
 
     let audioCtx = null;
     let analyser = null;
@@ -168,80 +169,81 @@
     let midEnergy = 0;
     let highEnergy = 0;
     let avgBassTracker = 0.15;
-
-    const defaultColors = [
-      'rgba(70, 120, 200, 0.04)',
-      'rgba(75, 130, 210, 0.07)',
-      'rgba(80, 140, 220, 0.11)',
-      'rgba(90, 155, 230, 0.16)',
-      'rgba(100, 170, 240, 0.22)',
-      'rgba(130, 190, 255, 0.30)',
-      'rgba(170, 215, 255, 0.40)'
-    ];
-
-    const matrixColors = [
-      'rgba(0, 200, 100, 0.05)',
-      'rgba(0, 220, 110, 0.10)',
-      'rgba(0, 240, 120, 0.17)',
-      'rgba(10, 250, 135, 0.24)',
-      'rgba(30, 255, 150, 0.32)',
-      'rgba(80, 255, 175, 0.42)',
-      'rgba(150, 255, 210, 0.54)'
-    ];
+    let shockwaves = [];
 
     function resizeCanvas() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = window.innerWidth;
       const h = window.innerHeight;
-      
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       ctx.scale(dpr, dpr);
-      
-      cols = Math.ceil(w / colStep);
-      rows = Math.ceil(h / charSize);
-      
+      cols = Math.ceil(w / colStep) + 1;
+      rows = Math.ceil(h / charSize) + 1;
       grid = [];
+      rainCols = [];
       for (let r = 0; r < rows; r++) {
         const row = [];
         for (let c = 0; c < cols; c++) {
-          row.push({
-            char: chars[(Math.random() * chars.length) | 0],
-            offset: Math.random() * 6.28
-          });
+          row.push({ char: chars[(Math.random() * chars.length) | 0], offset: Math.random() * 6.28 });
         }
         grid[r] = row;
+      }
+      for (let c = 0; c < cols; c++) {
+        rainCols[c] = {
+          head: Math.random() < 0.3 ? (Math.random() * rows) | 0 : -1,
+          speed: 0.25 + Math.random() * 0.5,
+          trail: 6 + Math.floor(Math.random() * 8),
+          active: Math.random() < 0.3
+        };
       }
     }
 
     const visualizerBars = document.querySelectorAll('.audio-bar');
 
+    function lerpColor(r1, g1, b1, r2, g2, b2, t) {
+      return [r1 + (r2 - r1) * t, g1 + (g2 - g1) * t, b1 + (b2 - b1) * t];
+    }
+
     function renderBackground(time) {
       if (!tabActive) return;
-      
       frameId = requestAnimationFrame(renderBackground);
-      
       const delta = time - lastTick;
       if (delta < frameInterval) return;
       lastTick = time - (delta % frameInterval);
 
+      let subBassRaw = 0, kickRaw = 0, midRaw = 0, highRaw = 0;
+
       if (analyser && freqData) {
         analyser.getByteFrequencyData(freqData);
+        const binCount = freqData.length;
 
-        const subBassRaw = (freqData[0] + freqData[1] + freqData[2]) / (3 * 255);
-        const kickRaw = (freqData[2] + freqData[3] + freqData[4] + freqData[5]) / (4 * 255);
-        const midRaw = (freqData[7] + freqData[9] + freqData[12] + freqData[15]) / (4 * 255);
-        const highRaw = (freqData[18] + freqData[22] + freqData[26] + freqData[30]) / (4 * 255);
+        subBassRaw = (freqData[0] + freqData[1] + freqData[2]) / (3 * 255);
+        kickRaw    = (freqData[2] + freqData[3] + freqData[4] + freqData[5]) / (4 * 255);
+        midRaw     = (freqData[8] + freqData[10] + freqData[14] + freqData[18]) / (4 * 255);
+        highRaw    = (freqData[22] + freqData[28] + freqData[34] + freqData[40]) / (4 * 255);
 
-        bassEnergy += (subBassRaw - bassEnergy) * 0.28;
-        midEnergy += (midRaw - midEnergy) * 0.22;
-        highEnergy += (highRaw - highEnergy) * 0.22;
+        bassEnergy += (subBassRaw - bassEnergy) * 0.25;
+        midEnergy  += (midRaw - midEnergy) * 0.2;
+        highEnergy += (highRaw - highEnergy) * 0.2;
         avgBassTracker = avgBassTracker * 0.98 + subBassRaw * 0.02;
 
-        if (subBassRaw > avgBassTracker * 1.6 && subBassRaw > 0.38) {
-          kickPulse = Math.min(0.35, kickPulse + 0.25);
+        if (subBassRaw > avgBassTracker * 1.65 && subBassRaw > 0.4) {
+          kickPulse = Math.min(0.6, kickPulse + 0.4);
+          const cx = (Math.random() * 0.6 + 0.2) * window.innerWidth;
+          const cy = (Math.random() * 0.6 + 0.2) * window.innerHeight;
+          shockwaves.push({ x: cx, y: cy, r: 0, maxR: Math.max(window.innerWidth, window.innerHeight) * 0.55, age: 0 });
+          if (shockwaves.length > 3) shockwaves.shift();
+
+          for (let c = 0; c < cols; c++) {
+            if (!rainCols[c].active && Math.random() < 0.4) {
+              rainCols[c].active = true;
+              rainCols[c].head = 0;
+              rainCols[c].speed = 0.3 + Math.random() * 0.7 + bassEnergy * 0.5;
+            }
+          }
         }
-        kickPulse *= 0.72;
+        kickPulse *= 0.74;
 
         if (visualizerBars.length >= 4) {
           visualizerBars[0].style.height = `${Math.max(2.5, subBassRaw * 11)}px`;
@@ -251,44 +253,132 @@
         }
       }
 
-      tick += 0.028 + bassEnergy * 0.035 + kickPulse * 0.02;
+      tick += 0.025 + bassEnergy * 0.04 + kickPulse * 0.015;
+
+      for (let c = 0; c < cols; c++) {
+        const rc = rainCols[c];
+        if (rc.active) {
+          rc.head += rc.speed;
+          if (rc.head - rc.trail > rows) {
+            rc.active = false;
+            rc.head = -1;
+            rc.speed = 0.25 + Math.random() * 0.5;
+          }
+        } else if (Math.random() < 0.0015 + bassEnergy * 0.004) {
+          rc.active = true;
+          rc.head = 0;
+          rc.speed = 0.25 + Math.random() * 0.55;
+        }
+      }
+
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        shockwaves[i].r += 8 + bassEnergy * 4;
+        shockwaves[i].age++;
+        if (shockwaves[i].r > shockwaves[i].maxR) shockwaves.splice(i, 1);
+      }
+
       const w = window.innerWidth;
       const h = window.innerHeight;
-      
       ctx.clearRect(0, 0, w, h);
       ctx.font = `600 ${charSize - 4}px monospace`;
 
-      const palette = matrix ? matrixColors : defaultColors;
-      const tiers = palette.length;
-      const midCol = cols * 0.5;
+      const midColX = w * 0.5;
+      const midColY = h * 0.5;
+      const maxDist = Math.sqrt(midColX * midColX + midColY * midColY);
+
+      const energyShift = Math.min(1, bassEnergy * 2.5 + kickPulse * 1.5);
+      const baseR1 = 70,  baseG1 = 120, baseB1 = 200;
+      const hotR   = 130, hotG   = 80,  hotB   = 255;
+      const matR   = 0,   matG   = 220, matB   = 120;
+      const matHot = 100, matHotG = 255, matHotB = 180;
 
       for (let r = 0; r < rows; r++) {
         const row = grid[r];
-        const y = (r + 1) * charSize;
+        const py = (r + 1) * charSize;
         for (let c = 0; c < cols; c++) {
           const item = row[c];
-          
+          const px = c * colStep;
+
+          const dx = px - midColX;
+          const dy = py - midColY;
+          const distFromCenter = Math.sqrt(dx * dx + dy * dy) / maxDist;
+          const spotlight = Math.max(0, 1 - distFromCenter * 1.1);
+
+          let shockBoost = 0;
+          for (let i = 0; i < shockwaves.length; i++) {
+            const sw = shockwaves[i];
+            const sdx = px - sw.x;
+            const sdy = py - sw.y;
+            const sd = Math.sqrt(sdx * sdx + sdy * sdy);
+            const waveWidth = 60;
+            const dist = Math.abs(sd - sw.r);
+            if (dist < waveWidth) {
+              const waveFactor = (1 - dist / waveWidth) * (1 - sw.r / sw.maxR);
+              shockBoost = Math.max(shockBoost, waveFactor * 0.7);
+            }
+          }
+
           let colFreq = 0;
           if (freqData) {
-            const distFromCenter = Math.abs(c - midCol) / midCol;
-            const bin = Math.min(31, Math.floor(distFromCenter * 24));
+            const normCol = c / cols;
+            const bin = Math.min(freqData.length - 1, Math.floor(normCol * freqData.length * 0.5));
             colFreq = (freqData[bin] || 0) / 255;
           }
 
-          const wave = Math.sin(tick + c * 0.18 + r * 0.14 + item.offset);
-          const audioBoost = bassEnergy * 0.12 + kickPulse * 0.18 + colFreq * 0.06;
-          const norm = Math.min(0.99, wave * 0.5 + 0.5 + audioBoost);
-          
-          if (norm < 0.32) continue;
-          
-          const idx = Math.min(Math.max(((norm - 0.32) / 0.67 * tiers) | 0, 0), tiers - 1);
-          
-          if (Math.random() < 0.0012 + highEnergy * 0.015) {
+          const wave1 = Math.sin(tick + c * 0.17 + r * 0.13 + item.offset);
+          const wave2 = Math.sin(tick * 0.7 + c * 0.09 - r * 0.11 + item.offset * 1.3) * 0.4;
+          const waveCombined = (wave1 + wave2) / 1.4;
+
+          const audioBoost = bassEnergy * 0.14 + kickPulse * 0.16 + colFreq * 0.08 + shockBoost;
+          const rawNorm = waveCombined * 0.5 + 0.5 + audioBoost;
+          const norm = Math.min(0.99, rawNorm) * spotlight;
+
+          const rc = rainCols[c];
+          let isRainHead = false;
+          let rainAlpha = 0;
+          if (rc.active) {
+            const headRow = rc.head | 0;
+            if (r === headRow) { isRainHead = true; rainAlpha = 1.0; }
+            else if (r < headRow && r >= headRow - rc.trail) {
+              rainAlpha = (rc.trail - (headRow - r)) / rc.trail;
+            }
+          }
+
+          if (norm < 0.2 && rainAlpha < 0.05) continue;
+
+          let finalAlpha;
+          let cr, cg, cb;
+
+          if (isRainHead) {
+            cr = 220; cg = 240; cb = 255;
+            finalAlpha = matrix ? 0.9 : 0.85;
+            if (Math.random() < 0.4) item.char = chars[(Math.random() * chars.length) | 0];
+          } else if (rainAlpha > 0.05) {
+            const t = rainAlpha * spotlight;
+            if (matrix) {
+              [cr, cg, cb] = lerpColor(matR, matG, matB, matHot, matHotG, matHotB, energyShift);
+            } else {
+              [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
+            }
+            finalAlpha = t * 0.55;
+          } else {
+            if (matrix) {
+              [cr, cg, cb] = lerpColor(matR, matG, matB, matHot, matHotG, matHotB, energyShift);
+            } else {
+              [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
+            }
+            const normMapped = (norm - 0.2) / 0.79;
+            finalAlpha = normMapped * (matrix ? 0.48 : 0.38) + shockBoost * 0.3;
+          }
+
+          if (finalAlpha < 0.02) continue;
+
+          if (!isRainHead && Math.random() < 0.0008 + highEnergy * 0.012 + kickPulse * 0.01) {
             item.char = chars[(Math.random() * chars.length) | 0];
           }
 
-          ctx.fillStyle = palette[idx];
-          ctx.fillText(item.char, c * colStep, y);
+          ctx.fillStyle = `rgba(${cr | 0},${cg | 0},${cb | 0},${Math.min(finalAlpha, 0.95).toFixed(3)})`;
+          ctx.fillText(item.char, px, py);
         }
       }
     }
@@ -296,13 +386,11 @@
     if (!reducedMotion) {
       resizeCanvas();
       frameId = requestAnimationFrame(renderBackground);
-
-      let timer;
+      let resizeTimer;
       window.addEventListener('resize', () => {
-        clearTimeout(timer);
-        timer = setTimeout(resizeCanvas, 150);
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resizeCanvas, 150);
       }, { passive: true });
-
       document.addEventListener('visibilitychange', () => {
         tabActive = !document.hidden;
         if (tabActive && !frameId) {
@@ -339,7 +427,7 @@
         if (AudioContextClass) {
           audioCtx = new AudioContextClass();
           analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 128;
+          analyser.fftSize = 256;
           analyser.smoothingTimeConstant = 0.75;
           freqData = new Uint8Array(analyser.frequencyBinCount);
           
