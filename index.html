@@ -440,11 +440,13 @@
           if (targetEl === el) {
             targetEl = null;
             cursorDot.classList.remove('on-box');
-            // Snap position to current mouse so the box collapses at the
-            // cursor, not from the element's top-left corner.
-            posX = mouseX - curW * 0.5;
-            posY = mouseY - curH * 0.5;
-            // Reset velocity so no inherited stretch jitter on exit.
+            // Instantly reset to dot at cursor - prevents the smear/stretch glitch
+            // that occurs when lerping from large box dimensions back to 10px.
+            posX = mouseX - 5;
+            posY = mouseY - 5;
+            curW = 10;
+            curH = 10;
+            curR = 50;
             vx = 0;
             vy = 0;
             sStretch = 0;
