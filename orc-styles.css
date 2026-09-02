@@ -466,6 +466,7 @@ body {
   width: 0%;
   background: #ffffff;
   border-radius: 999px;
+  box-shadow: 0 0 6px 1px rgba(120, 190, 255, 0.5);
 }
 
 .audio-time {

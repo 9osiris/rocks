@@ -164,11 +164,15 @@
     let audioCtx = null;
     let analyser = null;
     let freqData = null;
+    let prevFreqData = null;
     let bassEnergy = 0;
     let kickPulse = 0;
     let midEnergy = 0;
     let highEnergy = 0;
     let avgBassTracker = 0.15;
+    let fluxEnergy = 0;
+    let avgFluxTracker = 0.01;
+    let globalPulse = 0;
     let shockwaves = [];
 
     function resizeCanvas() {
@@ -216,7 +220,6 @@
 
       if (analyser && freqData) {
         analyser.getByteFrequencyData(freqData);
-        const binCount = freqData.length;
 
         subBassRaw = (freqData[0] + freqData[1] + freqData[2]) / (3 * 255);
         kickRaw    = (freqData[2] + freqData[3] + freqData[4] + freqData[5]) / (4 * 255);
@@ -228,22 +231,40 @@
         highEnergy += (highRaw - highEnergy) * 0.2;
         avgBassTracker = avgBassTracker * 0.98 + subBassRaw * 0.02;
 
-        if (subBassRaw > avgBassTracker * 1.65 && subBassRaw > 0.4) {
-          kickPulse = Math.min(0.6, kickPulse + 0.4);
-          const cx = (Math.random() * 0.6 + 0.2) * window.innerWidth;
-          const cy = (Math.random() * 0.6 + 0.2) * window.innerHeight;
-          shockwaves.push({ x: cx, y: cy, r: 0, maxR: Math.max(window.innerWidth, window.innerHeight) * 0.55, age: 0 });
-          if (shockwaves.length > 3) shockwaves.shift();
+        if (prevFreqData) {
+          let flux = 0;
+          for (let i = 0; i < freqData.length; i++) {
+            const d = freqData[i] - prevFreqData[i];
+            if (d > 0) flux += d;
+          }
+          flux /= freqData.length * 255;
+          fluxEnergy += (flux - fluxEnergy) * 0.45;
+          avgFluxTracker = avgFluxTracker * 0.96 + fluxEnergy * 0.04;
 
-          for (let c = 0; c < cols; c++) {
-            if (!rainCols[c].active && Math.random() < 0.4) {
-              rainCols[c].active = true;
-              rainCols[c].head = 0;
-              rainCols[c].speed = 0.3 + Math.random() * 0.7 + bassEnergy * 0.5;
+          const isOnset = fluxEnergy > avgFluxTracker * 2.4 && fluxEnergy > 0.01 && subBassRaw > 0.1;
+          if (isOnset) {
+            const strength = Math.min(1, fluxEnergy / avgFluxTracker * 0.3);
+            kickPulse = Math.min(0.75, kickPulse + 0.4 + strength * 0.35);
+            globalPulse = Math.min(1.0, globalPulse + 0.55 + strength * 0.3);
+
+            const cx = (Math.random() * 0.65 + 0.175) * window.innerWidth;
+            const cy = (Math.random() * 0.65 + 0.175) * window.innerHeight;
+            shockwaves.push({ x: cx, y: cy, r: 0, maxR: Math.max(window.innerWidth, window.innerHeight) * 0.6, strength });
+            if (shockwaves.length > 4) shockwaves.shift();
+
+            for (let c = 0; c < cols; c++) {
+              if (!rainCols[c].active && Math.random() < 0.35 + strength * 0.3) {
+                rainCols[c].active = true;
+                rainCols[c].head = 0;
+                rainCols[c].speed = 0.3 + Math.random() * 0.8 + bassEnergy * 0.6;
+              }
             }
           }
+          prevFreqData.set(freqData);
         }
+
         kickPulse *= 0.74;
+        globalPulse *= 0.83;
 
         if (visualizerBars.length >= 4) {
           visualizerBars[0].style.height = `${Math.max(2.5, subBassRaw * 11)}px`;
@@ -251,9 +272,15 @@
           visualizerBars[2].style.height = `${Math.max(2.5, midRaw * 11)}px`;
           visualizerBars[3].style.height = `${Math.max(2.5, highRaw * 11)}px`;
         }
+
+        const glowSize = (kickPulse * 18) | 0;
+        const glowAlpha = Math.min(kickPulse * 0.55, 0.4).toFixed(3);
+        player.style.boxShadow = kickPulse > 0.06
+          ? `0 12px 36px rgba(0,0,0,0.6), 0 0 ${glowSize}px ${(glowSize * 0.45) | 0}px rgba(80,160,255,${glowAlpha})`
+          : '0 12px 36px rgba(0,0,0,0.6)';
       }
 
-      tick += 0.025 + bassEnergy * 0.04 + kickPulse * 0.015;
+      tick += 0.025 + bassEnergy * 0.04 + kickPulse * 0.018 + globalPulse * 0.008;
 
       for (let c = 0; c < cols; c++) {
         const rc = rainCols[c];
@@ -302,7 +329,8 @@
           const dx = px - midColX;
           const dy = py - midColY;
           const distFromCenter = Math.sqrt(dx * dx + dy * dy) / maxDist;
-          const spotlight = Math.max(0, 1 - distFromCenter * 1.1);
+          const spotlightMult = Math.max(0.7, 1.15 - kickPulse * 0.4 - globalPulse * 0.15);
+          const spotlight = Math.max(0, 1 - distFromCenter * spotlightMult);
 
           let shockBoost = 0;
           for (let i = 0; i < shockwaves.length; i++) {
@@ -310,11 +338,11 @@
             const sdx = px - sw.x;
             const sdy = py - sw.y;
             const sd = Math.sqrt(sdx * sdx + sdy * sdy);
-            const waveWidth = 60;
+            const waveWidth = 75;
             const dist = Math.abs(sd - sw.r);
             if (dist < waveWidth) {
-              const waveFactor = (1 - dist / waveWidth) * (1 - sw.r / sw.maxR);
-              shockBoost = Math.max(shockBoost, waveFactor * 0.7);
+              const waveFactor = (1 - dist / waveWidth) * (1 - sw.r / sw.maxR) * (sw.strength || 0.5);
+              shockBoost = Math.max(shockBoost, waveFactor * 0.85);
             }
           }
 
@@ -327,9 +355,10 @@
 
           const wave1 = Math.sin(tick + c * 0.17 + r * 0.13 + item.offset);
           const wave2 = Math.sin(tick * 0.6 + c * 0.08 - r * 0.10 + item.offset * 1.4) * 0.3;
-          const waveCombined = (wave1 + wave2) / 1.3;
+          const wave3 = Math.sin(tick * 0.28 + c * 0.055 + r * 0.075 + item.offset * 0.7) * 0.18;
+          const waveCombined = (wave1 + wave2 + wave3) / 1.48;
 
-          const audioBoost = bassEnergy * 0.18 + kickPulse * 0.20 + colFreq * 0.12 + shockBoost * 0.8;
+          const audioBoost = bassEnergy * 0.18 + kickPulse * 0.20 + colFreq * 0.12 + shockBoost * 0.8 + globalPulse * 0.12;
           const rawNorm = waveCombined * 0.38 + 0.5 + audioBoost;
           const norm = Math.min(0.99, rawNorm) * spotlight;
 
@@ -340,7 +369,8 @@
             const headRow = rc.head | 0;
             if (r === headRow) { isRainHead = true; rainAlpha = 1.0; }
             else if (r < headRow && r >= headRow - rc.trail) {
-              rainAlpha = (rc.trail - (headRow - r)) / rc.trail;
+              rainAlpha = ((rc.trail - (headRow - r)) / rc.trail);
+              rainAlpha = rainAlpha * rainAlpha;
             }
           }
 
@@ -350,9 +380,9 @@
           let cr, cg, cb;
 
           if (isRainHead) {
-            cr = 220; cg = 240; cb = 255;
-            finalAlpha = matrix ? 0.9 : 0.85;
-            if (Math.random() < 0.4) item.char = chars[(Math.random() * chars.length) | 0];
+            cr = 215; cg = 238; cb = 255;
+            finalAlpha = Math.min(0.92, 0.82 + globalPulse * 0.1);
+            if (Math.random() < 0.45) item.char = chars[(Math.random() * chars.length) | 0];
           } else if (rainAlpha > 0.05) {
             const t = rainAlpha * spotlight;
             if (matrix) {
@@ -360,7 +390,7 @@
             } else {
               [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
             }
-            finalAlpha = t * 0.55;
+            finalAlpha = t * 0.6 + globalPulse * 0.08;
           } else {
             if (matrix) {
               [cr, cg, cb] = lerpColor(matR, matG, matB, matHot, matHotG, matHotB, energyShift);
@@ -368,17 +398,29 @@
               [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
             }
             const normMapped = (norm - 0.2) / 0.79;
-            finalAlpha = normMapped * (matrix ? 0.48 : 0.38) + shockBoost * 0.3;
+            finalAlpha = normMapped * (matrix ? 0.50 : 0.40) + shockBoost * 0.32 + globalPulse * 0.06;
           }
 
           if (finalAlpha < 0.02) continue;
+          finalAlpha = Math.min(finalAlpha, 0.95);
 
-          if (!isRainHead && Math.random() < 0.0008 + highEnergy * 0.012 + kickPulse * 0.01) {
+          if (!isRainHead && Math.random() < 0.0008 + highEnergy * 0.014 + kickPulse * 0.012) {
             item.char = chars[(Math.random() * chars.length) | 0];
           }
 
-          ctx.fillStyle = `rgba(${cr | 0},${cg | 0},${cb | 0},${Math.min(finalAlpha, 0.95).toFixed(3)})`;
+          const useGlow = isRainHead || finalAlpha > 0.55 || shockBoost > 0.3;
+          if (useGlow) {
+            ctx.shadowBlur = isRainHead ? 10 : 5;
+            ctx.shadowColor = `rgba(${cr | 0},${cg | 0},${cb | 0},${(finalAlpha * 0.6).toFixed(2)})`;
+          }
+
+          ctx.fillStyle = `rgba(${cr | 0},${cg | 0},${cb | 0},${finalAlpha.toFixed(3)})`;
           ctx.fillText(item.char, px, py);
+
+          if (useGlow) {
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+          }
         }
       }
     }
@@ -430,6 +472,7 @@
           analyser.fftSize = 256;
           analyser.smoothingTimeConstant = 0.6;
           freqData = new Uint8Array(analyser.frequencyBinCount);
+          prevFreqData = new Uint8Array(analyser.frequencyBinCount);
           
           const srcNode = audioCtx.createMediaElementSource(audio);
           srcNode.connect(analyser);
