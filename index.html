@@ -342,80 +342,49 @@
       }
     });
 
-    // Spring Physics Cursor
+    // Cursor
     const cursorDot = document.getElementById('cursor-dot');
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !prefersReducedMotion) {
       let mouseX = -100, mouseY = -100;
+      let curX = -100, curY = -100;
+      let curW = 10, curH = 10, curR = 50;
       let targetEl = null;
-
-      const spring = {
-        x: { val: -100, vel: 0 },
-        y: { val: -100, vel: 0 },
-        w: { val: 10,   vel: 0 },
-        h: { val: 10,   vel: 0 },
-        r: { val: 50,   vel: 0 },
-      };
-
-      const STIFF = 0.18;
-      const DAMP  = 0.72;
-      const DOT_R = 5;
 
       document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
       }, { passive: true });
 
-      function stepSpring(s, target) {
-        s.vel = (s.vel + (target - s.val) * STIFF) * DAMP;
-        s.val += s.vel;
-      }
+      function lerp(a, b, t) { return a + (b - a) * t; }
 
       function updateCursor() {
-        let tx, ty, tw, th, tr;
-
         if (targetEl) {
           const rect = targetEl.getBoundingClientRect();
-          const computedR = parseFloat(window.getComputedStyle(targetEl).borderRadius) || 14;
-          tx = rect.left;
-          ty = rect.top;
-          tw = rect.width;
-          th = rect.height;
-          tr = Math.min(computedR, Math.min(rect.width, rect.height) / 2);
+          const targetRadius = parseFloat(window.getComputedStyle(targetEl).borderRadius) || 16;
+          curX = lerp(curX, rect.left, 0.22);
+          curY = lerp(curY, rect.top, 0.22);
+          curW = lerp(curW, rect.width, 0.22);
+          curH = lerp(curH, rect.height, 0.22);
+          curR = lerp(curR, targetRadius, 0.22);
         } else {
-          tx = mouseX - DOT_R;
-          ty = mouseY - DOT_R;
-          tw = 10;
-          th = 10;
-          tr = 50;
+          curX = lerp(curX, mouseX - 5, 0.32);
+          curY = lerp(curY, mouseY - 5, 0.32);
+          curW = lerp(curW, 10, 0.32);
+          curH = lerp(curH, 10, 0.32);
+          curR = lerp(curR, 50, 0.32);
         }
-
-        stepSpring(spring.x, tx);
-        stepSpring(spring.y, ty);
-        stepSpring(spring.w, tw);
-        stepSpring(spring.h, th);
-        stepSpring(spring.r, tr);
-
-        cursorDot.style.transform   = `translate3d(${spring.x.val}px, ${spring.y.val}px, 0)`;
-        cursorDot.style.width        = `${spring.w.val}px`;
-        cursorDot.style.height       = `${spring.h.val}px`;
-        cursorDot.style.borderRadius = `${spring.r.val}px`;
-
+        cursorDot.style.transform    = `translate3d(${curX}px, ${curY}px, 0)`;
+        cursorDot.style.width        = `${curW}px`;
+        cursorDot.style.height       = `${curH}px`;
+        cursorDot.style.borderRadius = `${curR}px`;
         requestAnimationFrame(updateCursor);
       }
       requestAnimationFrame(updateCursor);
 
       const hoverables = document.querySelectorAll('a, .glass-btn, .floating-audio-player, .audio-btn, .top-corner-redirect a');
       hoverables.forEach(el => {
-        el.addEventListener('mouseenter', () => {
-          targetEl = el;
-          cursorDot.classList.add('on-box');
-        });
-        el.addEventListener('mouseleave', () => {
-          if (targetEl === el) {
-            targetEl = null;
-            cursorDot.classList.remove('on-box');
-          }
-        });
+        el.addEventListener('mouseenter', () => { targetEl = el; cursorDot.classList.add('on-box'); });
+        el.addEventListener('mouseleave', () => { if (targetEl === el) { targetEl = null; cursorDot.classList.remove('on-box'); } });
       });
     }
 
