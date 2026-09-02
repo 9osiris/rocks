@@ -222,7 +222,8 @@
         const bins = freqData.length; // 1024 bins now (21.5 Hz per bin)
         subBassRaw = (freqData[1] + freqData[2] + freqData[3]) / (3 * 255); // 21Hz - 86Hz
         kickRaw    = (freqData[4] + freqData[5] + freqData[6] + freqData[7] + freqData[8]) / (5 * 255); // 86Hz - 193Hz
-        midRaw     = (freqData[20] + freqData[25] + freqData[30] + freqData[35] + freqData[40]) / (5 * 255);
+        let mSum = 0; for(let i=15; i<=80; i+=2) mSum += freqData[i];
+        midRaw = mSum / (33 * 255); // ~320Hz to 1700Hz for vocals
         highRaw    = (freqData[100] + freqData[150] + freqData[200] + freqData[250] + freqData[300]) / (5 * 255);
 
         bassEnergy += (subBassRaw - bassEnergy) * 0.5;
@@ -251,10 +252,17 @@
             kickPulse  = Math.min(0.8,  kickPulse  + 0.45 + strength * 0.35);
             globalPulse = Math.min(1.0, globalPulse + 0.6  + strength * 0.3);
 
-            const cx = (Math.random() * 0.6 + 0.2) * window.innerWidth;
-            const cy = (Math.random() * 0.6 + 0.2) * window.innerHeight;
-            shockwaves.push({ x: cx, y: cy, r: 0, maxR: Math.max(window.innerWidth, window.innerHeight) * 0.65, strength });
-            if (shockwaves.length > 5) shockwaves.shift();
+            const cx = window.innerWidth * 0.5;
+            const cy = window.innerHeight * 0.5;
+            const size = 0.3 + strength * 0.4 + bassEnergy * 0.25;
+            // Overwrite array so it's only ever ONE shockwave scaling dynamically
+            shockwaves = [{ 
+              x: cx, 
+              y: cy, 
+              r: 0, 
+              maxR: Math.max(window.innerWidth, window.innerHeight) * size, 
+              strength: strength 
+            }];
 
             for (let c = 0; c < cols; c++) {
               if (!rainCols[c].active && Math.random() < 0.4 + strength * 0.35) {
@@ -369,7 +377,10 @@
           const wave3 = Math.sin(tick * 0.28 + c * 0.055 + r * 0.075 + item.offset * 0.7) * 0.18;
           const waveCombined = (wave1 + wave2 + wave3) / 1.48;
 
-          const audioBoost = bassEnergy * 0.20 + kickPulse * 0.22 + colFreq * 0.14 + rowFreq * 0.10 + shockBoost * 0.5 + globalPulse * 0.14;
+          const vocalFactor = Math.max(0, 1 - distFromCenter * 3.0); // Center ~33% of screen
+          const vocalBoost = Math.pow(vocalFactor, 1.5) * midEnergy * 1.4;
+
+          const audioBoost = bassEnergy * 0.20 + kickPulse * 0.22 + colFreq * 0.14 + rowFreq * 0.10 + shockBoost * 0.5 + globalPulse * 0.14 + vocalBoost;
           const rawNorm = waveCombined * 0.36 + 0.5 + audioBoost;
           const norm = Math.min(0.99, rawNorm) * spotlight;
 
@@ -414,7 +425,9 @@
 
           if (finalAlpha < 0.018) continue;
 
-          if (!isRainHead && Math.random() < 0.0006 + highEnergy * 0.016 + kickPulse * 0.014) {
+          // Standard high-energy scrambling + new vocal-driven center scrambling
+          const scrambleChance = 0.0006 + highEnergy * 0.016 + kickPulse * 0.014 + (vocalFactor * midEnergy * 0.035);
+          if (!isRainHead && Math.random() < scrambleChance) {
             item.char = chars[(Math.random() * chars.length) | 0];
           }
 
