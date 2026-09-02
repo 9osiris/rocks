@@ -173,6 +173,7 @@
     let fluxEnergy = 0;
     let avgFluxTracker = 0.01;
     let globalPulse = 0;
+    let lastOnset = 0;
     let shockwaves = [];
 
     function resizeCanvas() {
@@ -239,8 +240,9 @@
           fluxEnergy += (flux - fluxEnergy) * 0.65;
           avgFluxTracker = avgFluxTracker * 0.95 + fluxEnergy * 0.05;
 
-          const isOnset = fluxEnergy > avgFluxTracker * 2.2 && fluxEnergy > 0.009;
+          const isOnset = fluxEnergy > avgFluxTracker * 2.2 && fluxEnergy > 0.009 && (time - lastOnset > 180);
           if (isOnset) {
+            lastOnset = time;
             const strength = Math.min(1, (fluxEnergy / avgFluxTracker - 1) * 0.5);
             kickPulse  = Math.min(0.8,  kickPulse  + 0.45 + strength * 0.35);
             globalPulse = Math.min(1.0, globalPulse + 0.6  + strength * 0.3);
