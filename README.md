@@ -8,7 +8,7 @@ Live at: [here](https://osiris.rocks)
 
 ## Overview
 
-A lightweight, zero-framework single-page portfolio engineered for performance, clean aesthetics, and minimal resource utilization.
+My dumbass portfolio website that isn't completed, used my own AI to vibecode, and lowkey gave up on but we're chill.
 
 ### Features
 
@@ -22,9 +22,9 @@ A lightweight, zero-framework single-page portfolio engineered for performance, 
 
 ## Tech Stack
 
-- **Markup & Styling**: HTML5, CSS3 (Modern Glassmorphism, CSS Custom Properties)
-- **Scripting**: Vanilla JavaScript (ES6+, RequestAnimationFrame)
-- **Deployment**: Vercel (Clean URLs, automated edge routing)
+- **Markup & Styling**: HTML5, CSS3 (CSS Custom Properties)
+- **Scripting**: Vanilla JavaScript (ES6+)
+- **Deployment**: Vercel (Automated edge routing)
 
 ---
 
@@ -33,7 +33,7 @@ A lightweight, zero-framework single-page portfolio engineered for performance, 
 ```text
 .
 ├── index.html                  # Core portfolio page & scripts
-├── orc-styles.css              # Layout, glassmorphic UI & canvas styling
+├── orc-styles.css              # Layout & styling
 ├── osirisweb.svg               # Vector brand logo & favicon
 ├── osirisweb.png               # Raster brand icon
 ├── guilt_trip.mp3              # Audio track
@@ -50,4 +50,4 @@ A lightweight, zero-framework single-page portfolio engineered for performance, 
 
 ## License
 
-&copy; 2026 LYRD INNO. All rights reserved. Fibre Automated System.
+&copy; 2026 LYRD INNO. All rights reserved.
