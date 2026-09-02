@@ -334,73 +334,55 @@
     const dot = document.getElementById('cursor-dot');
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reducedMotion) {
       let mx = -100, my = -100;
-      let px = -100, py = -100;
-      let w = 10, h = 10, r = 50;
-      let vx = 0, vy = 0;
-      let oldX = -100, oldY = -100;
-      let stretch = 0, angle = 0;
+      let lastX = -100, lastY = -100;
       let target = null;
+      let box = { x: 0, y: 0, w: 10, h: 10, r: 50 };
 
       document.addEventListener('mousemove', (e) => {
         mx = e.clientX;
         my = e.clientY;
       }, { passive: true });
 
-      function lerp(a, b, t) {
-        return a + (b - a) * t;
+      function lerp(start, end, factor) {
+        return start + (end - start) * factor;
       }
 
       function stepCursor() {
-        const dx = mx - oldX;
-        const dy = my - oldY;
-        oldX = mx;
-        oldY = my;
-
-        vx = lerp(vx, dx, 0.25);
-        vy = lerp(vy, dy, 0.25);
-
         if (target) {
           const rect = target.getBoundingClientRect();
-          const targetR = parseFloat(window.getComputedStyle(target).borderRadius) || 14;
+          const targetRadius = parseFloat(window.getComputedStyle(target).borderRadius) || 16;
 
-          px = lerp(px, rect.left, 0.20);
-          py = lerp(py, rect.top, 0.20);
-          w = lerp(w, rect.width, 0.18);
-          h = lerp(h, rect.height, 0.18);
-          r = lerp(r, targetR, 0.20);
+          box.x = lerp(box.x, rect.left, 0.25);
+          box.y = lerp(box.y, rect.top, 0.25);
+          box.w = lerp(box.w, rect.width, 0.25);
+          box.h = lerp(box.h, rect.height, 0.25);
+          box.r = lerp(box.r, targetRadius, 0.25);
 
-          stretch = lerp(stretch, 0, 0.25);
-
-          dot.style.transform = `translate3d(${px}px, ${py}px, 0)`;
-          dot.style.width = `${w}px`;
-          dot.style.height = `${h}px`;
-          dot.style.borderRadius = `${r}px`;
+          dot.style.transform = `translate3d(${box.x}px, ${box.y}px, 0)`;
+          dot.style.width = `${box.w}px`;
+          dot.style.height = `${box.h}px`;
+          dot.style.borderRadius = `${box.r}px`;
         } else {
-          px = lerp(px, mx - 5, 0.28);
-          py = lerp(py, my - 5, 0.28);
-          w = lerp(w, 10, 0.20);
-          h = lerp(h, 10, 0.20);
-          r = lerp(r, 50, 0.20);
+          dot.style.width = '10px';
+          dot.style.height = '10px';
+          dot.style.borderRadius = '50%';
 
-          const speed = Math.hypot(vx, vy);
-          const goalStretch = Math.min(speed * 0.032, 0.65);
-          stretch = lerp(stretch, goalStretch, 0.18);
+          const dx = mx - lastX;
+          const dy = my - lastY;
+          lastX = mx;
+          lastY = my;
 
-          if (speed > 0.5) {
-            const targetAngle = Math.atan2(vy, vx) * (180 / Math.PI);
-            let diff = targetAngle - angle;
-            if (diff > 180) diff -= 360;
-            if (diff < -180) diff += 360;
-            angle += diff * 0.2;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 0.3) {
+            dot.style.transform = `translate3d(${mx - 5}px, ${my - 5}px, 0)`;
+          } else {
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            const stretch = Math.min(dist * 0.05, 1.2);
+            const scaleX = 1 + stretch;
+            const scaleY = Math.max(1 - stretch * 0.3, 0.5);
+            dot.style.transform = `translate3d(${mx - 5}px, ${my - 5}px, 0) rotate(${angle}deg) scale(${scaleX}, ${scaleY})`;
           }
-
-          const sx = 1 + stretch;
-          const sy = Math.max(1 - stretch * 0.35, 0.65);
-
-          dot.style.width = `${w}px`;
-          dot.style.height = `${h}px`;
-          dot.style.borderRadius = `${r}px`;
-          dot.style.transform = `translate3d(${px}px, ${py}px, 0) rotate(${angle}deg) scale(${sx}, ${sy})`;
         }
 
         requestAnimationFrame(stepCursor);
@@ -409,6 +391,13 @@
 
       document.querySelectorAll('a, .glass-btn, .floating-audio-player, .audio-btn').forEach(el => {
         el.addEventListener('mouseenter', () => {
+          if (!target) {
+            const rect = el.getBoundingClientRect();
+            box.x = rect.left;
+            box.y = rect.top;
+            box.w = rect.width;
+            box.h = rect.height;
+          }
           target = el;
           dot.classList.add('on-box');
         });
@@ -416,14 +405,6 @@
           if (target === el) {
             target = null;
             dot.classList.remove('on-box');
-            px = mx - 5;
-            py = my - 5;
-            w = 10;
-            h = 10;
-            r = 50;
-            vx = 0;
-            vy = 0;
-            stretch = 0;
           }
         });
       });
