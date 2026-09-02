@@ -130,22 +130,22 @@
 
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d', { alpha: true });
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const characters = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
-    const fontSize = 22;
-    const colWidth = 18;
+    const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+    const charSize = 22;
+    const colStep = 18;
     
     let cols = 0, rows = 0;
     let grid = [];
-    let time = 0;
-    let matrixMode = false;
-    let animationId = null;
-    let isTabVisible = true;
-    let lastRenderTime = 0;
-    const targetFpsInterval = 1000 / 35;
+    let tick = 0;
+    let matrix = false;
+    let frameId = null;
+    let tabActive = true;
+    let lastTick = 0;
+    const frameInterval = 1000 / 35;
 
-    const normalColors = [
+    const defaultColors = [
       'rgba(80, 140, 220, 0.04)',
       'rgba(80, 140, 220, 0.08)',
       'rgba(80, 140, 220, 0.12)',
@@ -163,7 +163,7 @@
       'rgba(0, 255, 120, 0.48)'
     ];
 
-    function initCanvas() {
+    function resizeCanvas() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -172,278 +172,271 @@
       canvas.height = Math.floor(h * dpr);
       ctx.scale(dpr, dpr);
       
-      cols = Math.ceil(w / colWidth);
-      rows = Math.ceil(h / fontSize);
+      cols = Math.ceil(w / colStep);
+      rows = Math.ceil(h / charSize);
       
-      grid = new Array(rows);
+      grid = [];
       for (let r = 0; r < rows; r++) {
-        const row = new Array(cols);
+        const row = [];
         for (let c = 0; c < cols; c++) {
-          row[c] = {
-            char: characters[(Math.random() * characters.length) | 0],
+          row.push({
+            char: chars[(Math.random() * chars.length) | 0],
             offset: Math.random() * 6.28
-          };
+          });
         }
-        grid[r] = row;
+        grid.push(row);
       }
     }
 
-    function renderCanvas(timestamp) {
-      if (!isTabVisible) return;
+    function renderBackground(time) {
+      if (!tabActive) return;
       
-      animationId = requestAnimationFrame(renderCanvas);
+      frameId = requestAnimationFrame(renderBackground);
       
-      const elapsed = timestamp - lastRenderTime;
-      if (elapsed < targetFpsInterval) return;
-      lastRenderTime = timestamp - (elapsed % targetFpsInterval);
+      const delta = time - lastTick;
+      if (delta < frameInterval) return;
+      lastTick = time - (delta % frameInterval);
 
-      time += 0.035;
+      tick += 0.035;
       const w = window.innerWidth;
       const h = window.innerHeight;
       
       ctx.clearRect(0, 0, w, h);
-      ctx.font = `600 ${fontSize - 4}px monospace`;
+      ctx.font = `600 ${charSize - 4}px monospace`;
 
-      const palette = matrixMode ? matrixColors : normalColors;
-      const numTiers = palette.length;
+      const palette = matrix ? matrixColors : defaultColors;
+      const tiers = palette.length;
 
       for (let r = 0; r < rows; r++) {
         const row = grid[r];
-        const yPos = (r + 1) * fontSize;
+        const y = (r + 1) * charSize;
         for (let c = 0; c < cols; c++) {
           const item = row[c];
-          const val = Math.sin(time + c * 0.2 + r * 0.15 + item.offset);
-          const normalized = (val * 0.5 + 0.5);
+          const val = Math.sin(tick + c * 0.2 + r * 0.15 + item.offset);
+          const norm = val * 0.5 + 0.5;
           
-          if (normalized < 0.25) continue;
+          if (norm < 0.25) continue;
           
-          const tier = Math.min(((normalized * numTiers) | 0), numTiers - 1);
+          const idx = Math.min((norm * tiers) | 0, tiers - 1);
           
           if (Math.random() < 0.003) {
-            item.char = characters[(Math.random() * characters.length) | 0];
+            item.char = chars[(Math.random() * chars.length) | 0];
           }
 
-          ctx.fillStyle = palette[tier];
-          ctx.fillText(item.char, c * colWidth, yPos);
+          ctx.fillStyle = palette[idx];
+          ctx.fillText(item.char, c * colStep, y);
         }
       }
     }
 
-    if (!prefersReducedMotion) {
-      initCanvas();
-      animationId = requestAnimationFrame(renderCanvas);
+    if (!reducedMotion) {
+      resizeCanvas();
+      frameId = requestAnimationFrame(renderBackground);
 
-      let resizeTimeout;
+      let timer;
       window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(initCanvas, 150);
+        clearTimeout(timer);
+        timer = setTimeout(resizeCanvas, 150);
       }, { passive: true });
 
       document.addEventListener('visibilitychange', () => {
-        isTabVisible = !document.hidden;
-        if (isTabVisible && !animationId) {
-          lastRenderTime = performance.now();
-          animationId = requestAnimationFrame(renderCanvas);
+        tabActive = !document.hidden;
+        if (tabActive && !frameId) {
+          lastTick = performance.now();
+          frameId = requestAnimationFrame(renderBackground);
         }
       });
     }
 
-    const audioElement = document.getElementById('audio-element');
-    const audioWidget = document.getElementById('audio-player-widget');
+    const audio = document.getElementById('audio-element');
+    const player = document.getElementById('audio-player-widget');
     const playBtn = document.getElementById('audio-play-btn');
     const playIcon = document.getElementById('audio-play-icon');
     const progressBar = document.getElementById('audio-progress-bar');
     const progressFill = document.getElementById('audio-progress-fill');
-    const timeDisplay = document.getElementById('audio-time');
-    let userPaused = false;
-    let audioStarted = false;
+    const timeLabel = document.getElementById('audio-time');
+    let userMuted = false;
+    let hasStarted = false;
 
-    function formatTime(seconds) {
-      if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
-      const m = Math.floor(seconds / 60);
-      const s = Math.floor(seconds % 60);
+    function formatSeconds(sec) {
+      if (isNaN(sec) || !isFinite(sec)) return '0:00';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    function setPlayingState(playing) {
-      if (playing) {
-        playIcon.className = 'fa-solid fa-pause';
-        audioWidget.classList.add('is-playing');
-      } else {
-        playIcon.className = 'fa-solid fa-play';
-        audioWidget.classList.remove('is-playing');
-      }
+    function updatePlayState(isPlaying) {
+      playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+      player.classList.toggle('is-playing', isPlaying);
     }
 
-    function triggerInstantAudio() {
-      if (audioStarted || userPaused) return;
-      const playPromise = audioElement.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          audioStarted = true;
-          setPlayingState(true);
-          removeAudioTriggers();
+    function tryPlay() {
+      if (hasStarted || userMuted) return;
+      const res = audio.play();
+      if (res && res.then) {
+        res.then(() => {
+          hasStarted = true;
+          updatePlayState(true);
+          unbindTriggers();
         }).catch(() => {});
       }
     }
 
-    const interactionEvents = ['pointerdown', 'mousemove', 'touchstart', 'keydown', 'scroll', 'click'];
-    function addAudioTriggers() {
-      interactionEvents.forEach(evt => {
-        window.addEventListener(evt, triggerInstantAudio, { passive: true, once: true });
-      });
+    const inputEvents = ['pointerdown', 'mousemove', 'touchstart', 'keydown', 'scroll', 'click'];
+    function bindTriggers() {
+      inputEvents.forEach(e => window.addEventListener(e, tryPlay, { passive: true, once: true }));
     }
-    function removeAudioTriggers() {
-      interactionEvents.forEach(evt => {
-        window.removeEventListener(evt, triggerInstantAudio);
-      });
+    function unbindTriggers() {
+      inputEvents.forEach(e => window.removeEventListener(e, tryPlay));
     }
 
-    triggerInstantAudio();
-    addAudioTriggers();
+    tryPlay();
+    bindTriggers();
 
     playBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (audioElement.paused) {
-        userPaused = false;
-        audioElement.play().then(() => {
-          audioStarted = true;
-          setPlayingState(true);
+      if (audio.paused) {
+        userMuted = false;
+        audio.play().then(() => {
+          hasStarted = true;
+          updatePlayState(true);
         }).catch(() => {});
       } else {
-        userPaused = true;
-        audioElement.pause();
-        setPlayingState(false);
+        userMuted = true;
+        audio.pause();
+        updatePlayState(false);
       }
     });
 
-    audioElement.addEventListener('timeupdate', () => {
-      if (audioElement.duration) {
-        const pct = (audioElement.currentTime / audioElement.duration) * 100;
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const pct = (audio.currentTime / audio.duration) * 100;
         progressFill.style.width = `${pct}%`;
-        timeDisplay.textContent = formatTime(audioElement.currentTime);
+        timeLabel.textContent = formatSeconds(audio.currentTime);
       }
     });
 
-    audioElement.addEventListener('ended', () => {
-      setPlayingState(false);
+    audio.addEventListener('ended', () => {
+      updatePlayState(false);
       progressFill.style.width = '0%';
-      timeDisplay.textContent = '0:00';
+      timeLabel.textContent = '0:00';
     });
 
     progressBar.addEventListener('click', (e) => {
       e.stopPropagation();
       const rect = progressBar.getBoundingClientRect();
-      const clickPos = (e.clientX - rect.left) / rect.width;
-      if (audioElement.duration) {
-        audioElement.currentTime = clickPos * audioElement.duration;
+      const ratio = (e.clientX - rect.left) / rect.width;
+      if (audio.duration) {
+        audio.currentTime = ratio * audio.duration;
       }
     });
 
-    const cursorDot = document.getElementById('cursor-dot');
-    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !prefersReducedMotion) {
-      let mouseX = -100, mouseY = -100;
-      let posX = -100, posY = -100;
-      let curW = 10, curH = 10, curR = 50;
+    const dot = document.getElementById('cursor-dot');
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reducedMotion) {
+      let mx = -100, my = -100;
+      let px = -100, py = -100;
+      let w = 10, h = 10, r = 50;
       let vx = 0, vy = 0;
-      let prevMouseX = -100, prevMouseY = -100;
-      let sStretch = 0, sAngle = 0;
-      let targetEl = null;
+      let oldX = -100, oldY = -100;
+      let stretch = 0, angle = 0;
+      let target = null;
 
       document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
+        mx = e.clientX;
+        my = e.clientY;
       }, { passive: true });
 
-      function lerp(a, b, t) { return a + (b - a) * t; }
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
 
-      function updateCursor() {
-        const rawVx = mouseX - prevMouseX;
-        const rawVy = mouseY - prevMouseY;
-        prevMouseX = mouseX;
-        prevMouseY = mouseY;
+      function stepCursor() {
+        const dx = mx - oldX;
+        const dy = my - oldY;
+        oldX = mx;
+        oldY = my;
 
-        vx = lerp(vx, rawVx, 0.25);
-        vy = lerp(vy, rawVy, 0.25);
+        vx = lerp(vx, dx, 0.25);
+        vy = lerp(vy, dy, 0.25);
 
-        if (targetEl) {
-          const rect = targetEl.getBoundingClientRect();
-          const br = parseFloat(window.getComputedStyle(targetEl).borderRadius) || 14;
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          const targetR = parseFloat(window.getComputedStyle(target).borderRadius) || 14;
 
-          posX = lerp(posX, rect.left, 0.20);
-          posY = lerp(posY, rect.top,  0.20);
-          curW = lerp(curW, rect.width,  0.18);
-          curH = lerp(curH, rect.height, 0.18);
-          curR = lerp(curR, br, 0.20);
+          px = lerp(px, rect.left, 0.20);
+          py = lerp(py, rect.top, 0.20);
+          w = lerp(w, rect.width, 0.18);
+          h = lerp(h, rect.height, 0.18);
+          r = lerp(r, targetR, 0.20);
 
-          sStretch = lerp(sStretch, 0, 0.25);
+          stretch = lerp(stretch, 0, 0.25);
 
-          cursorDot.style.transform    = `translate3d(${posX}px, ${posY}px, 0)`;
-          cursorDot.style.width        = `${curW}px`;
-          cursorDot.style.height       = `${curH}px`;
-          cursorDot.style.borderRadius = `${curR}px`;
+          dot.style.transform = `translate3d(${px}px, ${py}px, 0)`;
+          dot.style.width = `${w}px`;
+          dot.style.height = `${h}px`;
+          dot.style.borderRadius = `${r}px`;
         } else {
-          posX = lerp(posX, mouseX - 5, 0.28);
-          posY = lerp(posY, mouseY - 5, 0.28);
-          curW = lerp(curW, 10, 0.20);
-          curH = lerp(curH, 10, 0.20);
-          curR = lerp(curR, 50, 0.20);
+          px = lerp(px, mx - 5, 0.28);
+          py = lerp(py, my - 5, 0.28);
+          w = lerp(w, 10, 0.20);
+          h = lerp(h, 10, 0.20);
+          r = lerp(r, 50, 0.20);
 
-          const speed = Math.sqrt(vx * vx + vy * vy);
-          const targetStretch = Math.min(speed * 0.032, 0.65);
-          sStretch = lerp(sStretch, targetStretch, 0.18);
+          const speed = Math.hypot(vx, vy);
+          const goalStretch = Math.min(speed * 0.032, 0.65);
+          stretch = lerp(stretch, goalStretch, 0.18);
 
           if (speed > 0.5) {
-            const rawAngle = Math.atan2(vy, vx) * (180 / Math.PI);
-            let diff = rawAngle - sAngle;
+            const targetAngle = Math.atan2(vy, vx) * (180 / Math.PI);
+            let diff = targetAngle - angle;
             if (diff > 180) diff -= 360;
             if (diff < -180) diff += 360;
-            sAngle += diff * 0.2;
+            angle += diff * 0.2;
           }
 
-          const sx = 1 + sStretch;
-          const sy = Math.max(1 - sStretch * 0.35, 0.65);
+          const sx = 1 + stretch;
+          const sy = Math.max(1 - stretch * 0.35, 0.65);
 
-          cursorDot.style.width        = `${curW}px`;
-          cursorDot.style.height       = `${curH}px`;
-          cursorDot.style.borderRadius = `${curR}px`;
-          cursorDot.style.transform    = `translate3d(${posX}px, ${posY}px, 0) rotate(${sAngle}deg) scale(${sx}, ${sy})`;
+          dot.style.width = `${w}px`;
+          dot.style.height = `${h}px`;
+          dot.style.borderRadius = `${r}px`;
+          dot.style.transform = `translate3d(${px}px, ${py}px, 0) rotate(${angle}deg) scale(${sx}, ${sy})`;
         }
 
-        requestAnimationFrame(updateCursor);
+        requestAnimationFrame(stepCursor);
       }
-      requestAnimationFrame(updateCursor);
+      requestAnimationFrame(stepCursor);
 
       document.querySelectorAll('a, .glass-btn, .floating-audio-player, .audio-btn').forEach(el => {
         el.addEventListener('mouseenter', () => {
-          targetEl = el;
-          cursorDot.classList.add('on-box');
+          target = el;
+          dot.classList.add('on-box');
         });
         el.addEventListener('mouseleave', () => {
-          if (targetEl === el) {
-            targetEl = null;
-            cursorDot.classList.remove('on-box');
-            posX = mouseX - 5;
-            posY = mouseY - 5;
-            curW = 10;
-            curH = 10;
-            curR = 50;
+          if (target === el) {
+            target = null;
+            dot.classList.remove('on-box');
+            px = mx - 5;
+            py = my - 5;
+            w = 10;
+            h = 10;
+            r = 50;
             vx = 0;
             vy = 0;
-            sStretch = 0;
+            stretch = 0;
           }
         });
       });
     }
 
-    let keyBuffer = '';
+    let secretKeys = '';
     document.addEventListener('keydown', (e) => {
       if (!e.key) return;
-      keyBuffer += e.key.toLowerCase();
-      if (keyBuffer.length > 10) keyBuffer = keyBuffer.slice(-10);
-      if (keyBuffer.endsWith('fibre')) {
-        matrixMode = !matrixMode;
-        keyBuffer = '';
+      secretKeys += e.key.toLowerCase();
+      if (secretKeys.length > 8) secretKeys = secretKeys.slice(-8);
+      if (secretKeys.endsWith('fibre')) {
+        matrix = !matrix;
+        secretKeys = '';
       }
     });
   </script>
