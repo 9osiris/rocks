@@ -232,15 +232,18 @@
 
         if (prevFreqData) {
           let flux = 0;
-          for (let i = 0; i < bins; i++) {
+          const bassBins = Math.min(bins, 16); // Only track flux in the sub/kick/low-mid ranges
+          for (let i = 0; i < bassBins; i++) {
             const d = freqData[i] - prevFreqData[i];
             if (d > 0) flux += d;
           }
-          flux /= bins * 255;
+          flux /= bassBins * 255;
           fluxEnergy += (flux - fluxEnergy) * 0.65;
           avgFluxTracker = avgFluxTracker * 0.95 + fluxEnergy * 0.05;
 
-          const isOnset = fluxEnergy > avgFluxTracker * 2.2 && fluxEnergy > 0.009 && (time - lastOnset > 180);
+          // Gate it: must have a sudden bass flux spike, AND there must actually be bass/kick audio present
+          const isBassHit = (subBassRaw > 0.12 || kickRaw > 0.12);
+          const isOnset = fluxEnergy > avgFluxTracker * 2.2 && fluxEnergy > 0.015 && isBassHit && (time - lastOnset > 180);
           if (isOnset) {
             lastOnset = time;
             const strength = Math.min(1, (fluxEnergy / avgFluxTracker - 1) * 0.5);
