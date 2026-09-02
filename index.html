@@ -286,11 +286,11 @@
       const midColY = h * 0.5;
       const maxDist = Math.sqrt(midColX * midColX + midColY * midColY);
 
-      const energyShift = Math.min(1, bassEnergy * 2.5 + kickPulse * 1.5);
-      const baseR1 = 70,  baseG1 = 120, baseB1 = 200;
-      const hotR   = 130, hotG   = 80,  hotB   = 255;
-      const matR   = 0,   matG   = 220, matB   = 120;
-      const matHot = 100, matHotG = 255, matHotB = 180;
+      const energyShift = Math.min(1, bassEnergy * 3.0 + kickPulse * 2.0);
+      const baseR1 = 65,  baseG1 = 115, baseB1 = 195;
+      const hotR   = 105, hotG   = 185, hotB   = 255;
+      const matR   = 0,   matG   = 210, matB   = 115;
+      const matHot = 60,  matHotG = 245, matHotB = 200;
 
       for (let r = 0; r < rows; r++) {
         const row = grid[r];
@@ -326,11 +326,11 @@
           }
 
           const wave1 = Math.sin(tick + c * 0.17 + r * 0.13 + item.offset);
-          const wave2 = Math.sin(tick * 0.7 + c * 0.09 - r * 0.11 + item.offset * 1.3) * 0.4;
-          const waveCombined = (wave1 + wave2) / 1.4;
+          const wave2 = Math.sin(tick * 0.6 + c * 0.08 - r * 0.10 + item.offset * 1.4) * 0.3;
+          const waveCombined = (wave1 + wave2) / 1.3;
 
-          const audioBoost = bassEnergy * 0.14 + kickPulse * 0.16 + colFreq * 0.08 + shockBoost;
-          const rawNorm = waveCombined * 0.5 + 0.5 + audioBoost;
+          const audioBoost = bassEnergy * 0.18 + kickPulse * 0.20 + colFreq * 0.12 + shockBoost * 0.8;
+          const rawNorm = waveCombined * 0.38 + 0.5 + audioBoost;
           const norm = Math.min(0.99, rawNorm) * spotlight;
 
           const rc = rainCols[c];
@@ -428,7 +428,7 @@
           audioCtx = new AudioContextClass();
           analyser = audioCtx.createAnalyser();
           analyser.fftSize = 256;
-          analyser.smoothingTimeConstant = 0.75;
+          analyser.smoothingTimeConstant = 0.6;
           freqData = new Uint8Array(analyser.frequencyBinCount);
           
           const srcNode = audioCtx.createMediaElementSource(audio);
