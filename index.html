@@ -219,11 +219,11 @@
       if (analyser && freqData) {
         analyser.getByteFrequencyData(freqData);
 
-        const bins = freqData.length; // 1024 bins now (21.5 Hz per bin)
-        subBassRaw = (freqData[1] + freqData[2] + freqData[3]) / (3 * 255); // 21Hz - 86Hz
-        kickRaw    = (freqData[4] + freqData[5] + freqData[6] + freqData[7] + freqData[8]) / (5 * 255); // 86Hz - 193Hz
+        const bins = freqData.length;
+        subBassRaw = (freqData[1] + freqData[2] + freqData[3]) / (3 * 255);
+        kickRaw    = (freqData[4] + freqData[5] + freqData[6] + freqData[7] + freqData[8]) / (5 * 255);
         let mSum = 0; for(let i=15; i<=80; i+=2) mSum += freqData[i];
-        midRaw = mSum / (33 * 255); // ~320Hz to 1700Hz for vocals
+        midRaw = mSum / (33 * 255);
         highRaw    = (freqData[100] + freqData[150] + freqData[200] + freqData[250] + freqData[300]) / (5 * 255);
 
         bassEnergy += (subBassRaw - bassEnergy) * 0.5;
@@ -233,7 +233,7 @@
 
         if (prevFreqData) {
           let flux = 0;
-          const bassBins = 10; // Exactly bins 1 through 10 (21.5 Hz to 215 Hz)
+          const bassBins = 10;
           for (let i = 1; i <= bassBins; i++) {
             const d = freqData[i] - prevFreqData[i];
             if (d > 0) flux += d;
@@ -242,7 +242,6 @@
           fluxEnergy += (flux - fluxEnergy) * 0.4;
           avgFluxTracker = avgFluxTracker * 0.98 + fluxEnergy * 0.02;
 
-          // Gate: there must be a sharp spike in low-end flux, AND absolute volume must be loud enough, AND we wait 250ms between hits
           const isBassHit = (subBassRaw > 0.4 || kickRaw > 0.4); 
           const isOnset = fluxEnergy > avgFluxTracker * 2.8 && fluxEnergy > 0.015 && isBassHit && (time - lastOnset > 250);
           
@@ -255,7 +254,6 @@
             const cx = window.innerWidth * 0.5;
             const cy = window.innerHeight * 0.5;
             const size = 0.3 + strength * 0.4 + bassEnergy * 0.25;
-            // Overwrite array so it's only ever ONE shockwave scaling dynamically
             shockwaves = [{ 
               x: cx, 
               y: cy, 
@@ -334,7 +332,7 @@
 
         let rowFreq = 0;
         if (freqData && bins > 0) {
-          const logBin = Math.floor(Math.pow(rowNorm, 1.5) * 400); // Map rows over 0-8kHz
+          const logBin = Math.floor(Math.pow(rowNorm, 1.5) * 400);
           rowFreq = (freqData[logBin] || 0) / 255;
         }
 
@@ -368,7 +366,7 @@
           let colFreq = 0;
           if (freqData && bins > 0) {
             const logCol = Math.pow(c / cols, 1.2);
-            const bin = Math.floor(logCol * 400); // Map cols over 0-8kHz
+            const bin = Math.floor(logCol * 400);
             colFreq = ((freqData[bin] || 0) + (freqData[bin + 1] || 0)) / (2 * 255);
           }
 
@@ -377,7 +375,7 @@
           const wave3 = Math.sin(tick * 0.28 + c * 0.055 + r * 0.075 + item.offset * 0.7) * 0.18;
           const waveCombined = (wave1 + wave2 + wave3) / 1.48;
 
-          const vocalFactor = Math.max(0, 1 - distFromCenter * 3.0); // Center ~33% of screen
+          const vocalFactor = Math.max(0, 1 - distFromCenter * 3.0);
           const vocalBoost = Math.pow(vocalFactor, 1.5) * midEnergy * 1.4;
 
           const audioBoost = bassEnergy * 0.20 + kickPulse * 0.22 + colFreq * 0.14 + rowFreq * 0.10 + shockBoost * 0.5 + globalPulse * 0.14 + vocalBoost;
@@ -425,7 +423,6 @@
 
           if (finalAlpha < 0.018) continue;
 
-          // Standard high-energy scrambling + new vocal-driven center scrambling
           const scrambleChance = 0.0006 + highEnergy * 0.016 + kickPulse * 0.014 + (vocalFactor * midEnergy * 0.035);
           if (!isRainHead && Math.random() < scrambleChance) {
             item.char = chars[(Math.random() * chars.length) | 0];
