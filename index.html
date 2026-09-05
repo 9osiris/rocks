@@ -75,7 +75,7 @@
       <span class="audio-artist">Kanye West</span>
     </div>
     <div class="audio-progress-wrap">
-      <div class="audio-progress-bar" id="audio-progress-bar" aria-label="Seek position">
+      <div class="audio-progress-bar" id="audio-progress-bar" role="slider" tabindex="0" aria-label="Seek position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="audio-progress-fill" id="audio-progress-fill"></div>
       </div>
       <span class="audio-time" id="audio-time">0:00</span>
@@ -83,7 +83,7 @@
     <button id="audio-vol-btn" class="audio-vol-btn" aria-label="Toggle Mute">
       <i class="fa-solid fa-volume-high" id="audio-vol-icon"></i>
     </button>
-    <audio id="audio-element" src="guilt_trip.mp3" preload="metadata" playsinline></audio>
+    <audio id="audio-element" src="guilt_trip.mp3" preload="auto" playsinline></audio>
   </div>
 
   <main class="app-shell centered">
@@ -261,7 +261,7 @@
 
     function renderBackground(time) {
       if (!tabActive) return;
-      frameId = requestAnimationFrame(renderBackground);
+      if (!reducedMotion) frameId = requestAnimationFrame(renderBackground);
       if (!lastFrameTime) lastFrameTime = time;
       const dt = Math.min(2.5, Math.max(0, (time - lastFrameTime) / (1000 / 60)));
       lastFrameTime = time;
@@ -383,15 +383,24 @@
 
       ctx.font = `600 ${charSize - 4}px monospace`;
 
-      const midColX = w * 0.5;
-      const midColY = h * 0.5;
-      const maxDist = Math.sqrt(midColX * midColX + midColY * midColY);
-
       const energyShift = Math.min(1, bassEnergy * 3.0 + kickPulse * 2.0);
       const baseR1 = 65,  baseG1 = 115, baseB1 = 195;
       const hotR   = 105, hotG   = 185, hotB   = 255;
       const matR   = 0,   matG   = 210, matB   = 115;
       const matHot = 60,  matHotG = 245, matHotB = 200;
+
+      let cr, cg, cb;
+      if (matrix) {
+        [cr, cg, cb] = lerpColor(matR, matG, matB, matHot, matHotG, matHotB, energyShift);
+      } else {
+        [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
+      }
+
+      const paletteSteps = 48;
+      const palette = new Array(paletteSteps);
+      for (let i = 1; i <= paletteSteps; i++) {
+        palette[i - 1] = `rgba(${cr | 0},${cg | 0},${cb | 0},${(i / paletteSteps * 0.95).toFixed(3)})`;
+      }
 
       const bins = freqData ? freqData.length : 0;
 
@@ -410,9 +419,7 @@
           const item = row[c];
           const px = c * colStep;
 
-          const dx = px - midColX;
-          const dy = py - midColY;
-          const distFromCenter = Math.sqrt(dx * dx + dy * dy) / maxDist;
+          const distFromCenter = item.d;
           const spotlightMult = Math.max(0.65, 1.15 - kickPulse * 0.45 - globalPulse * 0.18);
           const spotlight = Math.max(0, 1 - distFromCenter * spotlightMult);
 
@@ -451,16 +458,8 @@
 
           if (norm < 0.18) continue;
 
-          let finalAlpha;
-          let cr, cg, cb;
-
-          if (matrix) {
-            [cr, cg, cb] = lerpColor(matR, matG, matB, matHot, matHotG, matHotB, energyShift);
-          } else {
-            [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
-          }
           const normMapped = (norm - 0.18) / 0.81;
-          finalAlpha = normMapped * (matrix ? 0.55 : 0.44) + shockBoost * 0.15 + globalPulse * 0.06;
+          const finalAlpha = normMapped * (matrix ? 0.55 : 0.44) + shockBoost * 0.15 + globalPulse * 0.06;
 
           if (finalAlpha < 0.018) continue;
 
@@ -469,7 +468,9 @@
             item.char = chars[(Math.random() * chars.length) | 0];
           }
 
-          ctx.fillStyle = `rgba(${cr | 0},${cg | 0},${cb | 0},${Math.min(finalAlpha, 0.95).toFixed(3)})`;
+          let qi = (finalAlpha * (paletteSteps / 0.95)) | 0;
+          if (qi >= paletteSteps) qi = paletteSteps - 1;
+          ctx.fillStyle = palette[qi];
           ctx.fillText(item.char, px, py);
         }
       }
@@ -493,6 +494,17 @@
           lastFrameTime = 0;
         }
       });
+    } else {
+      resizeCanvas();
+      renderBackground(0);
+      let staticResizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(staticResizeTimer);
+        staticResizeTimer = setTimeout(() => {
+          resizeCanvas();
+          renderBackground(0);
+        }, 150);
+      }, { passive: true });
     }
 
     const audio = document.getElementById('audio-element');
@@ -598,15 +610,40 @@
     volBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       audio.muted = !audio.muted;
+      syncVolState();
+    });
+
+    function syncVolState() {
       volIcon.className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
       volBtn.setAttribute('aria-label', audio.muted ? 'Unmute' : 'Mute');
-    });
+    }
+
+    if ('mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: 'Guilt Trip',
+          artist: 'Kanye West',
+          album: 'Yeezus',
+          artwork: [{ src: 'cover.jfif', sizes: '512x512', type: 'image/jpeg' }]
+        });
+        navigator.mediaSession.setActionHandler('play', () => {
+          userMuted = false;
+          audio.play().then(() => updatePlayState(true)).catch(() => {});
+        });
+        navigator.mediaSession.setActionHandler('pause', () => {
+          userMuted = true;
+          audio.pause();
+          updatePlayState(false);
+        });
+      } catch (err) {}
+    }
 
     audio.addEventListener('timeupdate', () => {
       if (audio.duration) {
         const pct = (audio.currentTime / audio.duration) * 100;
         progressFill.style.width = `${pct}%`;
         timeLabel.textContent = formatSeconds(audio.currentTime);
+        progressBar.setAttribute('aria-valuenow', pct.toFixed(0));
         sessionStorage.setItem('osi_track_pos', audio.currentTime);
       }
     });
@@ -643,6 +680,19 @@
     });
     progressBar.addEventListener('pointercancel', () => {
       seeking = false;
+    });
+    progressBar.addEventListener('keydown', (e) => {
+      if (!audio.duration) return;
+      let next = null;
+      if (e.key === 'ArrowRight') next = audio.currentTime + 5;
+      else if (e.key === 'ArrowLeft') next = audio.currentTime - 5;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = audio.duration - 0.5;
+      if (next !== null) {
+        e.preventDefault();
+        e.stopPropagation();
+        audio.currentTime = Math.min(audio.duration, Math.max(0, next));
+      }
     });
 
     const discordCard = document.getElementById('discord-card');
@@ -769,7 +819,7 @@
       if (['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) return;
       if (e.key === 'm' || e.key === 'M') {
         audio.muted = !audio.muted;
-        volIcon.className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+        syncVolState();
         return;
       }
       if (e.key === ' ') {

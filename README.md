@@ -10,7 +10,7 @@ my dumbass portfolio website that isnt completed, used my own ai to vibecode, an
 
 ## what it does
 
-- **quantized canvas engine** - 35 fps animated background grid, pre-allocated color tiers, dpr-scaled canvas rendering, zero per-frame string allocations. it reacts to the audio: bass hits spawn shockwaves from the center and the whole grid brightens and shifts color with the energy
+- **quantized canvas engine** - 35 fps animated background grid with a per-frame quantized color palette (48 alpha tiers, no per-cell string churn), precomputed cell distances, dpr-scaled rendering. it reacts to the audio: bass hits send soft expanding glows and a center flash that actually land on the beat
 - **audio visualizer** - real fft analysis through the web audio api. sub-bass (20-60hz) and kick (60-150hz) bands are detected by flux onset detection, so the shockwaves actually land on the beat instead of just flickering randomly
 - **fluid magnetic cursor** - continuous spring-damped pointer tracking that smoothly interpolates and morphs into interactive interface boundaries
 - **floating audio widget** - embedded bottom-corner audio player with scrub controls, track progress tracking, a 7-band spectrum visualizer, and user-gesture autoplay handling so it actually works on mobile
