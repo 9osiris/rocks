@@ -441,6 +441,7 @@ body {
   border-radius: 999px;
   position: relative;
   cursor: pointer;
+  touch-action: none;
 }
 
 .audio-progress-fill {

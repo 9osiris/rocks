@@ -204,6 +204,7 @@
     let globalPulse = 0;
     let lastOnset = 0;
     let shockwaves = [];
+    let flash = 0;
 
     function resizeCanvas() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -314,23 +315,26 @@
             const strength = Math.min(1, (fluxEnergy / avgFluxTracker - 1) * 0.4);
             kickPulse  = Math.min(0.8,  kickPulse  + 0.45 + strength * 0.35);
             globalPulse = Math.min(1.0, globalPulse + 0.6  + strength * 0.3);
+            flash = Math.min(1, flash + 0.30 + strength * 0.35);
 
-            const cx = window.innerWidth * 0.5;
-            const cy = window.innerHeight * 0.5;
-            const size = 0.3 + strength * 0.4 + bassEnergy * 0.25;
-            shockwaves = [{
-              x: cx,
-              y: cy,
+            shockwaves.push({
+              x: window.innerWidth * 0.5,
+              y: window.innerHeight * 0.5,
+              born: time,
+              life: 950,
+              maxR: Math.max(window.innerWidth, window.innerHeight) * (0.5 + strength * 0.45 + bassEnergy * 0.2),
+              strength: strength,
               r: 0,
-              maxR: Math.max(window.innerWidth, window.innerHeight) * size,
-              strength: strength
-            }];
+              intensity: 0
+            });
+            if (shockwaves.length > 3) shockwaves.shift();
           }
           prevFreqData.set(freqData);
         }
 
         kickPulse   *= Math.pow(0.70, dt);
         globalPulse *= Math.pow(0.80, dt);
+        flash       *= Math.pow(0.86, dt);
 
         if (visualizerBars.length) {
           for (let b = 0; b < bandEdges.length; b++) {
@@ -352,13 +356,31 @@
       tick += (0.022 + bassEnergy * 0.05 + kickPulse * 0.02 + globalPulse * 0.01) * dt;
 
       for (let i = shockwaves.length - 1; i >= 0; i--) {
-        shockwaves[i].r += 12 + bassEnergy * 6 + kickPulse * 4;
-        if (shockwaves[i].r > shockwaves[i].maxR) shockwaves.splice(i, 1);
+        const sw = shockwaves[i];
+        const t = (time - sw.born) / sw.life;
+        if (t >= 1) {
+          shockwaves.splice(i, 1);
+        } else {
+          sw.r = sw.maxR * (1 - Math.pow(1 - t, 3));
+          sw.intensity = Math.pow(1 - t, 2) * sw.strength;
+        }
       }
 
       const w = window.innerWidth;
       const h = window.innerHeight;
       ctx.clearRect(0, 0, w, h);
+
+      if (flash > 0.02) {
+        const fx = w * 0.5;
+        const fy = h * 0.5;
+        const fr = Math.min(w, h) * 0.7;
+        const glow = ctx.createRadialGradient(fx, fy, 0, fx, fy, fr);
+        glow.addColorStop(0, `rgba(140, 190, 255, ${(flash * 0.16).toFixed(3)})`);
+        glow.addColorStop(1, 'rgba(140, 190, 255, 0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+      }
+
       ctx.font = `600 ${charSize - 4}px monospace`;
 
       const midColX = w * 0.5;
@@ -397,17 +419,14 @@
           let shockBoost = 0;
           for (let i = 0; i < shockwaves.length; i++) {
             const sw = shockwaves[i];
+            if (sw.r < 1) continue;
             const sdx = px - sw.x;
             const sdy = py - sw.y;
             const sd = Math.sqrt(sdx * sdx + sdy * sdy);
-            const waveWidth = 140;
-            const dist = Math.abs(sd - sw.r);
-            if (dist < waveWidth) {
-              const normalizedDist = dist / waveWidth;
-              const smoothDropoff = 0.5 * (1 + Math.cos(normalizedDist * Math.PI)); 
-              const distanceFade = Math.pow(1 - sw.r / sw.maxR, 1.5);
-              const waveFactor = smoothDropoff * distanceFade * (sw.strength || 0.5);
-              shockBoost = Math.max(shockBoost, waveFactor * 0.45);
+            if (sd < sw.r) {
+              const inner = 1 - sd / sw.r;
+              const v = sw.intensity * inner * inner * 0.55;
+              if (v > shockBoost) shockBoost = v;
             }
           }
 
@@ -492,6 +511,8 @@
       const savedPos = parseFloat(sessionStorage.getItem('osi_track_pos'));
       if (!isNaN(savedPos) && savedPos > 0 && savedPos < audio.duration) {
         audio.currentTime = savedPos;
+        progressFill.style.width = `${(savedPos / audio.duration) * 100}%`;
+        timeLabel.textContent = formatSeconds(savedPos);
       }
     });
 
@@ -527,6 +548,7 @@
 
     function updatePlayState(isPlaying) {
       playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+      playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
       player.classList.toggle('is-playing', isPlaying);
     }
 
@@ -577,6 +599,7 @@
       e.stopPropagation();
       audio.muted = !audio.muted;
       volIcon.className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+      volBtn.setAttribute('aria-label', audio.muted ? 'Unmute' : 'Mute');
     });
 
     audio.addEventListener('timeupdate', () => {
@@ -595,13 +618,31 @@
       sessionStorage.removeItem('osi_track_pos');
     });
 
-    progressBar.addEventListener('click', (e) => {
-      e.stopPropagation();
+    let seeking = false;
+    function seekTo(clientX) {
       const rect = progressBar.getBoundingClientRect();
-      const ratio = (e.clientX - rect.left) / rect.width;
+      const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
       if (audio.duration) {
         audio.currentTime = ratio * audio.duration;
+        progressFill.style.width = `${ratio * 100}%`;
+        timeLabel.textContent = formatSeconds(ratio * audio.duration);
       }
+    }
+
+    progressBar.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      seeking = true;
+      progressBar.setPointerCapture(e.pointerId);
+      seekTo(e.clientX);
+    });
+    progressBar.addEventListener('pointermove', (e) => {
+      if (seeking) seekTo(e.clientX);
+    });
+    progressBar.addEventListener('pointerup', () => {
+      seeking = false;
+    });
+    progressBar.addEventListener('pointercancel', () => {
+      seeking = false;
     });
 
     const discordCard = document.getElementById('discord-card');
@@ -611,8 +652,9 @@
 
     discordCard.addEventListener('click', () => {
       const handle = '@osirisplus';
+      let done;
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(handle);
+        done = navigator.clipboard.writeText(handle);
       } else {
         const ta = document.createElement('textarea');
         ta.value = handle;
@@ -620,16 +662,19 @@
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
+        done = Promise.resolve();
       }
 
-      discordCopyBadge.classList.add('copied');
-      discordCopyText.textContent = 'copied!';
+      done.then(() => {
+        discordCopyBadge.classList.add('copied');
+        discordCopyText.textContent = 'copied!';
 
-      clearTimeout(copyResetTimer);
-      copyResetTimer = setTimeout(() => {
-        discordCopyBadge.classList.remove('copied');
-        discordCopyText.textContent = 'copy';
-      }, 1800);
+        clearTimeout(copyResetTimer);
+        copyResetTimer = setTimeout(() => {
+          discordCopyBadge.classList.remove('copied');
+          discordCopyText.textContent = 'copy';
+        }, 1800);
+      }).catch(() => {});
     });
 
     discordCard.addEventListener('keydown', (e) => {
