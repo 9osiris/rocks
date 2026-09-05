@@ -391,7 +391,7 @@ if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reducedM
   }
   requestAnimationFrame(stepCursor);
 
-  document.querySelectorAll('a, .glass-btn, .floating-audio-player, .audio-btn, .audio-vol-btn').forEach(el => {
+  document.querySelectorAll('a:not(.inline-link), .glass-btn, .floating-audio-player, .audio-btn, .audio-vol-btn').forEach(el => {
     el.addEventListener('mouseenter', () => {
       if (!target) {
         const rect = el.getBoundingClientRect();
