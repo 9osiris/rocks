@@ -6,7 +6,7 @@ my portfolio. live at [osiris.rocks](https://osiris.rocks)
 
 ## what this is
 
-my dumbass portfolio website that isnt completed, used my own ai to vibecode, and lowkey gave up on but were chill. an older version of this site was unoptimized as hell and fibre optimized it for me. thanks fibre.
+my dumbass portfolio website that isnt completed, used my own ai to vibecode, and lowkey gave up on but were chill. an older version of this site was unoptimized as hell. thanks fibre.
 
 ## what it does
 
