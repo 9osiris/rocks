@@ -3,23 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>osirisdev swe</title>
-  <meta name="description" content="true osiris ascension">
+  <title>osiris mogs</title>
+  <meta name="description" content="osi the goat">
   <meta name="theme-color" content="#06080d">
-  
-  <link rel="icon" type="image/svg+xml" href="osirisweb.svg">
+  <link rel="canonical" href="https://osiris.rocks/">
+
+  <link rel="icon" type="image/png" href="osirisweb.png">
   <link rel="apple-touch-icon" href="osirisweb.png">
   <link rel="manifest" href="manifest.json">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="osiris.rocks">
+  <meta property="og:title" content="osiris mogs">
+  <meta property="og:description" content="Personal site of osiris: full-stack web apps, low-level AI infrastructure, and reverse engineering.">
+  <meta property="og:url" content="https://osiris.rocks/">
+  <meta property="og:image" content="https://osiris.rocks/osirisweb.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="288">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="osiris mogs">
+  <meta name="twitter:description" content="Personal site of osiris: full-stack web apps, low-level AI infrastructure, and reverse engineering.">
+  <meta name="twitter:image" content="https://osiris.rocks/osirisweb.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="orc-styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Osiris",
+    "url": "https://osiris.rocks/",
+    "image": "https://osiris.rocks/osirisweb.png",
+    "sameAs": ["https://github.com/9osiris", "https://t.me/therealosiris"],
+    "knowsAbout": ["software engineering", "full-stack web development", "low-level AI infrastructure", "reverse engineering"],
+    "affiliation": { "@type": "Organization", "name": "Layered Innovation" },
+    "description": "Software developer and founder of Layered Innovation."
+  }
+  </script>
 </head>
 <body>
 
-  <canvas id="bg-canvas"></canvas>
-  <div class="cursor-dot" id="cursor-dot"></div>
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
 
   <div class="top-corner-redirect">
     <a href="https://shuttletv.su" target="_blank" rel="noopener noreferrer">if you're here for OsirisWatch, click here.</a>
@@ -38,12 +67,15 @@
           <span class="audio-bar"></span>
           <span class="audio-bar"></span>
           <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
         </div>
       </div>
       <span class="audio-artist">Kanye West</span>
     </div>
     <div class="audio-progress-wrap">
-      <div class="audio-progress-bar" id="audio-progress-bar">
+      <div class="audio-progress-bar" id="audio-progress-bar" aria-label="Seek position">
         <div class="audio-progress-fill" id="audio-progress-fill"></div>
       </div>
       <span class="audio-time" id="audio-time">0:00</span>
@@ -51,13 +83,13 @@
     <button id="audio-vol-btn" class="audio-vol-btn" aria-label="Toggle Mute">
       <i class="fa-solid fa-volume-high" id="audio-vol-icon"></i>
     </button>
-    <audio id="audio-element" src="guilt_trip.mp3" preload="auto" playsinline></audio>
+    <audio id="audio-element" src="guilt_trip.mp3" preload="metadata" playsinline></audio>
   </div>
 
   <main class="app-shell centered">
-    <img src="osirisweb.svg" alt="osiris logo" class="profile-logo" draggable="false" />
+    <img src="osirisweb.png" alt="osiris logo" class="profile-logo" draggable="false" width="512" height="288" />
     
-    <h1 class="hero-title">hello, im <span class="accent-gradient">osirisdev / osiris</span>.</h1>
+    <h1 class="hero-title">hello, im <span class="accent-gradient">osiris</span>.</h1>
     
     <p class="bio">
       i make software, full-stack web apps, and low-level ai infrastructure. been programming for about 3 years now, doing everything from frontend design to deep backend systems and reverse engineering. i focus on building fast, lightweight shit that doesnt lag and actually works the way it should.
@@ -81,7 +113,7 @@
         <span class="ticker-sep">·</span>
         <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/lua/lua-original.svg" alt="Lua">Lua</span>
         <span class="ticker-sep">·</span>
-        <span class="ticker-item"><span class="luau-badge">Lu</span>Luau</span>
+        <span class="ticker-item">Luau</span>
         <span class="ticker-sep">·</span>
         <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" alt="Next.js" class="invert-icon">Next.js</span>
         <span class="ticker-sep">·</span>
@@ -97,7 +129,7 @@
         <span class="ticker-sep">·</span>
         <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/lua/lua-original.svg" alt="Lua">Lua</span>
         <span class="ticker-sep">·</span>
-        <span class="ticker-item"><span class="luau-badge">Lu</span>Luau</span>
+        <span class="ticker-item">Luau</span>
         <span class="ticker-sep">·</span>
         <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" alt="Next.js" class="invert-icon">Next.js</span>
         <span class="ticker-sep">·</span>
@@ -113,7 +145,6 @@
           <span class="lower">@osirisplus</span>
         </div>
         <div class="copy-badge" id="discord-copy-badge">
-          <i class="fa-solid fa-copy" id="discord-copy-icon"></i>
           <span id="discord-copy-text">copy</span>
         </div>
       </div>
@@ -153,13 +184,11 @@
     
     let cols = 0, rows = 0;
     let grid = [];
-    let rainCols = [];
     let tick = 0;
     let matrix = false;
     let frameId = null;
     let tabActive = true;
-    let lastTick = 0;
-    const frameInterval = 1000 / 40;
+    let lastFrameTime = 0;
 
     let audioCtx = null;
     let analyser = null;
@@ -186,25 +215,44 @@
       cols = Math.ceil(w / colStep) + 1;
       rows = Math.ceil(h / charSize) + 1;
       grid = [];
-      rainCols = [];
+      const midX = w * 0.5;
+      const midY = h * 0.5;
+      const maxDist = Math.sqrt(midX * midX + midY * midY) || 1;
       for (let r = 0; r < rows; r++) {
         const row = [];
+        const py = (r + 1) * charSize;
         for (let c = 0; c < cols; c++) {
-          row.push({ char: chars[(Math.random() * chars.length) | 0], offset: Math.random() * 6.28 });
+          const px = c * colStep;
+          const dx = px - midX;
+          const dy = py - midY;
+          row.push({ char: chars[(Math.random() * chars.length) | 0], offset: Math.random() * 6.28, d: Math.sqrt(dx * dx + dy * dy) / maxDist });
         }
         grid[r] = row;
-      }
-      for (let c = 0; c < cols; c++) {
-        rainCols[c] = {
-          head: Math.random() < 0.3 ? (Math.random() * rows) | 0 : -1,
-          speed: 0.25 + Math.random() * 0.5,
-          trail: 6 + Math.floor(Math.random() * 8),
-          active: Math.random() < 0.3
-        };
       }
     }
 
     const visualizerBars = document.querySelectorAll('.audio-bar');
+    let bandEdges = [];
+    let bandLevels = new Array(visualizerBars.length).fill(0);
+
+    function buildBands() {
+      const hzPerBin = audioCtx.sampleRate / analyser.fftSize;
+      const binAt = hz => Math.max(1, Math.round(hz / hzPerBin));
+      const ranges = [
+        [20, 60, 1.0],
+        [60, 150, 1.0],
+        [150, 400, 1.1],
+        [400, 1000, 1.25],
+        [1000, 2500, 1.45],
+        [2500, 6000, 1.7],
+        [6000, 14000, 2.1]
+      ];
+      bandEdges = ranges.slice(0, visualizerBars.length).map(([lo, hi, gain]) => ({
+        start: binAt(lo),
+        end: binAt(hi),
+        gain
+      }));
+    }
 
     function lerpColor(r1, g1, b1, r2, g2, b2, t) {
       return [r1 + (r2 - r1) * t, g1 + (g2 - g1) * t, b1 + (b2 - b1) * t];
@@ -213,18 +261,34 @@
     function renderBackground(time) {
       if (!tabActive) return;
       frameId = requestAnimationFrame(renderBackground);
+      if (!lastFrameTime) lastFrameTime = time;
+      const dt = Math.min(2.5, Math.max(0, (time - lastFrameTime) / (1000 / 60)));
+      lastFrameTime = time;
 
       let subBassRaw = 0, kickRaw = 0, midRaw = 0, highRaw = 0;
 
       if (analyser && freqData) {
         analyser.getByteFrequencyData(freqData);
 
-        const bins = freqData.length;
-        subBassRaw = (freqData[1] + freqData[2] + freqData[3]) / (3 * 255);
-        kickRaw    = (freqData[4] + freqData[5] + freqData[6] + freqData[7] + freqData[8]) / (5 * 255);
-        let mSum = 0; for(let i=15; i<=80; i+=2) mSum += freqData[i];
-        midRaw = mSum / (33 * 255);
-        highRaw    = (freqData[100] + freqData[150] + freqData[200] + freqData[250] + freqData[300]) / (5 * 255);
+        const hzPerBin = audioCtx.sampleRate / analyser.fftSize;
+        const binAt = hz => Math.max(1, Math.round(hz / hzPerBin));
+        const subEnd = binAt(60), kickEnd = binAt(150), midStart = binAt(300), midEnd = binAt(2000);
+
+        let subSum = 0;
+        for (let i = 1; i < subEnd; i++) subSum += freqData[i];
+        subBassRaw = subSum / Math.max(1, (subEnd - 1) * 255);
+
+        let kickSum = 0;
+        for (let i = subEnd; i < kickEnd; i++) kickSum += freqData[i];
+        kickRaw = kickSum / Math.max(1, (kickEnd - subEnd) * 255);
+
+        let mSum = 0, mCount = 0;
+        for (let i = midStart; i <= midEnd; i += 2) { mSum += freqData[i]; mCount++; }
+        midRaw = mSum / Math.max(1, mCount * 255);
+
+        let hSum = 0, hCount = 0;
+        for (let i = binAt(4000); i < binAt(12000); i += 8) { hSum += freqData[i]; hCount++; }
+        highRaw = hSum / Math.max(1, hCount * 255);
 
         bassEnergy += (subBassRaw - bassEnergy) * 0.5;
         midEnergy  += (midRaw - midEnergy) * 0.4;
@@ -233,7 +297,7 @@
 
         if (prevFreqData) {
           let flux = 0;
-          const bassBins = 10;
+          const bassBins = kickEnd;
           for (let i = 1; i <= bassBins; i++) {
             const d = freqData[i] - prevFreqData[i];
             if (d > 0) flux += d;
@@ -242,9 +306,9 @@
           fluxEnergy += (flux - fluxEnergy) * 0.4;
           avgFluxTracker = avgFluxTracker * 0.98 + fluxEnergy * 0.02;
 
-          const isBassHit = (subBassRaw > 0.4 || kickRaw > 0.4); 
+          const isBassHit = (subBassRaw > 0.4 || kickRaw > 0.4);
           const isOnset = fluxEnergy > avgFluxTracker * 2.8 && fluxEnergy > 0.015 && isBassHit && (time - lastOnset > 250);
-          
+
           if (isOnset) {
             lastOnset = time;
             const strength = Math.min(1, (fluxEnergy / avgFluxTracker - 1) * 0.4);
@@ -254,54 +318,38 @@
             const cx = window.innerWidth * 0.5;
             const cy = window.innerHeight * 0.5;
             const size = 0.3 + strength * 0.4 + bassEnergy * 0.25;
-            shockwaves = [{ 
-              x: cx, 
-              y: cy, 
-              r: 0, 
-              maxR: Math.max(window.innerWidth, window.innerHeight) * size, 
-              strength: strength 
+            shockwaves = [{
+              x: cx,
+              y: cy,
+              r: 0,
+              maxR: Math.max(window.innerWidth, window.innerHeight) * size,
+              strength: strength
             }];
-
-            for (let c = 0; c < cols; c++) {
-              if (!rainCols[c].active && Math.random() < 0.4 + strength * 0.35) {
-                rainCols[c].active = true;
-                rainCols[c].head = 0;
-                rainCols[c].speed = 0.4 + Math.random() * 1.0 + bassEnergy * 0.8;
-                rainCols[c].trail = 5 + Math.floor(Math.random() * 10 + strength * 5);
-              }
-            }
           }
           prevFreqData.set(freqData);
         }
 
-        kickPulse  *= 0.70;
-        globalPulse *= 0.80;
+        kickPulse   *= Math.pow(0.70, dt);
+        globalPulse *= Math.pow(0.80, dt);
 
-        if (visualizerBars.length >= 4) {
-          visualizerBars[0].style.height = `${Math.max(2.5, subBassRaw * 11)}px`;
-          visualizerBars[1].style.height = `${Math.max(2.5, kickRaw * 11)}px`;
-          visualizerBars[2].style.height = `${Math.max(2.5, midRaw * 11)}px`;
-          visualizerBars[3].style.height = `${Math.max(2.5, highRaw * 11)}px`;
-        }
-      }
-
-      tick += 0.022 + bassEnergy * 0.05 + kickPulse * 0.02 + globalPulse * 0.01;
-
-      for (let c = 0; c < cols; c++) {
-        const rc = rainCols[c];
-        if (rc.active) {
-          rc.head += rc.speed;
-          if (rc.head - rc.trail > rows) {
-            rc.active = false;
-            rc.head = -1;
-            rc.speed = 0.25 + Math.random() * 0.5;
+        if (visualizerBars.length) {
+          for (let b = 0; b < bandEdges.length; b++) {
+            const e = bandEdges[b];
+            let sum = 0;
+            for (let i = e.start; i < e.end; i++) sum += freqData[i];
+            const raw = sum / Math.max(1, (e.end - e.start) * 255);
+            const boosted = Math.min(1, raw * e.gain);
+            bandLevels[b] += (boosted - bandLevels[b]) * (boosted > bandLevels[b] ? 0.55 : 0.18);
+            visualizerBars[b].style.height = `${Math.max(2.5, bandLevels[b] * 16)}px`;
           }
-        } else if (Math.random() < 0.0015 + bassEnergy * 0.004) {
-          rc.active = true;
-          rc.head = 0;
-          rc.speed = 0.25 + Math.random() * 0.55;
+        }
+      } else if (visualizerBars.length) {
+        for (let b = 0; b < visualizerBars.length; b++) {
+          visualizerBars[b].style.height = '2.5px';
         }
       }
+
+      tick += (0.022 + bassEnergy * 0.05 + kickPulse * 0.02 + globalPulse * 0.01) * dt;
 
       for (let i = shockwaves.length - 1; i >= 0; i--) {
         shockwaves[i].r += 12 + bassEnergy * 6 + kickPulse * 4;
@@ -378,53 +426,27 @@
           const vocalFactor = Math.max(0, 1 - distFromCenter * 3.0);
           const vocalBoost = Math.pow(vocalFactor, 1.5) * midEnergy * 1.4;
 
-          const audioBoost = bassEnergy * 0.20 + kickPulse * 0.22 + colFreq * 0.14 + rowFreq * 0.10 + shockBoost * 0.5 + globalPulse * 0.14 + vocalBoost;
+          const audioBoost = bassEnergy * 0.22 + kickPulse * 0.26 + colFreq * 0.14 + rowFreq * 0.10 + shockBoost * 0.5 + globalPulse * 0.16 + vocalBoost;
           const rawNorm = waveCombined * 0.36 + 0.5 + audioBoost;
           const norm = Math.min(0.99, rawNorm) * spotlight;
 
-          const rc = rainCols[c];
-          let isRainHead = false;
-          let rainAlpha = 0;
-          if (rc.active) {
-            const headRow = rc.head | 0;
-            if (r === headRow) { isRainHead = true; rainAlpha = 1.0; }
-            else if (r < headRow && r >= headRow - rc.trail) {
-              const t = (rc.trail - (headRow - r)) / rc.trail;
-              rainAlpha = t * t;
-            }
-          }
-
-          if (norm < 0.18 && rainAlpha < 0.04) continue;
+          if (norm < 0.18) continue;
 
           let finalAlpha;
           let cr, cg, cb;
 
-          if (isRainHead) {
-            cr = 210; cg = 235; cb = 255;
-            finalAlpha = Math.min(0.92, 0.80 + globalPulse * 0.12 + bassEnergy * 0.08);
-            if (Math.random() < 0.5) item.char = chars[(Math.random() * chars.length) | 0];
-          } else if (rainAlpha > 0.04) {
-            const t = rainAlpha * spotlight;
-            if (matrix) {
-              [cr, cg, cb] = lerpColor(matR, matG, matB, matHot, matHotG, matHotB, energyShift);
-            } else {
-              [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
-            }
-            finalAlpha = Math.min(0.65, t * 0.62 + globalPulse * 0.08);
+          if (matrix) {
+            [cr, cg, cb] = lerpColor(matR, matG, matB, matHot, matHotG, matHotB, energyShift);
           } else {
-            if (matrix) {
-              [cr, cg, cb] = lerpColor(matR, matG, matB, matHot, matHotG, matHotB, energyShift);
-            } else {
-              [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
-            }
-            const normMapped = (norm - 0.18) / 0.81;
-            finalAlpha = normMapped * (matrix ? 0.50 : 0.40) + shockBoost * 0.15 + globalPulse * 0.06;
+            [cr, cg, cb] = lerpColor(baseR1, baseG1, baseB1, hotR, hotG, hotB, energyShift);
           }
+          const normMapped = (norm - 0.18) / 0.81;
+          finalAlpha = normMapped * (matrix ? 0.55 : 0.44) + shockBoost * 0.15 + globalPulse * 0.06;
 
           if (finalAlpha < 0.018) continue;
 
           const scrambleChance = 0.0006 + highEnergy * 0.016 + kickPulse * 0.014 + (vocalFactor * midEnergy * 0.035);
-          if (!isRainHead && Math.random() < scrambleChance) {
+          if (Math.random() < scrambleChance) {
             item.char = chars[(Math.random() * chars.length) | 0];
           }
 
@@ -444,9 +466,12 @@
       }, { passive: true });
       document.addEventListener('visibilitychange', () => {
         tabActive = !document.hidden;
-        if (tabActive && !frameId) {
-          lastTick = performance.now();
-          frameId = requestAnimationFrame(renderBackground);
+        if (tabActive) {
+          if (!frameId) frameId = requestAnimationFrame(renderBackground);
+        } else {
+          if (frameId) cancelAnimationFrame(frameId);
+          frameId = null;
+          lastFrameTime = 0;
         }
       });
     }
@@ -463,10 +488,12 @@
     let userMuted = false;
     let hasStarted = false;
 
-    const savedPos = parseFloat(sessionStorage.getItem('osi_track_pos'));
-    if (!isNaN(savedPos) && savedPos > 0) {
-      audio.currentTime = savedPos;
-    }
+    audio.addEventListener('loadedmetadata', () => {
+      const savedPos = parseFloat(sessionStorage.getItem('osi_track_pos'));
+      if (!isNaN(savedPos) && savedPos > 0 && savedPos < audio.duration) {
+        audio.currentTime = savedPos;
+      }
+    });
 
     function initAudioContext() {
       if (audioCtx) {
@@ -482,7 +509,8 @@
           analyser.smoothingTimeConstant = 0.82;
           freqData = new Uint8Array(analyser.frequencyBinCount);
           prevFreqData = new Uint8Array(analyser.frequencyBinCount);
-          
+          buildBands();
+
           const srcNode = audioCtx.createMediaElementSource(audio);
           srcNode.connect(analyser);
           analyser.connect(audioCtx.destination);
@@ -502,8 +530,9 @@
       player.classList.toggle('is-playing', isPlaying);
     }
 
-    function tryPlay() {
+    function tryPlay(e) {
       if (hasStarted || userMuted) return;
+      if (e && e.target && player && player.contains(e.target)) return;
       initAudioContext();
       const res = audio.play();
       if (res && res.then) {
@@ -511,13 +540,15 @@
           hasStarted = true;
           updatePlayState(true);
           unbindTriggers();
-        }).catch(() => {});
+        }).catch(() => {
+          if (audio.paused) bindTriggers();
+        });
       }
     }
 
-    const inputEvents = ['pointerdown', 'mousemove', 'touchstart', 'keydown', 'scroll', 'click'];
+    const inputEvents = ['pointerdown', 'touchend', 'click', 'keydown'];
     function bindTriggers() {
-      inputEvents.forEach(e => window.addEventListener(e, tryPlay, { passive: true, once: true }));
+      inputEvents.forEach(e => window.addEventListener(e, tryPlay, { passive: true }));
     }
     function unbindTriggers() {
       inputEvents.forEach(e => window.removeEventListener(e, tryPlay));
@@ -575,7 +606,6 @@
 
     const discordCard = document.getElementById('discord-card');
     const discordCopyBadge = document.getElementById('discord-copy-badge');
-    const discordCopyIcon = document.getElementById('discord-copy-icon');
     const discordCopyText = document.getElementById('discord-copy-text');
     let copyResetTimer = null;
 
@@ -593,15 +623,21 @@
       }
 
       discordCopyBadge.classList.add('copied');
-      discordCopyIcon.className = 'fa-solid fa-check';
       discordCopyText.textContent = 'copied!';
 
       clearTimeout(copyResetTimer);
       copyResetTimer = setTimeout(() => {
         discordCopyBadge.classList.remove('copied');
-        discordCopyIcon.className = 'fa-solid fa-copy';
         discordCopyText.textContent = 'copy';
       }, 1800);
+    });
+
+    discordCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.stopPropagation();
+        e.preventDefault();
+        discordCard.click();
+      }
     });
 
     const dot = document.getElementById('cursor-dot');

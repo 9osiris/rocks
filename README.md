@@ -1,53 +1,48 @@
 # osiris.rocks
 
-Personal developer portfolio by **Osiris** / **Layered Innovation (LAYRD INNO.)**.
-
-Live at: [here](https://osiris.rocks)
+my portfolio. live at [osiris.rocks](https://osiris.rocks)
 
 ---
 
-## Overview
+## what this is
 
-My dumbass portfolio website that isn't completed, used my own AI to vibecode, and lowkey gave up on but we're chill.
+my dumbass portfolio website that isnt completed, used my own ai to vibecode, and lowkey gave up on but were chill. an older version of this site was unoptimized as hell and fibre optimized it for me. thanks fibre.
 
-### Features
+## what it does
 
-- **Quantized Canvas Engine**: 35 FPS animated background grid using pre-allocated color tiers, DPR-scaled canvas rendering, and zero per-frame string allocations.
-- **Fluid Magnetic Cursor**: Continuous spring-damped pointer tracking that smoothly interpolates and morphs into interactive interface boundaries.
-- **Floating Audio Widget**: Embedded bottom-corner audio player with scrub controls, track progress tracking, and user-gesture autoplay handling.
-- **Responsive Marquee Ticker**: Continuous animated skill ticker displaying development tooling and language proficiencies.
-- **SEO & PWA Configured**: Validated Web App Manifest, OpenGraph tags, sitemap, and Google Search Console verification.
+- **quantized canvas engine** - 35 fps animated background grid, pre-allocated color tiers, dpr-scaled canvas rendering, zero per-frame string allocations. it reacts to the audio: bass hits spawn shockwaves from the center and the whole grid brightens and shifts color with the energy
+- **audio visualizer** - real fft analysis through the web audio api. sub-bass (20-60hz) and kick (60-150hz) bands are detected by flux onset detection, so the shockwaves actually land on the beat instead of just flickering randomly
+- **fluid magnetic cursor** - continuous spring-damped pointer tracking that smoothly interpolates and morphs into interactive interface boundaries
+- **floating audio widget** - embedded bottom-corner audio player with scrub controls, track progress tracking, a 7-band spectrum visualizer, and user-gesture autoplay handling so it actually works on mobile
+- **responsive marquee ticker** - continuous animated skill ticker displaying development tooling and language proficiencies
+- **seo & pwa configured** - validated web app manifest, opengraph tags, sitemap, and google search console verification
 
----
+theres also a little easter egg. type `fibre` anywhere on the page.
 
-## Tech Stack
+## tech stack
 
-- **Markup & Styling**: HTML5, CSS3 (CSS Custom Properties)
-- **Scripting**: Vanilla JavaScript (ES6+)
-- **Deployment**: Vercel (Automated edge routing)
+- html5 + css3 (custom properties, no frameworks)
+- vanilla javascript (es6+)
+- deployed on vercel
 
----
-
-## Project Structure
+## project structure
 
 ```text
 .
-├── index.html                  # Core portfolio page & scripts
-├── orc-styles.css              # Layout & styling
-├── osirisweb.svg               # Vector brand logo & favicon
-├── osirisweb.png               # Raster brand icon
-├── guilt_trip.mp3              # Audio track
-├── cover.jfif                  # Audio player artwork
-├── googleb3700fd05b93ee70.html # Google Search Console verification
-├── manifest.json               # Web App Manifest
-├── robots.txt                  # Search crawler directives
-├── sitemap.xml                 # XML Sitemap
-├── vercel.json                 # Vercel deployment & routing configuration
-└── README.md                   # Repository documentation
+├── index.html                  # the whole site, markup + scripts
+├── orc-styles.css              # layout & styling
+├── osirisweb.svg               # vector brand logo & favicon
+├── osirisweb.png               # raster brand icon
+├── guilt_trip.mp3              # the track
+├── cover.jfif                  # audio player artwork
+├── googleb3700fd05b93ee70.html # google search console verification
+├── manifest.json               # web app manifest
+├── robots.txt                  # search crawler directives
+├── sitemap.xml                 # xml sitemap
+├── vercel.json                 # vercel deployment & routing config
+└── README.md                   # this
 ```
 
----
+## license
 
-## License
-
-&copy; 2026 LYRD INNO. All rights reserved. Fibre Automated Systems.
+&copy; 2026 LYRD INNO. all rights reserved. fibre automated systems.
