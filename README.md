@@ -17,7 +17,7 @@ my dumbass portfolio website that isnt completed, used my own ai to vibecode, an
 - **responsive marquee ticker** - continuous animated skill ticker displaying development tooling and language proficiencies
 - **seo & pwa configured** - validated web app manifest, opengraph tags, sitemap, and google search console verification
 
-theres also a little easter egg. type `fibre` anywhere on the page.
+theres also a little easter egg. type `fibre` anywhere on the page (works on both pages).
 
 ## tech stack
 
@@ -29,7 +29,9 @@ theres also a little easter egg. type `fibre` anywhere on the page.
 
 ```text
 .
-├── index.html                  # the whole site, markup + scripts
+├── index.html                  # the landing page, markup + player scripts
+├── about.html                  # about me page, interests + stack
+├── bg.js                       # shared canvas engine, cursor, easter egg
 ├── orc-styles.css              # layout & styling
 ├── osirisweb.svg               # vector brand logo & favicon
 ├── osirisweb.png               # raster brand icon
