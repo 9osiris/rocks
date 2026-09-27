@@ -7,11 +7,9 @@
   <meta name="description" content="what osiris is into: autonomous agents, retrieval systems, computer vision, infrastructure, and everything in between.">
   <meta name="theme-color" content="#06080d">
   <link rel="canonical" href="https://osiris.rocks/about">
-
   <link rel="icon" type="image/png" href="osirisweb.png">
   <link rel="apple-touch-icon" href="osirisweb.png">
   <link rel="manifest" href="manifest.json">
-
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="osiris.rocks">
   <meta property="og:title" content="about · osiris">
@@ -19,7 +17,6 @@
   <meta property="og:url" content="https://osiris.rocks/about">
   <meta property="og:image" content="https://osiris.rocks/osirisweb.png">
   <meta property="og:locale" content="en_US">
-
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="about · osiris">
   <meta name="twitter:description" content="autonomous agents, retrieval systems, computer vision, infrastructure, and everything in between.">
@@ -31,39 +28,60 @@
   <link rel="stylesheet" href="orc-styles.css">
 </head>
 <body>
-
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
   <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
-
+  <div class="floating-audio-player" id="audio-player-widget">
+    <img src="cover.jfif" alt="Yeezus album cover" class="audio-cover" draggable="false" />
+    <button id="audio-play-btn" class="audio-btn" aria-label="Play or Pause">
+      <i class="fa-solid fa-play" id="audio-play-icon"></i>
+    </button>
+    <div class="audio-info">
+      <div class="audio-title-row">
+        <span class="audio-title">Guilt Trip</span>
+        <div class="audio-bars" id="audio-bars">
+          <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
+          <span class="audio-bar"></span>
+        </div>
+      </div>
+      <span class="audio-artist">Kanye West</span>
+    </div>
+    <div class="audio-progress-wrap">
+      <div class="audio-progress-bar" id="audio-progress-bar" role="slider" tabindex="0" aria-label="Seek position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="audio-progress-fill" id="audio-progress-fill"></div>
+      </div>
+      <span class="audio-time" id="audio-time">0:00</span>
+    </div>
+    <button id="audio-vol-btn" class="audio-vol-btn" aria-label="Toggle Mute">
+      <i class="fa-solid fa-volume-high" id="audio-vol-icon"></i>
+    </button>
+    <audio id="audio-element" src="guilt_trip.mp3" preload="auto" playsinline></audio>
+  </div>
   <div class="top-corner-redirect">
     <a href="/">back home</a>
   </div>
-
   <main class="app-shell about-shell">
     <h1 class="hero-title about-title">about <span class="accent-gradient">me</span>.</h1>
-
     <p class="bio">
       im osiris. 5 years programming, 3 of those doing software engineering and web design, self taught. i started with the usual stuff, bots and random scripts, and somewhere along the way got obsessed with the systems side of ai. not the model training part, the part around it: how an agent remembers things, how it finds what it needs, how it checks its own work before it hands you an answer thats confidently wrong.
     </p>
-
     <p class="bio">
       in december 2025 i founded Layered Innovation and ive been building Fibre Intelligence since. its a custom ai model line and reasoning engine, built from scratch, for algorithmic problem solving, logic optimization, and multistep synthesis. its the reason this whole page exists. most of what i know about retrieval, orchestration, and agent design, i learned the hard way building it. it even optimized this website. an older version of this site was slow as hell and fibre cleaned it up, which is a weird flex but ill take it.
     </p>
-
     <h2 class="section-title">what i actually spend my time on</h2>
-
     <p class="bio">
       most of my time goes into retrieval. rag pipelines, hybrid search, custom embedding search, the unglamorous part that decides whether an agent sounds smart or sounds like its guessing. getting a system to cite its sources and actually be right is harder than it looks, and thats basically the whole job.
     </p>
-
     <p class="bio">
       the other half is agents and orchestration: planning, tool use, reflection loops, multiagent setups where things check each others work. the specific qualities i chase are persistent memory, contextual retrieval, adversarial validation, and self evaluation. if a system cant tell you when its unsure, its not done.
     </p>
-
     <p class="bio">
       on the side i mess with computer vision (yolov8, object detection, image tagging) and ai moderation, mostly detection stuff. and i do a lot of infra out of necessity: docker, kubernetes, aws, microservice deployment. nobody taught me that scaling and deployment are half the job, i found out the hard way.
     </p>
-
     <h2 class="section-title">stack</h2>
     <div class="chip-group">
       <span class="chip">python</span>
@@ -74,16 +92,13 @@
       <span class="chip">aws / azure</span>
       <span class="chip">docker / kubernetes</span>
     </div>
-
     <p class="bio about-close">
       swift is on the list too but i wont pretend, im still early on it ngl. anyway, if any of this overlaps with what you're building, <a href="/" class="inline-link">hit me up</a>.
     </p>
-
     <footer class="footer">
       <span>&copy; 2026 LYRD INNO &middot; Fibre Automated Systems</span>
     </footer>
   </main>
-
   <script src="bg.js"></script>
 </body>
 </html>
