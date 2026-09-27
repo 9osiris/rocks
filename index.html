@@ -7,11 +7,9 @@
   <meta name="description" content="osi the goat">
   <meta name="theme-color" content="#06080d">
   <link rel="canonical" href="https://osiris.rocks/">
-
   <link rel="icon" type="image/png" href="osirisweb.png">
   <link rel="apple-touch-icon" href="osirisweb.png">
   <link rel="manifest" href="manifest.json">
-
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="osiris.rocks">
   <meta property="og:title" content="osiris mogs">
@@ -21,7 +19,6 @@
   <meta property="og:image:width" content="512">
   <meta property="og:image:height" content="288">
   <meta property="og:locale" content="en_US">
-
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="osiris mogs">
   <meta name="twitter:description" content="Personal site of osiris: full stack web apps, low level ai infrastructure, and reverse engineering.">
@@ -46,10 +43,8 @@
   </script>
 </head>
 <body>
-
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
   <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
-
   <div class="floating-audio-player" id="audio-player-widget">
     <img src="cover.jfif" alt="Yeezus album cover" class="audio-cover" draggable="false" />
     <button id="audio-play-btn" class="audio-btn" aria-label="Play or Pause">
@@ -81,22 +76,17 @@
     </button>
     <audio id="audio-element" src="guilt_trip.mp3" preload="auto" playsinline></audio>
   </div>
-
   <main class="app-shell centered">
     <h1 class="hero-title">hello, im <span class="accent-gradient">osiris</span>.</h1>
-
     <p class="bio">
       i make software, full stack web apps, and low level ai infrastructure. i focus on building fast, lightweight shit that doesnt lag and actually works the way it should.
     </p>
-
     <p class="bio startup-bio">
       in december 2025 i founded Layered Innovation (LAYRD INNO.) and ive been building 'Fibre Intelligence', a custom ai model line and reasoning engine, ever since. dropping it publicly next year.
     </p>
-
     <p class="bio about-teaser">
       everything else, the agents, the retrieval work, the vision stuff, all of it lives on the <a href="/about" class="inline-link">about page</a>.
     </p>
-
     <div class="ticker-wrap">
       <div class="ticker">
         <span class="ticker-item"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python">Python</span>
@@ -133,76 +123,15 @@
         <span class="ticker-sep">·</span>
       </div>
     </div>
-
-        <h2 class="section-title">projects</h2>
-    <div class="project-grid">
-      <a href="https://github.com/9osiris/mule" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">mule</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">minimal coding agent against any openai-compatible chat api. 25 tools, sessions, skills, plugins, full test coverage.</p>
-      </a>
-      <a href="https://github.com/9osiris/ctxpack" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">ctxpack</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">bundles a repo into one file for pasting into coding agents. respects .gitignore, skips binaries.</p>
-      </a>
-      <a href="https://github.com/9osiris/embedx" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">embedx</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">semantic search over any folder with zero dependencies. backed by any openai-compatible embeddings api.</p>
-      </a>
-      <a href="https://github.com/9osiris/envx" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">envx</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">loads a .env file and runs a command with those vars set. quoted values, export prefixes, -e overrides.</p>
-      </a>
-      <a href="https://github.com/9osiris/mockllm" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">mockllm</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">scriptable fake openai-compatible chat server for testing agents. stop hand-rolling your own.</p>
-      </a>
-      <a href="https://github.com/9osiris/probe" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">probe</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">model eval harness for any openai-compatible chat api. evals from json, checks built in.</p>
-      </a>
-      <a href="https://github.com/9osiris/promptlab" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">promptlab</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">runs one prompt against several system prompts or models through any openai-compatible api. compares output.</p>
-      </a>
-      <a href="https://github.com/9osiris/relay" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">relay</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">local openai-compatible gateway. one endpoint that routes chat and embeddings across providers.</p>
-      </a>
-      <a href="https://github.com/9osiris/watchrun" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="project-top">
-          <span class="project-name">watchrun</span>
-          <i class="fa-solid fa-arrow-up-right-from-square project-arrow"></i>
-        </div>
-        <p class="project-desc">reruns a command whenever files change. polls mtimes, debounces save bursts, zero deps.</p>
-      </a>
-    </div>
-
     <h2 class="section-title">contact & socials</h2>
     <div class="link-container">
+      <a href="/projects" class="glass-btn">
+        <div class="btn-icon"><i class="fa-solid fa-folder"></i></div>
+        <div class="btn-text">
+          <span class="upper">Projects</span>
+          <span class="lower">what ive built</span>
+        </div>
+      </a>
       <div class="glass-btn" id="discord-card" role="button" tabindex="0" style="cursor: pointer;">
         <div class="btn-icon"><i class="fa-brands fa-discord"></i></div>
         <div class="btn-text">
@@ -213,7 +142,6 @@
           <span id="discord-copy-text">copy</span>
         </div>
       </div>
-
       <a href="https://t.me/therealosiris" target="_blank" rel="noopener noreferrer" class="glass-btn">
         <div class="btn-icon"><i class="fa-brands fa-telegram"></i></div>
         <div class="btn-text">
@@ -221,7 +149,6 @@
           <span class="lower">@therealosiris</span>
         </div>
       </a>
-
       <a href="https://github.com/9osiris" target="_blank" rel="noopener noreferrer" class="glass-btn">
         <div class="btn-icon"><i class="fa-brands fa-github"></i></div>
         <div class="btn-text">
@@ -230,12 +157,10 @@
         </div>
       </a>
     </div>
-
     <footer class="footer">
       <span>&copy; 2026 LYRD INNO &middot; Fibre Automated Systems</span>
     </footer>
   </main>
-
   <script src="bg.js"></script>
   <script>
     const audio = document.getElementById('audio-element');
@@ -249,7 +174,6 @@
     const volIcon = document.getElementById('audio-vol-icon');
     let userMuted = false;
     let hasStarted = false;
-
     audio.addEventListener('loadedmetadata', () => {
       const savedPos = parseFloat(sessionStorage.getItem('osi_track_pos'));
       if (!isNaN(savedPos) && savedPos > 0 && savedPos < audio.duration) {
@@ -258,7 +182,6 @@
         timeLabel.textContent = formatSeconds(savedPos);
       }
     });
-
     function initAudioContext() {
       if (audioCtx) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -274,27 +197,23 @@
           freqData = new Uint8Array(analyser.frequencyBinCount);
           prevFreqData = new Uint8Array(analyser.frequencyBinCount);
           buildBands();
-
           const srcNode = audioCtx.createMediaElementSource(audio);
           srcNode.connect(analyser);
           analyser.connect(audioCtx.destination);
         }
       } catch (err) {}
     }
-
     function formatSeconds(sec) {
       if (isNaN(sec) || !isFinite(sec)) return '0:00';
       const m = Math.floor(sec / 60);
       const s = Math.floor(sec % 60);
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
-
     function updatePlayState(isPlaying) {
       playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
       playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
       player.classList.toggle('is-playing', isPlaying);
     }
-
     function tryPlay(e) {
       if (hasStarted || userMuted) return;
       if (e && e.target && player && player.contains(e.target)) return;
@@ -310,7 +229,6 @@
         });
       }
     }
-
     const inputEvents = ['pointerdown', 'touchend', 'click', 'keydown'];
     function bindTriggers() {
       inputEvents.forEach(e => window.addEventListener(e, tryPlay, { passive: true }));
@@ -318,10 +236,8 @@
     function unbindTriggers() {
       inputEvents.forEach(e => window.removeEventListener(e, tryPlay));
     }
-
     tryPlay();
     bindTriggers();
-
     playBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       initAudioContext();
@@ -337,18 +253,15 @@
         updatePlayState(false);
       }
     });
-
     volBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       audio.muted = !audio.muted;
       syncVolState();
     });
-
     function syncVolState() {
       volIcon.className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
       volBtn.setAttribute('aria-label', audio.muted ? 'Unmute' : 'Mute');
     }
-
     if ('mediaSession' in navigator) {
       try {
         navigator.mediaSession.metadata = new MediaMetadata({
@@ -368,7 +281,6 @@
         });
       } catch (err) {}
     }
-
     audio.addEventListener('timeupdate', () => {
       if (audio.duration) {
         const pct = (audio.currentTime / audio.duration) * 100;
@@ -378,14 +290,12 @@
         sessionStorage.setItem('osi_track_pos', audio.currentTime);
       }
     });
-
     audio.addEventListener('ended', () => {
       updatePlayState(false);
       progressFill.style.width = '0%';
       timeLabel.textContent = '0:00';
       sessionStorage.removeItem('osi_track_pos');
     });
-
     let seeking = false;
     function seekTo(clientX) {
       const rect = progressBar.getBoundingClientRect();
@@ -396,7 +306,6 @@
         timeLabel.textContent = formatSeconds(ratio * audio.duration);
       }
     }
-
     progressBar.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
       seeking = true;
@@ -425,12 +334,10 @@
         audio.currentTime = Math.min(audio.duration, Math.max(0, next));
       }
     });
-
     const discordCard = document.getElementById('discord-card');
     const discordCopyBadge = document.getElementById('discord-copy-badge');
     const discordCopyText = document.getElementById('discord-copy-text');
     let copyResetTimer = null;
-
     discordCard.addEventListener('click', () => {
       const handle = '@osirisplus';
       let done;
@@ -445,11 +352,9 @@
         document.body.removeChild(ta);
         done = Promise.resolve();
       }
-
       done.then(() => {
         discordCopyBadge.classList.add('copied');
         discordCopyText.textContent = 'copied!';
-
         clearTimeout(copyResetTimer);
         copyResetTimer = setTimeout(() => {
           discordCopyBadge.classList.remove('copied');
@@ -457,7 +362,6 @@
         }, 1800);
       }).catch(() => {});
     });
-
     discordCard.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.stopPropagation();
@@ -465,7 +369,6 @@
         discordCard.click();
       }
     });
-
     document.addEventListener('keydown', (e) => {
       if (['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) return;
       if (e.key === 'm' || e.key === 'M') {
