@@ -218,7 +218,7 @@ function initDiscordCopy(){
 const card=document.getElementById('discord-card'),badge=document.getElementById('discord-copy-badge'),txt=document.getElementById('discord-copy-text');
 if(!card||!badge||!txt)return;
 card.addEventListener('click',()=>{
-const handle='@osirisplus';let done;
+const handle='@osiriscodes';let done;
 if(navigator.clipboard&&navigator.clipboard.writeText)done=navigator.clipboard.writeText(handle);
 else{const ta=document.createElement('textarea');ta.value=handle;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done=Promise.resolve();}
 done.then(()=>{badge.classList.add('copied');txt.textContent='copied!';
