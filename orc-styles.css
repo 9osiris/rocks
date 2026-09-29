@@ -506,7 +506,7 @@ body {
     display: none !important;
   }
 }
-.project-grid {
+.page-back { margin-bottom: 32px; } .project-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -560,7 +560,7 @@ body {
   margin: 0;
 }
 @media (max-width: 600px) {
-  .project-grid {
+  .page-back { margin-bottom: 32px; } .project-grid {
     grid-template-columns: 1fr;
   }
 }
