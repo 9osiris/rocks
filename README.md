@@ -48,3 +48,5 @@ theres also a little easter egg. type `fibre` anywhere on the page (works on bot
 ## license
 
 &copy; 2026 LYRD INNO. all rights reserved. fibre automated systems.
+
+(Edited for a quick test)
